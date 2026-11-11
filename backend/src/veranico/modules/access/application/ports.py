@@ -64,3 +64,15 @@ class SpendCeilings(Protocol):
     async def reached(self) -> CeilingReason | None:
         """The ceiling that refuses a model call now, or `None` when spending is allowed."""
         ...
+
+
+class SpendStore(Protocol):
+    """The ledger: micro-dollars per UTC day (`YYYY-MM-DD`) and per month (`YYYY-MM`)."""
+
+    async def totals(self, day: str, month: str) -> tuple[int, int]:
+        """Micro-dollars spent in the day and in the month; zero where nothing was."""
+        ...
+
+    async def add(self, day: str, month: str, cost_usd_micros: int) -> None:
+        """Add one call's cost to the day and to the month, atomically and without a read."""
+        ...

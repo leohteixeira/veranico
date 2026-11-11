@@ -49,6 +49,24 @@ class StubSpendCeilings:
         return self.reason
 
 
+class MemorySpendStore:
+    def __init__(self) -> None:
+        self.days: dict[str, int] = {}
+        self.months: dict[str, int] = {}
+        self.calls: dict[str, int] = {}
+        self.writes = 0
+
+    async def totals(self, day: str, month: str) -> tuple[int, int]:
+        return self.days.get(day, 0), self.months.get(month, 0)
+
+    async def add(self, day: str, month: str, cost_usd_micros: int) -> None:
+        self.days[day] = self.days.get(day, 0) + cost_usd_micros
+        self.months[month] = self.months.get(month, 0) + cost_usd_micros
+        for key in (day, month):
+            self.calls[key] = self.calls.get(key, 0) + 1
+        self.writes += 1
+
+
 class MemoryWorkspaceStore:
     def __init__(self) -> None:
         self.workspaces: dict[WorkspaceId, Workspace] = {}
