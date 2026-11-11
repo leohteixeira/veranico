@@ -190,11 +190,11 @@ async def test_carrier_catalog_forwarder_asks_the_carriers_facade_each_time() ->
         container = api_container()
 
     catalog = captured[0]
-    # The stub carriers facade behind the forwarder raises until plan 04 lands.
-    with pytest.raises(NotImplementedError):
-        catalog.all()  # type: ignore[attr-defined]  # CarrierCatalog port
-    with pytest.raises(NotImplementedError):
-        catalog.get("carrier-1")  # type: ignore[attr-defined]  # CarrierCatalog port
+    # The forwarder answers from the directory of the carriers facade (plan 04).
+    carriers = catalog.all()  # type: ignore[attr-defined]  # CarrierCatalog port
+    assert [carrier.carrier_id for carrier in carriers] == ["carrier-1", "carrier-2"]
+    assert catalog.get("carrier-1") == carriers[0]  # type: ignore[attr-defined]  # CarrierCatalog port
+    assert catalog.get("carrier-9") is None  # type: ignore[attr-defined]  # CarrierCatalog port
     assert container.carriers is not None
 
 
