@@ -65,7 +65,7 @@ exit $$status
 endef
 
 .PHONY: help dev test test-integration test-failure lint fmt gen-client ingest build-cube \
-	mutation-proof evals load evidence traceability \
+	mutation-proof evals record-replay load evidence traceability \
 	verify-m0 verify-m1 verify-m2 verify-m3 verify-m4 verify-m5 verify-m6
 
 help:
@@ -77,7 +77,7 @@ help:
 	@echo "make gen-client        export OpenAPI and regenerate the typed client (CHECK=1: fail on drift)"
 	@echo "make ingest LAT= LON=  fetch and cache point history"
 	@echo "make build-cube REGION= [SYNTHETIC=1 SEED=] [MEASURE=1]"
-	@echo "make mutation-proof | evals | load | evidence | traceability"
+	@echo "make mutation-proof | evals | record-replay LOCALE= | load | evidence | traceability"
 	@echo "make verify-m0 .. verify-m6   the executable gate of each milestone"
 
 # Frontend dependencies follow the lockfile; pnpm rewrites .modules.yaml on every install.
@@ -228,6 +228,13 @@ mutation-proof:
 evals:
 	@if [ ! -f backend/tests/evals/run.py ]; then echo "evals: not implemented in this milestone (plan 06)" >&2; exit 2; fi
 	cd backend && uv run python -m tests.evals.run $(EVALS_ARGS)
+
+# Paid: records the replay of one language on the real cubes (SPEC 9.6), about US$ 0.01, with a
+# hard stop: `make record-replay LOCALE=en` (or pt-BR) [MAX_COST_USD=0.10]. Needs the emulators.
+record-replay:
+	@if [ -z "$(LOCALE)" ]; then echo "usage: make record-replay LOCALE=en|pt-BR [MAX_COST_USD=0.10]" >&2; exit 2; fi
+	cd backend && FIRESTORE_EMULATOR_HOST=$(FIRESTORE_HOST) STORAGE_EMULATOR_HOST=$(STORAGE_HOST) \
+		uv run python -m tests.evals.record_replay --locale $(LOCALE) --max-cost-usd $(or $(MAX_COST_USD),0.10)
 
 # The runner starts its own Compose project (`veranico-load`, compose.yaml plus
 # load/compose.load.yaml) and never the development one, so this does not depend on `dev`.
