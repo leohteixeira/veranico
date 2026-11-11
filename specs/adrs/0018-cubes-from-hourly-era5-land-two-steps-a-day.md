@@ -21,7 +21,7 @@ The specification also requires daily values aggregated by local day (section 4)
 
 ## Consequences
 
-* The cubes stay ERA5-Land on the 0.1° grid, with local days, as the specification intends. The cost is 228 requests (3 regions, 76 years) of 730 small fields each instead of one server-side daily product.
+* The cubes stay ERA5-Land on the 0.1° grid, with local days, as the specification intends. The cost is 228 requests (3 regions, 76 years) of 730 small fields each, plus 228 one-day requests for 1 January of the following year (the last local day of a year needs it, and a request is a product of years, months, days and times), instead of one server-side daily product.
 * Years before 2019 with daylight saving time in the Centre-South are aggregated on the fixed standard offset. Open-Meteo's `timezone=auto` follows the historical clock, so in those summers the two sources cut the day one hour apart. The consistency check of section 4.4 already compares two different products (ADR 0017) and its tolerance is set from measured differences at H1.
 * Not verified, and to be confirmed with the first real request at H1 before `make build-cube` is trusted: the request keys and option values of the hourly entry (variable, time, area order, NetCDF output), the variable and coordinate names inside the returned file, and any request size limit. A mismatch must fail the download step with a clear message, never produce a cube.
 
