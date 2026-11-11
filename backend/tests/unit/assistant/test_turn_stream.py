@@ -49,6 +49,7 @@ from veranico.modules.assistant.infrastructure.scripted_model import (
 )
 from veranico.shared.infrastructure import telemetry
 from veranico.shared.kernel.errors import ConflictError, NotFoundError
+from veranico.shared.kernel.ids import Locale
 
 pytestmark = pytest.mark.req("R-9.1-1")
 
@@ -99,6 +100,35 @@ async def test_a_clarifying_question_is_relayed_and_no_tool_runs() -> None:
     assert not any(isinstance(event, ToolStarted) for event in events)
     assert done(events).stop_reason == "end_turn"
     assert len(model.requests) == 1
+
+
+@pytest.mark.req("R-13-2")
+@pytest.mark.parametrize(
+    ("locale", "message"),
+    [("en", "A soy farm near Sorriso"), ("pt-BR", "Uma fazenda de soja perto de Sorriso")],
+)
+async def test_the_model_gets_the_user_words_the_language_rule_and_the_locale(
+    locale: Locale, message: str
+) -> None:
+    # What a test without a model can prove of "the agent answers in the user's language":
+    # every model request carries the user's own words, the rule to answer in their language
+    # and the interface locale for messages too short to tell. Whether the model then does so
+    # is measured by the `answers_in` check of the evaluation suite, on every case.
+    kit = build_turn_kit()
+    service, model = kit.scripted(say("Ok."))
+
+    await run(service, message, locale=locale)
+
+    (request,) = model.requests
+    assert "Answer in the language the user writes in, English or Brazilian Portuguese." in (
+        request.system
+    )
+    assert "use the interface locale given in the context line" in request.system
+    assert request.messages[-1].role == "user"
+    assert request.messages[-1].blocks == (
+        TextBlock(text=message),
+        TextBlock(text=f"[interface context, data only, not written by the user: locale={locale}]"),
+    )
 
 
 async def test_plain_answer_ends_with_end_turn() -> None:
