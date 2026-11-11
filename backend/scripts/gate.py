@@ -123,6 +123,18 @@ GATES: dict[str, Gate] = {
         plans="plans 01, 02",
         steps=(
             Step(
+                "NetCDF to Zarr pipeline on the synthetic file, cube store, consistency check",
+                "uv run pytest tests/unit/climate/test_cube_build.py"
+                " tests/integration/climate/test_cube_store.py"
+                " tests/integration/climate/test_consistency.py -q",
+                BACKEND,
+            ),
+            Step(
+                "cube store on the Cloud Storage emulator",
+                "make test-integration TESTS=tests/integration/climate/test_gcs_store.py",
+                REPO,
+            ),
+            Step(
                 "per-cell metrics equal the hand-computed 2 by 2 grid",
                 "uv run pytest tests/unit/pricing/test_cells.py"
                 " tests/unit/pricing/test_cells_summary.py -q",
