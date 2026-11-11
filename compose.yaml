@@ -1,0 +1,77 @@
+# Local infrastructure for development and tests: the emulators and Jaeger.
+#
+# The API role, the carrier role and the Vite dev server run on the host (`make dev`) until
+# the container image exists (plan 09); their services are added here then.
+#
+# This file reads no `.env` file and interpolates no variable: the stack starts on a bare
+# copy of the repository, and no secret can reach a container or the output of
+# `docker compose config`.
+name: veranico
+
+services:
+  firestore:
+    # The image has no entrypoint, and the emulator binds localhost unless told otherwise.
+    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:593.0.0-emulators
+    command: ["gcloud", "emulators", "firestore", "start", "--host-port=0.0.0.0:8580"]
+    ports:
+      - "8580:8580"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "--output", "/dev/null", "http://localhost:8580/"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+      start_period: 5s
+
+  storage:
+    # A community emulator: Google publishes none for Cloud Storage. Data lives in the
+    # container and is gone after `docker compose down`.
+    image: fsouza/fake-gcs-server:1.56.1
+    command: ["-scheme", "http", "-port", "8590", "-public-host", "localhost:8590"]
+    ports:
+      - "8590:8590"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--spider", "http://localhost:8590/_internal/healthcheck"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+      start_period: 2s
+
+  jaeger:
+    # Jaeger v2, all-in-one with in-memory storage. Only the UI is published; OTLP (4317,
+    # 4318) is reachable inside the network.
+    image: jaegertracing/jaeger:2.23.0
+    ports:
+      - "8516:16686"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--spider", "http://localhost:13133/status"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+      start_period: 2s
+
+  toxiproxy:
+    # The fault proxy of the failure campaign; only `make test-failure` starts it. Tests
+    # create the proxy through the control API, listening on 8520 and pointing at the
+    # carrier role, which runs on the host until its Compose service exists.
+    profiles: ["failure"]
+    image: ghcr.io/shopify/toxiproxy:2.13.0
+    # A command replaces the image's default arguments, so the bind address is repeated.
+    command: ["-host=0.0.0.0"]
+    ports:
+      - "8520:8520" # listener of the proxy the tests create
+      - "8521:8474" # control API
+    extra_hosts:
+      - "host.docker.internal=host-gateway"
+    healthcheck:
+      # The image has no shell: exec form only.
+      test: ["CMD", "/toxiproxy-cli", "list"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+      start_period: 1s
+
+networks:
+  default:
+    # A fixed name, so a container started outside the project (the k6 container of the
+    # load campaign) can join it.
+    name: veranico
