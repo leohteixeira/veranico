@@ -11,6 +11,17 @@ export const ptBR: Messages = {
   "app.synthetic":
     "Dados climáticos sintéticos: estes números foram gerados para a demonstração e não são histórico de clima.",
 
+  // Map
+  "map.label": "Mapa de {region}",
+  "map.label_empty": "Mapa",
+  "map.basemap_failed": "O mapa de base não carregou. A camada de risco continua visível.",
+  "map.basemap_retry": "Carregar de novo",
+  "basemap.label": "Mapa de base",
+  "basemap.relief": "Relevo",
+  "basemap.satellite": "Satélite",
+  "attribution.label": "Fontes e licenças",
+  "attribution.basemap": "Mapa de base:",
+
   // Languages and themes
   "language.label": "Idioma",
   "language.en": "English",

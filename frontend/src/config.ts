@@ -16,8 +16,12 @@ export interface BasemapConfig {
   urlTemplate: string;
   /** The attribution text the provider requires, shown next to the map. */
   attribution: string;
+  /** Where the attribution links to (the provider asks for a link back). */
+  attributionUrl?: string;
   /** The licence of the layer, shown with the attribution. */
   licenceNote: string;
+  /** The text of the licence. */
+  licenceUrl?: string;
   maxZoom: number;
 }
 
@@ -40,11 +44,37 @@ export const ENV_BASEMAP_RELIEF = "VITE_BASEMAP_RELIEF";
 export const ENV_BASEMAP_SATELLITE = "VITE_BASEMAP_SATELLITE";
 export const ENV_EXAMPLE_COVERS = "VITE_EXAMPLE_COVERS";
 
-// The URL templates, attribution texts and licence notes are written in Task 5 of the web plan,
-// after they are verified in EOX's documentation. They are never stated from memory.
+// Verified on 2026-11-11 in EOX's own documents, not stated from memory:
+// - https://tiles.maps.eox.at/wmts/1.0.0/WMTSCapabilities.xml: the layer identifiers
+//   (`terrain-light_3857`; `s2cloudless-2025_3857`, the most recent year), the resource template
+//   `.../{layer}/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg`, the tile matrix set
+//   `g` (Web Mercator, 256 px tiles), the attribution of each layer and "Proper attribution is
+//   required for any usage".
+// - https://maps.eox.at/: free use, with attribution and a link back to EOX::Maps.
+// - https://cloudless.eox.at/documentation/license: the attribution of Sentinel-2 cloudless and
+//   its CC BY-NC-SA 4.0 licence, which is why the demo is non-commercial.
+// The attribution texts are the providers' wording and are not translated. In Leaflet's template
+// `{z}` is the tile matrix, `{y}` the row and `{x}` the column. Both layers answer over HTTPS.
 const DEFAULT_BASEMAPS: Record<BasemapId, BasemapConfig> = {
-  relief: { urlTemplate: "", attribution: "", licenceNote: "", maxZoom: 0 },
-  satellite: { urlTemplate: "", attribution: "", licenceNote: "", maxZoom: 0 },
+  relief: {
+    urlTemplate:
+      "https://tiles.maps.eox.at/wmts/1.0.0/terrain-light_3857/default/g/{z}/{y}/{x}.jpg",
+    attribution: "Terrain Light { Data © OpenStreetMap contributors and others, Rendering © EOX }",
+    attributionUrl: "https://maps.eox.at/#data",
+    licenceNote: "EOX::Maps, free to use with attribution",
+    licenceUrl: "https://maps.eox.at/",
+    maxZoom: 13,
+  },
+  satellite: {
+    urlTemplate:
+      "https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2025_3857/default/g/{z}/{y}/{x}.jpg",
+    attribution:
+      "EOxCloudless https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2025)",
+    attributionUrl: "https://cloudless.eox.at",
+    licenceNote: "CC BY-NC-SA 4.0",
+    licenceUrl: "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+    maxZoom: 13,
+  },
 };
 
 // The three example covers of the approved preview (`design-reference/vr/engine.js`). The API has
@@ -103,6 +133,11 @@ function isFiniteNumber(value: unknown): value is number {
 
 const MONTH_DAY = /^\d{2}-\d{2}$/;
 
+/** Absent, or an `https:` address: these become links in the attribution line. */
+function isOptionalUrl(value: unknown): value is string | undefined {
+  return value === undefined || (typeof value === "string" && value.startsWith("https://"));
+}
+
 function isBasemap(value: unknown): value is BasemapConfig {
   return (
     isObject(value) &&
@@ -111,6 +146,8 @@ function isBasemap(value: unknown): value is BasemapConfig {
     typeof value.attribution === "string" &&
     value.attribution !== "" &&
     typeof value.licenceNote === "string" &&
+    isOptionalUrl(value.attributionUrl) &&
+    isOptionalUrl(value.licenceUrl) &&
     isFiniteNumber(value.maxZoom)
   );
 }

@@ -16,6 +16,17 @@ export const en = {
   "app.synthetic":
     "Synthetic weather data: these figures are generated for the demo and are not weather history.",
 
+  // Map
+  "map.label": "Map of {region}",
+  "map.label_empty": "Map",
+  "map.basemap_failed": "The basemap did not load. The risk layer is still shown.",
+  "map.basemap_retry": "Load it again",
+  "basemap.label": "Basemap",
+  "basemap.relief": "Relief",
+  "basemap.satellite": "Satellite",
+  "attribution.label": "Sources and licences",
+  "attribution.basemap": "Basemap:",
+
   // Languages and themes
   "language.label": "Language",
   "language.en": "English",
