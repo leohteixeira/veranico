@@ -11,6 +11,8 @@ import hmac
 from datetime import datetime
 from enum import Enum
 
+TIMESTAMP_HEADER = "Veranico-Timestamp"
+SIGNATURE_HEADER = "Veranico-Signature"
 _VERSION_PREFIX = "v1="
 
 
