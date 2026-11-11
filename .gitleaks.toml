@@ -1,0 +1,28 @@
+# gitleaks configuration: the default rules, plus an allowlist of the Git-ignored paths.
+#
+# `gitleaks dir` does not read .gitignore, so without this list a scan of the working tree
+# walks virtual environments, caches, build output and the developer's private .env file.
+# Keep the list in step with .gitignore. `env.example` (no leading dot) is scanned.
+# Every gitleaks call passes --redact.
+title = "veranico"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Git-ignored paths (see .gitignore)"
+paths = [
+    '''(^|/)\.env$''',
+    '''(^|/)\.env\.[^/]+$''',
+    '''(^|/)(\.venv|venv)/''',
+    '''(^|/)\.data/''',
+    '''(^|/)\.evidence/''',
+    '''(^|/)(__pycache__|\.mypy_cache|\.ruff_cache|\.pytest_cache|\.import_linter_cache|\.cache)/''',
+    '''(^|/)[^/]+\.egg-info/''',
+    '''(^|/)(node_modules|\.pnpm-store|\.vite)/''',
+    '''(^|/)(build|dist)/''',
+    '''(^|/)(htmlcov|coverage)/''',
+    '''(^|/)(playwright-report|test-results|blob-report)/''',
+    '''(^|/)backend/tests/evals/logs/''',
+    '''(^|/)(\.idea|\.vscode)/''',
+]

@@ -1,0 +1,7 @@
+# Hooks are not installed automatically. Run `lefthook install` once per clone to enable them.
+pre-commit:
+  jobs:
+    - name: gitleaks
+      run: gitleaks git --pre-commit --staged --redact
+    - name: lint
+      run: make lint
