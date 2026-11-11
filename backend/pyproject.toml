@@ -14,6 +14,7 @@ dependencies = [
     "google-cloud-tasks>=2.26.0",
     "h3>=4.5.0",
     "h5netcdf>=1.8.2",
+    "h5py>=3.16.0",
     "httpx>=0.28.1",
     "numpy>=2.5.4",
     "opentelemetry-api>=1.45.2",
