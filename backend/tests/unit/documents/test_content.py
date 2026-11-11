@@ -8,6 +8,7 @@ import pytest
 from tests.unit.documents.fixtures import dry_spell_quote, rainfall_quote
 from veranico.modules.documents.application.content import (
     CodedFigure,
+    CoordinateFigure,
     CountFigure,
     DateFigure,
     PercentFigure,
@@ -132,8 +133,8 @@ def test_each_figure_is_the_value_object_of_the_quote_unchanged(build: Any) -> N
     assert found["trend_slope"] == QuantityFigure(
         backtest.trend.slope_per_decade, f"{unit}_per_decade"
     )
-    assert found["latitude"] == QuantityFigure(quote.location.lat)
-    assert found["longitude"] == QuantityFigure(quote.location.lon)
+    assert found["latitude"] == CoordinateFigure(quote.location.lat)
+    assert found["longitude"] == CoordinateFigure(quote.location.lon)
     assert found["window"] == WindowFigure(index.window.start, index.window.end)
     assert found["seasons_used"] == CountFigure(backtest.seasons_used)
     assert found["seasons_excluded"] == CountFigure(len(backtest.seasons_excluded))

@@ -146,6 +146,20 @@ def test_a_label_outside_the_font_encoding_still_renders() -> None:
     assert "Limite R$ 75.500,00" in text
 
 
+@pytest.mark.parametrize(
+    ("lat", "english", "portuguese"),
+    [(0.00005, "Latitude 0.0001", "Latitude 0,0001"), (0.0, "Latitude 0.0000", "Latitude 0,0000")],
+)
+def test_a_point_on_the_equator_renders(lat: float, english: str, portuguese: str) -> None:
+    """The equator crosses Brazil: a coordinate near zero must not fail the render."""
+    quote = fixtures.rainfall_quote()
+    location = quote.location.model_copy(update={"lat": lat})
+    on_the_equator = quote.model_copy(update={"location": location})
+
+    assert has_phrase(rendered_text(on_the_equator, "en"), english)
+    assert has_phrase(rendered_text(on_the_equator, "pt-BR"), portuguese)
+
+
 @pytest.mark.req("R-8-2")
 def test_a_long_label_wraps_without_moving_a_figure() -> None:
     quote = fixtures.rainfall_quote()

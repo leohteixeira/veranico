@@ -40,7 +40,12 @@ class RateFigure:
 @dataclass(frozen=True, slots=True)
 class QuantityFigure:
     value: float
-    unit: str | None = None  # catalogue code of the text that carries the unit
+    unit: str  # catalogue code of the text that carries the unit
+
+
+@dataclass(frozen=True, slots=True)
+class CoordinateFigure:
+    degrees: float  # a latitude or a longitude, shown with four decimal places
 
 
 @dataclass(frozen=True, slots=True)
@@ -74,6 +79,7 @@ Figure = (
     | PercentFigure
     | RateFigure
     | QuantityFigure
+    | CoordinateFigure
     | CountFigure
     | DateFigure
     | WindowFigure
@@ -140,8 +146,8 @@ def build_content(quote: QuoteView) -> TermSheetContent:
             _row("quote_id", TextFigure(quote.quote_id)),
             _row("created_at", DateFigure(quote.created_at)),
             _row("location", TextFigure(quote.location.label)),
-            _row("latitude", QuantityFigure(quote.location.lat)),
-            _row("longitude", QuantityFigure(quote.location.lon)),
+            _row("latitude", CoordinateFigure(quote.location.lat)),
+            _row("longitude", CoordinateFigure(quote.location.lon)),
             _row("admin_region", _text_or_not_available(quote.location.admin_region)),
             _row("dataset_id", TextFigure(quote.dataset_id)),
         ),

@@ -3,11 +3,13 @@
 Formatting for a locale is not recomputation: no function here rounds, converts through
 `float` or does arithmetic on a stored value. Money is laid out from the digits of the integer
 centavos, a rate from the characters of its six-place string, a physical quantity from the
-shortest text that reads back as the stored number. A malformed input raises `ValueError`:
-a formatter never guesses.
+shortest text that reads back as the stored number. The one exception is a coordinate, which
+is not a figure of the quote and is shown with four decimal places. A malformed input raises
+`ValueError`: a formatter never guesses.
 """
 
 import calendar
+import math
 import re
 from collections.abc import Sequence
 from datetime import UTC, datetime
@@ -74,7 +76,7 @@ def format_rate(rate: str, locale: Locale) -> str:
 
 
 def format_quantity(value: float, locale: Locale) -> str:
-    """Millimetres, days, a slope or a coordinate, with the digits of the stored number.
+    """Millimetres, days or a slope, with the digits of the stored number.
 
     `repr` gives the shortest decimal text that reads back as the same `float`, so nothing is
     rounded here: `142.5` → `142.5`, `7.0` → `7.0`.
@@ -86,6 +88,18 @@ def format_quantity(value: float, locale: Locale) -> str:
         raise ValueError("a quantity is a finite number in plain decimal notation")
     decimal, _ = _separators(locale)
     return text.replace(".", decimal)
+
+
+def format_coordinate(degrees: float, locale: Locale) -> str:
+    """A latitude or longitude with four decimal places: `-21.55` → `-21.5500`.
+
+    A coordinate is a place, not a figure of the quote: it is shown with the precision of the
+    default location label, so a point on the equator (`0.00005`) has a plain decimal text.
+    """
+    if type(degrees) is not float or not math.isfinite(degrees):
+        raise ValueError("a coordinate is a finite float")
+    decimal, _ = _separators(locale)
+    return f"{degrees:.4f}".replace(".", decimal)
 
 
 def _month_name(month: int, months: Sequence[str]) -> str:

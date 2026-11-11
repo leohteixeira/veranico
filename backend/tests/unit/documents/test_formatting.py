@@ -10,6 +10,7 @@ from typing import Any
 import pytest
 
 from veranico.modules.documents.domain.formatting import (
+    format_coordinate,
     format_date,
     format_day_month,
     format_money,
@@ -132,7 +133,7 @@ def test_a_malformed_rate_is_rejected(malformed: Any) -> None:
         (7.0, "7.0", "7,0"),
         (0.0, "0.0", "0,0"),
         (-12.5, "-12.5", "-12,5"),
-        (-21.2456, "-21.2456", "-21,2456"),  # a coordinate keeps the digits it was stored with
+        (142.55, "142.55", "142,55"),  # a trigger the user typed keeps its digits
     ],
 )
 def test_a_quantity_keeps_the_digits_of_the_stored_number(
@@ -146,6 +147,30 @@ def test_a_quantity_keeps_the_digits_of_the_stored_number(
 def test_a_quantity_that_is_not_a_plain_finite_float_is_rejected(malformed: Any) -> None:
     with pytest.raises(ValueError, match="quantity"):
         format_quantity(malformed, "en")
+
+
+@pytest.mark.parametrize(
+    ("degrees", "english", "portuguese"),
+    [
+        (-21.55, "-21.5500", "-21,5500"),
+        (-12.123456, "-12.1235", "-12,1235"),
+        (0.0, "0.0000", "0,0000"),
+        (0.00005, "0.0001", "0,0001"),  # on the equator: `repr` would give `5e-05`
+        (-0.00001, "-0.0000", "-0,0000"),
+        (-55.0, "-55.0000", "-55,0000"),
+    ],
+)
+def test_a_coordinate_has_four_decimal_places(
+    degrees: float, english: str, portuguese: str
+) -> None:
+    assert format_coordinate(degrees, "en") == english
+    assert format_coordinate(degrees, "pt-BR") == portuguese
+
+
+@pytest.mark.parametrize("malformed", [math.nan, math.inf, 7, "7.0", True, None])
+def test_a_coordinate_that_is_not_a_finite_float_is_rejected(malformed: Any) -> None:
+    with pytest.raises(ValueError, match="coordinate"):
+        format_coordinate(malformed, "en")
 
 
 @pytest.mark.req("R-8-2")
@@ -201,6 +226,7 @@ def test_an_unsupported_locale_is_rejected() -> None:
         lambda: format_percent("0.500000", locale),
         lambda: format_rate("0.500000", locale),
         lambda: format_quantity(1.5, locale),
+        lambda: format_coordinate(1.5, locale),
         lambda: format_day_month("11-15", locale, EN_MONTHS),
         lambda: format_date(datetime(2026, 11, 10, tzinfo=UTC), locale, EN_MONTHS),
     ):

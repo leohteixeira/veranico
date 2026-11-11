@@ -23,6 +23,7 @@ from reportlab.platypus import Flowable, Paragraph, SimpleDocTemplate, Spacer, T
 
 from veranico.modules.documents.application.content import (
     CodedFigure,
+    CoordinateFigure,
     CountFigure,
     DateFigure,
     Figure,
@@ -37,10 +38,10 @@ from veranico.modules.documents.application.content import (
 )
 from veranico.modules.documents.application.i18n.translate import months, translate
 from veranico.modules.documents.domain.formatting import (
+    format_coordinate,
     format_date,
     format_money,
     format_percent,
-    format_quantity,
     format_rate,
     format_window,
 )
@@ -135,9 +136,9 @@ def _cell(figure: Figure, locale: Locale) -> str | Paragraph:
         case RateFigure(rate=rate):
             return format_rate(rate, locale)
         case QuantityFigure(value=value, unit=unit):
-            if unit is None:
-                return format_quantity(value, locale)
             return translate(Coded(code=unit, params={"value": value}), locale)
+        case CoordinateFigure(degrees=degrees):
+            return format_coordinate(degrees, locale)
         case CountFigure(value=count):
             return str(count)
         case DateFigure(at=at):
