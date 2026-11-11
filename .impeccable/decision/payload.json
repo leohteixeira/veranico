@@ -1,0 +1,128 @@
+{
+  "title": "Choose the visual world for Veranico",
+  "question": "The roll assigned Lot Mark. Keep it, take an alternate, or re-roll. This sets type, palette, density and one signature move for the app; the layout (chat beside map, history, quote, approvals) is fixed by the brief.",
+  "options": [
+    {
+      "id": "assigned",
+      "label": "Lot Mark",
+      "kicker": "THE ROLL",
+      "lineage": "Stencilled export coffee sacks and the cooperative grading room",
+      "thesis": "Every quote is a marked lot: its origin, season and number travel with every figure it produced.",
+      "palette": ["#1f3fa0", "#f3efe6", "#17140f", "#d2ae77", "#c7361f", "#2f7d4f"],
+      "materials": ["stencil ink with bridges", "manila lot tags", "grading-tray cobalt", "woven stripe"],
+      "viewport": "Cobalt top bar with region, language and access state. Chat column on the left with collapsed tool cards. Work area on the right with tabs Map, History, Quote, Approvals; the map opens on the Sul de Minas grid coloured by trigger frequency, legend and season slider below. The insured cell wears a stencilled outline and a manila lot tag carrying the quote id.",
+      "risk": "A stencil face is loud; it must stay on identifiers only, or the working screen turns into packaging.",
+      "raised": [
+        { "from": "challenger-centre-rail", "raise": "Every lot tag in the chat is keyed to its evidence: hovering one lights the same cell, bar and quote row in the work area." },
+        { "from": "challenger-transit", "raise": "One mark burns brightest: only the insured cell and its quote use full-saturation ink, everything else sits a step back." },
+        { "from": "challenger-variable-specimen", "raise": "The season slider remaps the whole grid continuously, with a live readout of year, index value and payout." },
+        { "from": "challenger-j-card", "raise": "Every per-season row sets its figure against one hard right margin, with the running total beneath." }
+      ]
+    },
+    {
+      "id": "model-pick",
+      "label": "Zoneamento",
+      "kicker": "IMPECCABLE’S PICK",
+      "lineage": "Brazil's official agricultural climate-risk zoning sheets (ZARC)",
+      "thesis": "The risk sheet brokers already trust, made live: fixed risk classes on the map and the coverage window drawn as a ribbon of ten-day periods.",
+      "palette": ["#0f3b3a", "#eef3ee", "#3f9b6a", "#f2c230", "#e0652a", "#1b2424"],
+      "materials": ["ministry map inks", "ten-day period ribbon", "class legend table"],
+      "viewport": "Deep teal top bar. Chat on the left, work area on the right. The map shows cells in three fixed risk classes with a ranked legend; above it a 36-cell ribbon of ten-day periods marks the coverage window, and the same ribbon repeats in chat, chart, quote and term sheet.",
+      "risk": "Also where most agricultural dashboards land: it can read as a government GIS portal."
+    },
+    {
+      "id": "challenger-crouwel",
+      "label": "Cell Specimen",
+      "verdict": "competitive",
+      "lineage": "Wim Crouwel's grid-constructed type specimens",
+      "thesis": "The ERA5 cell is the design unit: the interface is built on a visible construction grid whose module is one map cell.",
+      "palette": ["#ffffff", "#0b0b0c", "#9db7e8", "#ff4a1c"],
+      "materials": ["construction-grid hairlines", "grid-built numerals", "one accent plane"],
+      "viewport": "White shell on faint blue gridlines. Chat left, work area right, every panel edge snapping to the cell module. Trigger frequency and premium are set in monumental grid-built numerals; a grid toggle shows or hides the cell lattice on the map.",
+      "case": "Wins on clarity because the grid is the mechanism itself; loses on identification, since a broker does not see their world in a type specimen.",
+      "risk": "Monumental numerals can crowd a working screen, and white with one accent drifts toward a grey default.",
+      "hero": "https://impeccable.style/worlds/cards/crouwel-grid-specimen-hero.webp"
+    },
+    {
+      "id": "challenger-orienteering",
+      "label": "Course over Terrain",
+      "verdict": "competitive",
+      "lineage": "Orienteering maps drawn to the ISOM colour standard",
+      "thesis": "Data is fixed terrain underneath; the insured farm and its active quote ride above in one reserved purple that nothing else may use.",
+      "palette": ["#ffffff", "#f6c544", "#8a9a3b", "#b5651d", "#2f7fc1", "#a3239e"],
+      "materials": ["ISOM inks", "ranked symbol legend", "numbered control circles"],
+      "viewport": "White shell with a narrow legend column. The map carries the cell grid in a fixed ink language; the insured point, its cell and the quote are drawn in purple. The six steps of the flow appear as a numbered course that checks off as the agent completes them.",
+      "case": "Holds clarity for the map and the workflow; loses on identification, because the sport is unfamiliar to this audience.",
+      "risk": "ISOM terrain colours compete with the data ramp on the same map and need strict separation.",
+      "hero": "https://impeccable.style/worlds/cards/notation-diagram-systems-orienteering-map-hero.webp"
+    },
+    {
+      "id": "challenger-centre-rail",
+      "label": "Keyed Rail",
+      "verdict": "declined",
+      "lineage": "Centre-rail reference editions",
+      "thesis": "Chat and evidence twinned around a narrow rail of keys.",
+      "palette": ["#efe8d8", "#1a1816", "#d6402b"],
+      "materials": ["hairline rules", "rubric keys"],
+      "viewport": "Two columns around a centre rail where each tool call drops a key.",
+      "case": "Serves the provenance proof but not the map, and a scholarly page is far from a broker's desk.",
+      "risk": "Bone paper, serif and vermilion is the look this category of tool defaults to.",
+      "kept": "Every claim keyed to its evidence across the gutter.",
+      "hero": "https://impeccable.style/worlds/cards/rw-centre-rail-reference-setting-hero.webp"
+    },
+    {
+      "id": "challenger-transit",
+      "label": "Midnight Diagram",
+      "verdict": "declined",
+      "lineage": "Enamel metropolitan rail maps",
+      "thesis": "The network as a diagram of disciplined coloured lines.",
+      "palette": ["#0e1b3d", "#f4f4f0", "#e0312b", "#2d5be3", "#f0a81c", "#2e9e5b"],
+      "materials": ["enamel ground", "line inks"],
+      "viewport": "A dark diagram where the chosen line burns brightest.",
+      "case": "A transit diagram discards geographic distance, and distance is exactly what basis risk is.",
+      "risk": "Dark ground with bright lines reads as a generic climate dashboard.",
+      "kept": "One chosen mark burning brightest.",
+      "hero": "https://impeccable.style/worlds/cards/wayfinding-cartography-signage-midnight-transit-diagram-hero.webp"
+    },
+    {
+      "id": "challenger-variable-specimen",
+      "label": "Axis Specimen",
+      "verdict": "declined",
+      "lineage": "Interactive variable-font specimens",
+      "thesis": "One slider morphs a whole grid in real time.",
+      "palette": ["#fafaf7", "#0c0c0c", "#3a5bff"],
+      "materials": ["paper white", "ink black", "monospace readout"],
+      "viewport": "A giant figure and a grid that breathes under a slider.",
+      "case": "The slider-drives-grid interaction fits the season slider, but the world offers little beyond it and no link to the audience.",
+      "risk": "Paper, ink and one accent is a grey screen with a highlight.",
+      "kept": "One control remapping the whole grid, with a live readout.",
+      "hero": "https://impeccable.style/worlds/cards/variable-font-specimen-hero.webp"
+    },
+    {
+      "id": "challenger-j-card",
+      "label": "Inlay Card",
+      "verdict": "declined",
+      "lineage": "Hand-lettered cassette inlay cards",
+      "thesis": "Lists ruled by hand, running times tight to the margin.",
+      "palette": ["#fdfdf8", "#1f3f9e", "#8b8f97", "#d2232a"],
+      "materials": ["ballpoint on lined stock", "brand stripe"],
+      "viewport": "A folded sheet of ruled tracklists.",
+      "case": "Handwriting undermines trust in priced figures, and the audience has no tie to it.",
+      "risk": "Reads as novelty on a pricing tool.",
+      "kept": "Figures set tight against one hard right margin.",
+      "hero": "https://impeccable.style/worlds/cards/vernacular-ephemera-cassette-j-card-hero.webp"
+    }
+  ],
+  "reroll": { "registers": ["safer", "bolder"] },
+  "buildPath": { "value": "code" },
+  "canon": true,
+  "canonCard": {
+    "label": "The category standard",
+    "thesis": "The climate-risk dashboard this category ships, executed cleanly.",
+    "palette": ["#0b1220", "#111a2e", "#19c3b1", "#e6edf7"],
+    "materials": ["dark navy shell", "teal accent", "floating map cards"],
+    "viewport": "Dark navy shell, map filling the right side with rounded stat cards over it, chat in a left drawer, teal for every highlight.",
+    "risk": "Indistinguishable from other climate and insurance dashboards by design."
+  },
+  "steer": true
+}
