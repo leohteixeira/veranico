@@ -118,7 +118,22 @@ GATES: dict[str, Gate] = {
             ),
         ),
     ),
-    "m2": Gate(plans="plans 01, 02"),
+    "m2": Gate(
+        plans="plans 01, 02",
+        steps=(
+            Step(
+                "per-cell metrics equal the hand-computed 2 by 2 grid",
+                "uv run pytest tests/unit/pricing/test_cells.py"
+                " tests/unit/pricing/test_cells_summary.py -q",
+                BACKEND,
+            ),
+            Step(
+                "per-cell metrics on a full-size cube in under one second",
+                "uv run pytest tests/integration/pricing/test_cell_metrics_speed.py -m slow -q",
+                BACKEND,
+            ),
+        ),
+    ),
     "m3": Gate(plans="plans 03, 04, 05, 06"),
     "m4": Gate(plans="plan 08"),
     "m5": Gate(plans="plan 09"),
