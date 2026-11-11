@@ -94,6 +94,18 @@ GATES: dict[str, Gate] = {
                 REPO,
             ),
             Step(
+                "climate point path tests",
+                "uv run pytest tests/unit/climate tests/integration/climate tests/failure/climate"
+                ' tests/api/climate -m "not live and not slow and not integration" -q',
+                BACKEND,
+            ),
+            Step(
+                "ingest caches one real point (open without network)",
+                "uv run python scripts/ingest.py --lat=-9.39 --lon=-40.5",
+                BACKEND,
+                may_be_open=True,
+            ),
+            Step(
                 "pricing unit and API tests",
                 "uv run pytest tests/unit/pricing tests/api/pricing -q",
                 BACKEND,
