@@ -57,11 +57,13 @@ def test_every_module_has_a_snapshot_and_nothing_else_does() -> None:
 
 
 @pytest.mark.parametrize("module", MODULES)
+@pytest.mark.req("R-3.1-14")
 def test_contract_defines_exactly_the_frozen_names_in_order(module: str) -> None:
     assert list(definitions(contract_source(module))) == list(definitions(snapshot_source(module)))
 
 
 @pytest.mark.parametrize("module", MODULES)
+@pytest.mark.req("R-3.1-14")
 def test_every_definition_equals_its_frozen_form(module: str) -> None:
     actual = definitions(contract_source(module))
     frozen = definitions(snapshot_source(module))

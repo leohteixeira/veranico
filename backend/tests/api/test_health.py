@@ -18,6 +18,7 @@ def paths(app: FastAPI) -> set[str]:
 
 
 @pytest.mark.parametrize("role", ["api", "carrier"])
+@pytest.mark.req("R-11.2-13", "R-11.4-2")
 async def test_each_role_answers_200_on_healthz_and_readyz(role: str) -> None:
     app = create_app(settings_for_tests(role, firestore_emulator_host=EMULATOR))  # type: ignore[arg-type]  # parametrized literal
 
@@ -29,6 +30,7 @@ async def test_each_role_answers_200_on_healthz_and_readyz(role: str) -> None:
     assert (ready.status_code, ready.json()) == (200, {"status": "ready"})
 
 
+@pytest.mark.req("R-3-2")
 async def test_carrier_role_exposes_no_api_route() -> None:
     app = create_app(settings_for_tests("carrier", firestore_emulator_host=EMULATOR))
 
@@ -38,6 +40,7 @@ async def test_carrier_role_exposes_no_api_route() -> None:
         assert (await http.get("/api/v1/regions")).status_code == 404
 
 
+@pytest.mark.req("R-3-2")
 async def test_api_role_exposes_no_carrier_route() -> None:
     app = create_app(settings_for_tests("api", firestore_emulator_host=EMULATOR))
 

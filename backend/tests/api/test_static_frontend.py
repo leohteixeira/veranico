@@ -31,6 +31,7 @@ def client(dist: Path, frame_ancestors: list[str], role: str = "api") -> httpx.A
     return httpx.AsyncClient(transport=transport, base_url="http://test")
 
 
+@pytest.mark.req("R-17-1")
 async def test_built_frontend_is_served_at_the_root(dist: Path) -> None:
     async with client(dist, []) as http:
         index = await http.get("/", headers=HTML)
@@ -42,6 +43,7 @@ async def test_built_frontend_is_served_at_the_root(dist: Path) -> None:
     assert asset.text == "console.log('veranico')"
 
 
+@pytest.mark.req("R-12.5-2")
 async def test_embed_route_falls_back_to_index_and_names_the_configured_origins(dist: Path) -> None:
     origins = ["http://127.0.0.1:3450", "https://leohteixeira.com"]
     async with client(dist, origins) as http:
@@ -54,6 +56,7 @@ async def test_embed_route_falls_back_to_index_and_names_the_configured_origins(
     )
 
 
+@pytest.mark.req("R-12.5-2")
 async def test_embed_route_may_be_framed_by_nobody_when_no_origin_is_configured(dist: Path) -> None:
     async with client(dist, []) as http:
         embed = await http.get("/embed/map", headers=HTML)
@@ -65,6 +68,7 @@ async def test_embed_route_may_be_framed_by_nobody_when_no_origin_is_configured(
 @pytest.mark.parametrize(
     "path", ["/", "/assets/app.js", "/some/client/route", "/embed", "/embed/map/other", "/healthz"]
 )
+@pytest.mark.req("R-12.5-2")
 async def test_every_other_response_may_be_framed_by_nobody(dist: Path, path: str) -> None:
     async with client(dist, ["http://127.0.0.1:3450"]) as http:
         response = await http.get(path, headers=HTML)

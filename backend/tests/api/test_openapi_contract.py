@@ -289,10 +289,35 @@ def assert_surface(document: dict[str, Any], expected: list[Route]) -> None:
     assert actual == sorted(expected)
 
 
+@pytest.mark.req(
+    "R-11-1",
+    "R-11.1-1",
+    "R-11.1-2",
+    "R-11.1-3",
+    "R-11.1-4",
+    "R-11.1-5",
+    "R-11.2-1",
+    "R-11.2-2",
+    "R-11.2-3",
+    "R-11.2-4",
+    "R-11.2-5",
+    "R-11.2-6",
+    "R-11.2-7",
+    "R-11.2-8",
+    "R-11.2-9",
+    "R-11.2-10",
+    "R-11.2-11",
+    "R-11.2-12",
+    "R-11.2-13",
+    "R-11.2-14",
+    "R-11.3-1",
+    "R-11.3-2",
+)
 def test_api_role_serves_exactly_the_routes_of_the_contract(api_document: dict[str, Any]) -> None:
     assert_surface(api_document, API_ROUTES + HEALTH_ROUTES)
 
 
+@pytest.mark.req("R-11.4-1", "R-11.4-2")
 def test_carrier_role_serves_exactly_its_routes(carrier_document: dict[str, Any]) -> None:
     assert_surface(carrier_document, CARRIER_ROUTES + HEALTH_ROUTES)
 
@@ -305,6 +330,7 @@ def test_operation_ids_are_unique(
         assert len(ids) == len(set(ids))
 
 
+@pytest.mark.req("R-11.1-1")
 def test_parameters_outside_the_path_are_the_documented_ones(
     api_document: dict[str, Any], carrier_document: dict[str, Any]
 ) -> None:
@@ -361,6 +387,7 @@ def test_stream_event_models_are_in_the_components(api_document: dict[str, Any])
     ]
 
 
+@pytest.mark.req("R-11-2")
 def test_problem_document_is_in_the_components_and_is_every_error_answer(
     api_document: dict[str, Any], carrier_document: dict[str, Any]
 ) -> None:

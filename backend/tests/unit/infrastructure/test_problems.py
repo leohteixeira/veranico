@@ -14,6 +14,7 @@ def _body(response: object) -> dict[str, object]:
     return json.loads(response.body)  # type: ignore[attr-defined, no-any-return]  # JSONResponse.body
 
 
+@pytest.mark.req("R-11-2")
 def test_domain_error_becomes_the_problem_document() -> None:
     response = problem_response(
         errors.InvalidCoverError("exit must be below the trigger"), "abc123"
@@ -89,6 +90,7 @@ async def _call(method: str, path: str, **kwargs: object) -> httpx.Response:
         return await client.request(method, path, **kwargs)  # type: ignore[arg-type]  # test passthrough
 
 
+@pytest.mark.req("R-11-2")
 async def test_handler_maps_a_raised_domain_error() -> None:
     response = await _call("GET", "/missing")
 
@@ -106,6 +108,7 @@ async def test_a_part_that_has_not_landed_is_not_implemented_and_not_a_server_er
     assert response.json()["code"] == "not_implemented"
 
 
+@pytest.mark.req("R-11-2")
 async def test_request_validation_error_becomes_invalid_arguments() -> None:
     response = await _call("POST", "/quotes", json={"limit_cents": "a private value"})
 

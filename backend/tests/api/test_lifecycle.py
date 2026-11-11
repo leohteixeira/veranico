@@ -197,6 +197,7 @@ async def test_carrier_catalog_forwarder_asks_the_carriers_facade_each_time() ->
     assert container.carriers is not None
 
 
+@pytest.mark.req("R-17-6")
 async def test_sigterm_sets_the_shutdown_event_turns_readyz_503_and_reaches_the_server() -> None:
     received: list[int] = []
 
@@ -233,6 +234,7 @@ def _free_port() -> int:
         return int(probe.getsockname()[1])
 
 
+@pytest.mark.req("R-17-6")
 def test_uvicorn_exits_cleanly_on_sigterm_with_the_handler_in_front() -> None:
     """The real server: our handler runs first and uvicorn's own shutdown still happens."""
     port = _free_port()

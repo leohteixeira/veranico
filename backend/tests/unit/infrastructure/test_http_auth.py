@@ -104,6 +104,7 @@ async def issue_key(client: httpx.AsyncClient, access: FakeAccessFacade) -> tupl
 # browser_principal
 
 
+@pytest.mark.req("R-10.1-1")
 async def test_first_request_gets_a_workspace_and_the_cookie_with_its_attributes() -> None:
     client, _ = build(
         settings=settings_for_tests(
@@ -300,6 +301,7 @@ async def test_any_principal_with_a_bad_bearer_never_falls_back_to_the_cookie(
 # visitor_ref
 
 
+@pytest.mark.req("R-10.3-2")
 async def test_visitor_ref_passes_the_socket_peer_and_the_allowance_code() -> None:
     client, access = build()
 
@@ -342,6 +344,7 @@ async def test_visitor_ref_takes_the_entry_the_platform_appended(
     assert access.calls == [("visitor", (expected, None))]
 
 
+@pytest.mark.req("R-10.3-7")
 async def test_visitor_ref_leaves_no_address_or_code_in_a_log_record(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -399,6 +402,7 @@ async def test_token_mode_accepts_the_configured_token() -> None:
         {"Authorization": "Basic internal-token"},
     ],
 )
+@pytest.mark.req("R-11.3-1", "R-11.3-2")
 async def test_token_mode_rejects_a_missing_or_wrong_token(headers: dict[str, str]) -> None:
     client, _ = build(settings=_token_settings())
 
@@ -430,6 +434,7 @@ async def test_oidc_mode_accepts_the_invoker_with_the_configured_audience() -> N
     ],
     ids=["missing", "wrong-audience", "wrong-account", "unverified-email", "garbage", "not-bearer"],
 )
+@pytest.mark.req("R-11.3-1", "R-11.3-2")
 async def test_oidc_mode_rejects_every_other_caller(authorization: str | None) -> None:
     client, _ = build(settings=_oidc_settings())
     headers = {} if authorization is None else {"Authorization": authorization}
