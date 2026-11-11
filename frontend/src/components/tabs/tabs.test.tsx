@@ -56,7 +56,12 @@ describe("tabs card [R-12.1-4]", () => {
     inEnglish(<Tabs />);
     const list = screen.getByRole("tablist", { name: "Details" });
     const tabs = within(list).getAllByRole("tab");
-    expect(tabs.map((tab) => tab.textContent)).toEqual(["Risk", "History", "Quote", "Approvals1"]);
+    expect(tabs.map((tab) => tab.textContent)).toEqual([
+      "Risk",
+      "History",
+      "Quote",
+      "Approvals1 1 pending",
+    ]);
     const selected = () => tabs.map((tab) => tab.getAttribute("aria-selected"));
     const stops = () => tabs.map((tab) => tab.tabIndex);
     expect(selected()).toEqual(["true", "false", "false", "false"]);

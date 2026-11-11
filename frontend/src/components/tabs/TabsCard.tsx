@@ -77,7 +77,17 @@ export function TabsCard({ tab, onTab, panels, badges, className }: TabsCardProp
               }}
             >
               {translate(locale, `tab.${id}`)}
-              {badge > 0 && <span className="tabs__badge num">{badge}</span>}
+              {badge > 0 && (
+                <span className="tabs__badge num" data-count={badge}>
+                  <span aria-hidden="true">{badge}</span>
+                  <span className="sr-only">
+                    {" "}
+                    {translate(locale, badge === 1 ? "tabs.badge.one" : "tabs.badge.other", {
+                      count: badge,
+                    })}
+                  </span>
+                </span>
+              )}
             </button>
           );
         })}
