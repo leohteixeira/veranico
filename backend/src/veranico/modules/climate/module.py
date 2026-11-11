@@ -13,12 +13,14 @@ import httpx
 from fastapi import APIRouter
 
 from veranico.modules.climate.application.ensure_history import EnsureHistory
+from veranico.modules.climate.application.export_evidence import ExportEvidence
 from veranico.modules.climate.application.facade import Climate
 from veranico.modules.climate.application.ports import WeatherStore
 from veranico.modules.climate.application.resolve_location import ResolveLocation
 from veranico.modules.climate.contracts import ClimateFacade
 from veranico.modules.climate.http.router import build_router
 from veranico.modules.climate.infrastructure.local_store import LocalWeatherStore
+from veranico.modules.climate.infrastructure.netcdf import encode_evidence
 from veranico.modules.climate.infrastructure.open_meteo import OpenMeteoArchive
 from veranico.modules.climate.infrastructure.open_meteo_geocoding import OpenMeteoGeocoder
 from veranico.shared.infrastructure.blobs import BlobStore
@@ -65,4 +67,5 @@ def assemble(
         store=store,
         resolve=ResolveLocation(geocoder),
         ensure=EnsureHistory(store, archive, clock, first_year=settings.first_year),
+        export=ExportEvidence(store, encode_evidence),
     )

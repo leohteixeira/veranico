@@ -1,6 +1,7 @@
 """The implementation of `ClimateFacade`: thin, it delegates to the use cases and the store."""
 
 from veranico.modules.climate.application.ensure_history import EnsureHistory
+from veranico.modules.climate.application.export_evidence import ExportEvidence
 from veranico.modules.climate.application.ports import WeatherStore
 from veranico.modules.climate.application.resolve_location import ResolveLocation
 from veranico.modules.climate.contracts import (
@@ -22,11 +23,16 @@ REAL_CUBE_SOURCE = "era5-land/cds"
 
 class Climate:
     def __init__(
-        self, store: WeatherStore, resolve: ResolveLocation, ensure: EnsureHistory
+        self,
+        store: WeatherStore,
+        resolve: ResolveLocation,
+        ensure: EnsureHistory,
+        export: ExportEvidence,
     ) -> None:
         self._store = store
         self._resolve = resolve
         self._ensure = ensure
+        self._export = export
 
     async def resolve_location(
         self, query: str | None, lat: float | None, lon: float | None
@@ -51,7 +57,7 @@ class Climate:
         raise DatasetNotFoundError  # no cube can be installed before plan task 9
 
     async def export_evidence(self, request: EvidenceRequest) -> bytes:
-        raise NotImplementedError  # plan task 7
+        return await self._export(request)
 
     async def _region(self, definition: RegionDef) -> Region:
         """The region as served: synthetic unless its installed cube is the real one.

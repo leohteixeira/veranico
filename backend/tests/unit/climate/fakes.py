@@ -11,11 +11,13 @@ from dataclasses import dataclass, field
 import numpy as np
 
 from veranico.modules.climate.application.cells import h3_cell_of
-from veranico.modules.climate.application.ports import CubeSource, PointFetch
+from veranico.modules.climate.application.ports import CubeSource, PointFetch, Provenance
 from veranico.modules.climate.contracts import DailySeries, DatasetRef, GridPoint
 from veranico.modules.climate.domain.validation import validate_daily
 from veranico.shared.kernel.errors import DatasetNotFoundError
 from veranico.shared.kernel.ids import DatasetId
+
+FAKE_CHECKSUM = "sha256:in-memory"
 
 
 def year_days(first_year: int, last_year: int) -> np.ndarray:
@@ -86,6 +88,10 @@ class InMemoryWeatherStore:
         if dataset_id not in self.series:
             raise DatasetNotFoundError
         return self.series[dataset_id]
+
+    async def provenance(self, dataset_id: DatasetId) -> Provenance:
+        await self.read_series(dataset_id)
+        return Provenance(request=self.requests.get(dataset_id, {}), checksum=FAKE_CHECKSUM)
 
     async def write_point(
         self, series: DailySeries, requested_h3: str, request: Mapping[str, str]

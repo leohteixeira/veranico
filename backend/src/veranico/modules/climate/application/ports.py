@@ -1,6 +1,6 @@
 """Ports of the climate application layer; the adapters live in `infrastructure/`."""
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Literal, Protocol
 
@@ -10,6 +10,16 @@ from veranico.modules.climate.contracts import DailySeries, DatasetRef, GridPoin
 from veranico.shared.kernel.ids import DatasetId
 
 CubeSource = Literal["era5-land/cds", "synthetic"]
+
+
+# Encodes a daily slice with its global attributes as NetCDF bytes. It blocks.
+EncodeEvidence = Callable[[np.ndarray, np.ndarray, Mapping[str, str]], bytes]
+
+
+@dataclass(frozen=True, slots=True)
+class Provenance:
+    request: Mapping[str, str]  # what was asked of the source
+    checksum: str  # the manifest's checksum of the stored data
 
 
 @dataclass(frozen=True, slots=True)
@@ -71,6 +81,10 @@ class WeatherStore(Protocol):
     async def describe(self, dataset_id: DatasetId) -> DatasetRef: ...
 
     async def read_series(self, dataset_id: DatasetId) -> DailySeries: ...
+
+    async def provenance(self, dataset_id: DatasetId) -> Provenance:
+        """Where the dataset's values came from, as its manifest records it."""
+        ...
 
     async def write_point(
         self, series: DailySeries, requested_h3: str, request: Mapping[str, str]

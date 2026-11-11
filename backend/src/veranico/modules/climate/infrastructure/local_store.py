@@ -17,7 +17,7 @@ from pathlib import Path
 from pydantic import BaseModel
 
 from veranico.modules.climate.application.cells import h3_cell_of
-from veranico.modules.climate.application.ports import CubeSource
+from veranico.modules.climate.application.ports import CubeSource, Provenance
 from veranico.modules.climate.contracts import DailySeries, DatasetRef
 from veranico.modules.climate.domain.validation import validate_daily
 from veranico.modules.climate.infrastructure import zarr_io
@@ -53,6 +53,10 @@ class LocalWeatherStore:
 
     async def read_series(self, dataset_id: DatasetId) -> DailySeries:
         return await asyncio.to_thread(self._read_series, dataset_id)
+
+    async def provenance(self, dataset_id: DatasetId) -> Provenance:
+        manifest = await asyncio.to_thread(self._point_manifest, dataset_id)
+        return Provenance(request=manifest.request, checksum=manifest.checksum)
 
     async def write_point(
         self, series: DailySeries, requested_h3: str, request: Mapping[str, str]
