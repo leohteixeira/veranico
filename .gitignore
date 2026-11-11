@@ -39,6 +39,12 @@ blob-report/
 backend/tests/evals/logs/
 .evidence/
 
+# Terraform: provider binaries, state and variable values
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+
 # Editors and operating system
 .idea/
 .vscode/

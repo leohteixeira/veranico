@@ -24,5 +24,14 @@ paths = [
     '''(^|/)(htmlcov|coverage)/''',
     '''(^|/)(playwright-report|test-results|blob-report)/''',
     '''(^|/)backend/tests/evals/logs/''',
+    '''(^|/)\.terraform/''',
+    '''(^|/)[^/]+\.tfstate(\.[^/]+)?$''',
+    '''(^|/)[^/]+\.tfvars$''',
     '''(^|/)(\.idea|\.vscode)/''',
+]
+
+[[allowlists]]
+description = "Sentinel values of the redaction test: invented markers, searched for in spans and logs"
+regexes = [
+    '''^sentinel-[a-z]+-[0-9a-f]{6}$''',
 ]
