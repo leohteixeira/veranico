@@ -5,9 +5,34 @@ import pytest
 
 from veranico.modules.pricing.domain.errors import InvalidCoverError
 from veranico.modules.pricing.domain.index import IndexType
-from veranico.modules.pricing.domain.payout import payout_fraction, validate_cover, validate_index
+from veranico.modules.pricing.domain.payout import (
+    payout_amounts,
+    payout_fraction,
+    validate_cover,
+    validate_index,
+)
 
 LIMIT_CENTS = 30_000_000
+
+
+@pytest.mark.req("R-5.3-1")
+def test_payout_amounts_are_the_limit_times_the_fraction_for_rainfall() -> None:
+    # trigger 100, exit 40: nothing, nothing, a quarter, half, the limit, the limit
+    amounts = payout_amounts(
+        "rainfall_below", [130.0, 100.0, 85.0, 70.0, 40.0, 20.0], 100.0, 40.0, LIMIT_CENTS
+    )
+
+    assert amounts.tolist() == pytest.approx(
+        [0, 0, 7_500_000, 15_000_000, 30_000_000, 30_000_000], abs=1e-6
+    )
+
+
+@pytest.mark.req("R-5.3-2")
+def test_payout_amounts_are_the_limit_times_the_fraction_for_dry_spells() -> None:
+    # trigger 10, exit 25, limit R$ 1,000.00: 16 days pays two fifths
+    amounts = payout_amounts("dry_spell_above", [8.0, 16.0, 40.0], 10.0, 25.0, 100_000)
+
+    assert amounts.tolist() == pytest.approx([0, 40_000, 100_000], abs=1e-6)
 
 
 def payout_cents(index_type: IndexType, index: float, trigger: float, exit: float) -> float:

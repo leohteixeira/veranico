@@ -407,7 +407,7 @@ async def test_rising_trend_reports_the_increasing_direction() -> None:
     }
 
 
-@pytest.mark.parametrize("source", ["synthetic", "era5-land/open-meteo"])
+@pytest.mark.parametrize("source", ["synthetic", "era5-land/cds", "era5/open-meteo"])
 async def test_data_source_assumption_reports_the_source_of_the_series(
     source: builders.Source,
 ) -> None:
@@ -545,13 +545,24 @@ async def test_simulation_size_out_of_bounds_is_invalid_arguments(n: int) -> Non
         await pricing.price(dataset_id, RAINFALL, SimulationOptions(n=n))
 
 
-async def test_top_n_below_one_is_invalid_arguments() -> None:
+@pytest.mark.req("R-9.4-5")
+@pytest.mark.parametrize("top_n", [0, -1, 11])
+async def test_top_n_outside_one_to_ten_is_invalid_arguments(top_n: int) -> None:
     pricing, dataset_id, _ = facade_over(builders.daily_series(seed=0))
 
     with pytest.raises(InvalidArgumentsError):
         await pricing.extreme_seasons(
-            dataset_id, "rainfall_below", Window(start="01-11", end="01-20"), 0
+            dataset_id, "rainfall_below", Window(start="01-11", end="01-20"), top_n
         )
+
+
+@pytest.mark.req("R-9.4-5")
+async def test_top_n_of_one_and_of_ten_are_accepted() -> None:
+    pricing, dataset_id, _ = facade_over(builders.daily_series(seed=0))
+    window = Window(start="01-11", end="01-20")
+
+    assert len(await pricing.extreme_seasons(dataset_id, "rainfall_below", window, 1)) == 1
+    assert len(await pricing.extreme_seasons(dataset_id, "rainfall_below", window, 10)) == 10
 
 
 async def test_cell_metrics_is_not_implemented_before_task_13() -> None:

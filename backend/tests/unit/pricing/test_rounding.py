@@ -5,9 +5,32 @@ import re
 
 import pytest
 
-from veranico.modules.pricing.domain.rounding import to_cents, to_rate, to_tenth
+from veranico.modules.pricing.domain.rounding import (
+    cents_difference,
+    to_cents,
+    to_rate,
+    to_tenth,
+)
 
 RATE_PATTERN = re.compile(r"^-?\d+\.\d{6}$")  # the kernel's `Rate`
+
+
+@pytest.mark.req("R-5.7-1")
+@pytest.mark.parametrize(
+    ("simulated", "historical", "gap"),
+    [
+        (1_250_000, 1_000_000, 250_000),  # simulation above history
+        (900_000, 1_000_000, -100_000),  # below: the gap may be negative
+        (1_000_000, 1_000_000, 0),
+    ],
+)
+def test_cents_difference_is_the_first_figure_minus_the_second(
+    simulated: int, historical: int, gap: int
+) -> None:
+    result = cents_difference(simulated, historical)
+
+    assert result == gap
+    assert type(result) is int
 
 
 @pytest.mark.req("R-5.7-1")

@@ -11,7 +11,7 @@ from scipy import stats
 
 from veranico.modules.pricing.domain.errors import InsufficientHistoryError
 from veranico.modules.pricing.domain.index import IndexType, SeasonIndex
-from veranico.modules.pricing.domain.payout import payout_fraction, validate_cover
+from veranico.modules.pricing.domain.payout import payout_amounts, validate_cover
 
 SIGNIFICANCE_LEVEL = 0.05
 YEARS_PER_DECADE = 10.0
@@ -87,7 +87,7 @@ def backtest(
     seasons_used = len(season_index.seasons)
     require_history(seasons_used, min_seasons)
     values = season_index.values
-    payouts = limit_cents * payout_fraction(index_type, values, trigger, exit)
+    payouts = payout_amounts(index_type, values, trigger, exit, limit_cents)
     seasons_paying = int(np.count_nonzero(paying(index_type, values, trigger)))
     max_payout = float(payouts.max())
     return BacktestFigures(

@@ -18,7 +18,7 @@ from scipy import stats
 
 from veranico.modules.pricing.domain.backtest import paying
 from veranico.modules.pricing.domain.index import IndexType
-from veranico.modules.pricing.domain.payout import payout_fraction
+from veranico.modules.pricing.domain.payout import payout_amounts
 
 SimulationMethod = Literal["gamma_mle", "bootstrap"]
 
@@ -89,7 +89,7 @@ def simulate(
     else:
         method = "bootstrap"
         simulated = generator.choice(history, size=n, replace=True)
-    payouts = limit_cents * payout_fraction(index_type, simulated, trigger, exit)
+    payouts = payout_amounts(index_type, simulated, trigger, exit, limit_cents)
     seasons_paying = int(np.count_nonzero(paying(index_type, simulated, trigger)))
     return SimulationFigures(
         method=method,

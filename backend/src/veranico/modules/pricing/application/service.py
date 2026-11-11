@@ -33,6 +33,8 @@ from veranico.shared.kernel.money import Money
 # A simulation draws `n` float64 values at once. The bound keeps one request from asking
 # for gigabytes of memory; it is ten times the default size.
 MAX_SIMULATION_N = 1_000_000
+# The `find_extreme_seasons` tool takes 1 to 10 seasons (contracts section 8).
+MAX_TOP_N = 10
 
 
 def check_index(index: IndexDefinition) -> None:
@@ -99,8 +101,8 @@ class PricingService:
         self, dataset_id: DatasetId, index_type: IndexType, window: Window, top_n: int
     ) -> list[ExtremeSeason]:
         parse_window(window.start, window.end)
-        if top_n < 1:
-            raise InvalidArgumentsError("top_n must be at least 1")
+        if not 1 <= top_n <= MAX_TOP_N:
+            raise InvalidArgumentsError(f"top_n must be between 1 and {MAX_TOP_N}")
         series = await self._climate.daily_series(dataset_id)
         season_index = self._season_index(series, index_type, window)
         return mapping.extreme_seasons(
