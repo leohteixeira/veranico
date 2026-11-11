@@ -1,0 +1,195 @@
+event: started
+data: {"conversation_id":"cv-01hx7m3k9q","message_id":"m-0002"}
+
+event: user_message
+data: {"text":"Coffee farm near Três Pontas, MG. The client worries about a dry spell during flowering, 1 Sep to 31 Oct. Pay when rainfall is below 150 mm, in full at 75 mm. Limit R$ 300,000."}
+
+event: tool_started
+data: {"call_id":"call-1","tool":"resolve_location","arguments":{"query":"Três Pontas, MG"}}
+
+event: tool_finished
+data: {"call_id":"call-1","tool":"resolve_location","status":"ok","duration_ms":412,"summary":{"code":"tool.resolve_location","params":{"label":"Três Pontas, MG","lat":-21.41,"lon":-45.48}},"result":{"label":"Três Pontas, MG","lat":-21.41,"lon":-45.48,"h3_cell":"86a8a0c57ffffff","admin_region":"Minas Gerais","country_code":"BR"},"error":null}
+
+event: tool_started
+data: {"call_id":"call-2","tool":"get_weather_history","arguments":{"lat":-21.41,"lon":-45.48}}
+
+event: tool_finished
+data: {"call_id":"call-2","tool":"get_weather_history","status":"ok","duration_ms":968,"summary":{"code":"tool.get_weather_history","params":{"dataset_id":"cube:sul-de-minas:9:10","first_year":1950,"last_year":2024,"source":"synthetic"}},"result":{"dataset_id":"cube:sul-de-minas:9:10","kind":"cube","region_id":"sul-de-minas","grid_point":{"lat":-21.4,"lon":-45.5},"first_year":1950,"last_year":2024,"days":27394,"missing_days":0,"source":"synthetic"},"error":null}
+
+event: tool_started
+data: {"call_id":"call-3","tool":"backtest_index","arguments":{"dataset_id":"cube:sul-de-minas:9:10","index_type":"rainfall_below","window_start":"09-01","window_end":"10-31","trigger":150,"exit":75,"limit_cents":30000000}}
+
+event: tool_finished
+data: {"call_id":"call-3","tool":"backtest_index","status":"ok","duration_ms":131,"summary":{"code":"tool.backtest_index","params":{"seasons_used":74,"trigger_frequency_rate":"0.229730"}},"result":{"dataset_id":"cube:sul-de-minas:9:10","cover":{"index":{"index_type":"rainfall_below","window":{"start":"09-01","end":"10-31"},"trigger":150,"exit":75},"limit":{"amount_cents":30000000,"currency":"BRL"}},"seasons":[{"season":1950,"index_value":148.7,"payout":{"amount_cents":520000,"currency":"BRL"}},{"season":1951,"index_value":226.4,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1952,"index_value":246.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1953,"index_value":247.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1954,"index_value":207.4,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1955,"index_value":144.3,"payout":{"amount_cents":2280000,"currency":"BRL"}},{"season":1956,"index_value":238.5,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1957,"index_value":89.8,"payout":{"amount_cents":24080000,"currency":"BRL"}},{"season":1958,"index_value":231.2,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1959,"index_value":144.1,"payout":{"amount_cents":2360000,"currency":"BRL"}},{"season":1960,"index_value":141.6,"payout":{"amount_cents":3360000,"currency":"BRL"}},{"season":1961,"index_value":245.3,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1962,"index_value":173,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1963,"index_value":238,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1964,"index_value":243.1,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1965,"index_value":139.1,"payout":{"amount_cents":4360000,"currency":"BRL"}},{"season":1966,"index_value":183,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1967,"index_value":276.2,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1968,"index_value":255.1,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1969,"index_value":231.4,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1970,"index_value":205.3,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1971,"index_value":254.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1972,"index_value":295.5,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1973,"index_value":192,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1974,"index_value":184,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1975,"index_value":140.2,"payout":{"amount_cents":3920000,"currency":"BRL"}},{"season":1976,"index_value":240,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1977,"index_value":224,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1978,"index_value":228.3,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1979,"index_value":186.2,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1980,"index_value":187,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1981,"index_value":230.7,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1982,"index_value":260.7,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1983,"index_value":143.1,"payout":{"amount_cents":2760000,"currency":"BRL"}},{"season":1984,"index_value":132.3,"payout":{"amount_cents":7080000,"currency":"BRL"}},{"season":1985,"index_value":168.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1986,"index_value":181.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1987,"index_value":223,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1988,"index_value":194.7,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1989,"index_value":131.9,"payout":{"amount_cents":7240000,"currency":"BRL"}},{"season":1990,"index_value":220.4,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1991,"index_value":311.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1992,"index_value":304.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1993,"index_value":189.7,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1994,"index_value":173.4,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1995,"index_value":81.6,"payout":{"amount_cents":27360000,"currency":"BRL"}},{"season":1996,"index_value":215.3,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1997,"index_value":181,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1998,"index_value":159.2,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1999,"index_value":215.4,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2000,"index_value":174.1,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2001,"index_value":112.9,"payout":{"amount_cents":14840000,"currency":"BRL"}},{"season":2002,"index_value":143.7,"payout":{"amount_cents":2520000,"currency":"BRL"}},{"season":2003,"index_value":267.4,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2004,"index_value":228.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2005,"index_value":300.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2006,"index_value":162.7,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2007,"index_value":288.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2008,"index_value":109.3,"payout":{"amount_cents":16280000,"currency":"BRL"}},{"season":2009,"index_value":200.3,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2010,"index_value":99,"payout":{"amount_cents":20400000,"currency":"BRL"}},{"season":2011,"index_value":216,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2012,"index_value":189.7,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2013,"index_value":117.9,"payout":{"amount_cents":12840000,"currency":"BRL"}},{"season":2014,"index_value":221.1,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2015,"index_value":206.1,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2016,"index_value":243.3,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2017,"index_value":199.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2018,"index_value":147,"payout":{"amount_cents":1200000,"currency":"BRL"}},{"season":2019,"index_value":242.5,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2020,"index_value":216.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2021,"index_value":343.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2022,"index_value":254.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2023,"index_value":210.7,"payout":{"amount_cents":0,"currency":"BRL"}}],"seasons_used":74,"seasons_excluded":[],"trigger_frequency":"0.229730","burn_cost":{"amount_cents":2072973,"currency":"BRL"},"max_payout":{"amount_cents":27360000,"currency":"BRL"},"max_payout_season":1995,"trend":{"slope_per_decade":-4.2,"p_value":"0.031000","significant":true},"warnings":[{"code":"warning.trend_significant","params":{"slope_per_decade":-4.2,"direction":"decreasing"}}]},"error":null}
+
+event: text_delta
+data: {"text":"Over 74 seasons, 1950 "}
+
+event: text_delta
+data: {"text":"to 2023, the Sep "}
+
+event: text_delta
+data: {"text":"1 – Oct 31 "}
+
+event: text_delta
+data: {"text":"total at this grid "}
+
+event: text_delta
+data: {"text":"point fell below 150.0 "}
+
+event: text_delta
+data: {"text":"mm in 22.97% of "}
+
+event: text_delta
+data: {"text":"them. The average historical "}
+
+event: text_delta
+data: {"text":"payout is R$ 20,729.73 and "}
+
+event: text_delta
+data: {"text":"the largest is R$ 273,600.00, "}
+
+event: text_delta
+data: {"text":"in 1995. The index "}
+
+event: text_delta
+data: {"text":"has a significant falling "}
+
+event: text_delta
+data: {"text":"trend, so history may "}
+
+event: text_delta
+data: {"text":"misstate current risk. The "}
+
+event: text_delta
+data: {"text":"weather data for this "}
+
+event: text_delta
+data: {"text":"region is synthetic. Shall "}
+
+event: text_delta
+data: {"text":"I price this structure?"}
+
+event: done
+data: {"conversation_id":"cv-01hx7m3k9q","message_id":"m-0002","stop_reason":"end_turn","prompt_version":"fixture-1"}
+
+event: started
+data: {"conversation_id":"cv-01hx7m3k9q","message_id":"m-0004"}
+
+event: user_message
+data: {"text":"Yes, price it."}
+
+event: tool_started
+data: {"call_id":"call-4","tool":"price_cover","arguments":{"lat":-21.41,"lon":-45.48,"label":"Três Pontas, MG","admin_region":"Minas Gerais","index_type":"rainfall_below","window_start":"09-01","window_end":"10-31","trigger":150,"exit":75,"limit_cents":30000000,"n":100000,"seed":42}}
+
+event: tool_finished
+data: {"call_id":"call-4","tool":"price_cover","status":"ok","duration_ms":1840,"summary":{"code":"tool.price_cover","params":{"quote_id":"Q-7K2M9P","premium_cents":2484000}},"result":{"quote_id":"Q-7K2M9P","priced":{"backtest":{"dataset_id":"cube:sul-de-minas:9:10","cover":{"index":{"index_type":"rainfall_below","window":{"start":"09-01","end":"10-31"},"trigger":150,"exit":75},"limit":{"amount_cents":30000000,"currency":"BRL"}},"seasons":[{"season":1950,"index_value":148.7,"payout":{"amount_cents":520000,"currency":"BRL"}},{"season":1951,"index_value":226.4,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1952,"index_value":246.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1953,"index_value":247.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1954,"index_value":207.4,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1955,"index_value":144.3,"payout":{"amount_cents":2280000,"currency":"BRL"}},{"season":1956,"index_value":238.5,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1957,"index_value":89.8,"payout":{"amount_cents":24080000,"currency":"BRL"}},{"season":1958,"index_value":231.2,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1959,"index_value":144.1,"payout":{"amount_cents":2360000,"currency":"BRL"}},{"season":1960,"index_value":141.6,"payout":{"amount_cents":3360000,"currency":"BRL"}},{"season":1961,"index_value":245.3,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1962,"index_value":173,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1963,"index_value":238,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1964,"index_value":243.1,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1965,"index_value":139.1,"payout":{"amount_cents":4360000,"currency":"BRL"}},{"season":1966,"index_value":183,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1967,"index_value":276.2,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1968,"index_value":255.1,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1969,"index_value":231.4,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1970,"index_value":205.3,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1971,"index_value":254.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1972,"index_value":295.5,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1973,"index_value":192,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1974,"index_value":184,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1975,"index_value":140.2,"payout":{"amount_cents":3920000,"currency":"BRL"}},{"season":1976,"index_value":240,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1977,"index_value":224,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1978,"index_value":228.3,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1979,"index_value":186.2,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1980,"index_value":187,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1981,"index_value":230.7,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1982,"index_value":260.7,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1983,"index_value":143.1,"payout":{"amount_cents":2760000,"currency":"BRL"}},{"season":1984,"index_value":132.3,"payout":{"amount_cents":7080000,"currency":"BRL"}},{"season":1985,"index_value":168.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1986,"index_value":181.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1987,"index_value":223,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1988,"index_value":194.7,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1989,"index_value":131.9,"payout":{"amount_cents":7240000,"currency":"BRL"}},{"season":1990,"index_value":220.4,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1991,"index_value":311.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1992,"index_value":304.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1993,"index_value":189.7,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1994,"index_value":173.4,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1995,"index_value":81.6,"payout":{"amount_cents":27360000,"currency":"BRL"}},{"season":1996,"index_value":215.3,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1997,"index_value":181,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1998,"index_value":159.2,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1999,"index_value":215.4,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2000,"index_value":174.1,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2001,"index_value":112.9,"payout":{"amount_cents":14840000,"currency":"BRL"}},{"season":2002,"index_value":143.7,"payout":{"amount_cents":2520000,"currency":"BRL"}},{"season":2003,"index_value":267.4,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2004,"index_value":228.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2005,"index_value":300.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2006,"index_value":162.7,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2007,"index_value":288.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2008,"index_value":109.3,"payout":{"amount_cents":16280000,"currency":"BRL"}},{"season":2009,"index_value":200.3,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2010,"index_value":99,"payout":{"amount_cents":20400000,"currency":"BRL"}},{"season":2011,"index_value":216,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2012,"index_value":189.7,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2013,"index_value":117.9,"payout":{"amount_cents":12840000,"currency":"BRL"}},{"season":2014,"index_value":221.1,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2015,"index_value":206.1,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2016,"index_value":243.3,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2017,"index_value":199.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2018,"index_value":147,"payout":{"amount_cents":1200000,"currency":"BRL"}},{"season":2019,"index_value":242.5,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2020,"index_value":216.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2021,"index_value":343.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2022,"index_value":254.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2023,"index_value":210.7,"payout":{"amount_cents":0,"currency":"BRL"}}],"seasons_used":74,"seasons_excluded":[],"trigger_frequency":"0.229730","burn_cost":{"amount_cents":2072973,"currency":"BRL"},"max_payout":{"amount_cents":27360000,"currency":"BRL"},"max_payout_season":1995,"trend":{"slope_per_decade":-4.2,"p_value":"0.031000","significant":true},"warnings":[{"code":"warning.trend_significant","params":{"slope_per_decade":-4.2,"direction":"decreasing"}}]},"simulation":{"method":"gamma_mle","n":100000,"seed":42,"expected_loss":{"amount_cents":1620000,"currency":"BRL"},"std_dev":{"amount_cents":2070000,"currency":"BRL"},"probability_of_payout":"0.171200","payout_1_in_10":{"amount_cents":6300000,"currency":"BRL"},"payout_1_in_100":{"amount_cents":21450000,"currency":"BRL"},"gap_to_burn_cost":{"amount_cents":-452973,"currency":"BRL"}},"premium":{"premium":{"amount_cents":2484000,"currency":"BRL"},"rate_on_line":"0.082800","risk_load":"0.300000","expense_load":"0.150000"},"assumptions":[{"code":"assumption.index_type","params":{"index_type":"rainfall_below"}},{"code":"assumption.window","params":{"start":"09-01","end":"10-31"}},{"code":"assumption.seasons_used","params":{"seasons_used":74,"first_season":1950,"last_season":2023}},{"code":"assumption.simulation_method","params":{"method":"gamma_mle","n":100000,"seed":42}},{"code":"assumption.loads","params":{"risk_load_rate":"0.300000","expense_load_rate":"0.150000"}},{"code":"assumption.data_source","params":{"source":"synthetic"}}]}},"error":null}
+
+event: text_delta
+data: {"text":"Quote Q-7K2M9P is a "}
+
+event: text_delta
+data: {"text":"draft. Expected loss R$ 16,200.00; "}
+
+event: text_delta
+data: {"text":"one-in-ten payout R$ 63,000.00; one-in-a-hundred "}
+
+event: text_delta
+data: {"text":"payout R$ 214,500.00. The indicative "}
+
+event: text_delta
+data: {"text":"premium is R$ 24,840.00, a "}
+
+event: text_delta
+data: {"text":"rate on line of "}
+
+event: text_delta
+data: {"text":"8.28%. Assumptions: rainfall below "}
+
+event: text_delta
+data: {"text":"150.0 mm pays linearly "}
+
+event: text_delta
+data: {"text":"down to 75.0 mm, "}
+
+event: text_delta
+data: {"text":"74 seasons used, gamma "}
+
+event: text_delta
+data: {"text":"fit, synthetic weather data. "}
+
+event: text_delta
+data: {"text":"Pricing is illustrative."}
+
+event: done
+data: {"conversation_id":"cv-01hx7m3k9q","message_id":"m-0004","stop_reason":"end_turn","prompt_version":"fixture-1"}
+
+event: started
+data: {"conversation_id":"cv-01hx7m3k9q","message_id":"m-0006"}
+
+event: user_message
+data: {"text":"Draft the term sheet."}
+
+event: tool_started
+data: {"call_id":"call-5","tool":"draft_term_sheet","arguments":{"quote_id":"Q-7K2M9P"}}
+
+event: tool_finished
+data: {"call_id":"call-5","tool":"draft_term_sheet","status":"ok","duration_ms":655,"summary":{"code":"tool.draft_term_sheet","params":{}},"result":{"documents":[{"quote_id":"Q-7K2M9P","kind":"term_sheet","locale":"en","content_type":"application/pdf","size_bytes":48213,"path":"/api/v1/quotes/Q-7K2M9P/term-sheet.pdf?lang=en"},{"quote_id":"Q-7K2M9P","kind":"term_sheet","locale":"pt-BR","content_type":"application/pdf","size_bytes":48213,"path":"/api/v1/quotes/Q-7K2M9P/term-sheet.pdf?lang=pt-BR"}]},"error":null}
+
+event: text_delta
+data: {"text":"The term sheet for "}
+
+event: text_delta
+data: {"text":"Q-7K2M9P is rendered in "}
+
+event: text_delta
+data: {"text":"English and Portuguese. It "}
+
+event: text_delta
+data: {"text":"is in the Quote "}
+
+event: text_delta
+data: {"text":"tab."}
+
+event: done
+data: {"conversation_id":"cv-01hx7m3k9q","message_id":"m-0006","stop_reason":"end_turn","prompt_version":"fixture-1"}
+
+event: started
+data: {"conversation_id":"cv-01hx7m3k9q","message_id":"m-0008"}
+
+event: user_message
+data: {"text":"Request submission to Aurora Re (mock)."}
+
+event: tool_started
+data: {"call_id":"call-6","tool":"request_submission","arguments":{"quote_id":"Q-7K2M9P","carrier_id":"carrier-1"}}
+
+event: tool_finished
+data: {"call_id":"call-6","tool":"request_submission","status":"ok","duration_ms":208,"summary":{"code":"tool.request_submission","params":{"submission_id":"S-4HX8TD","carrier_id":"carrier-1"}},"result":{"submission_id":"S-4HX8TD","carrier_id":"carrier-1","requested_at":"2026-11-10T14:07:30Z","decided_at":null,"decision_note":null,"delivery":{"status":"not_started","attempts":0,"receipt_id":null,"last_error_code":null}},"error":null}
+
+event: approval_required
+data: {"approval_id":"S-4HX8TD","quote_id":"Q-7K2M9P"}
+
+event: text_delta
+data: {"text":"Submission S-4HX8TD to Aurora "}
+
+event: text_delta
+data: {"text":"Re (mock) is waiting "}
+
+event: text_delta
+data: {"text":"for approval. I can "}
+
+event: text_delta
+data: {"text":"request it but I "}
+
+event: text_delta
+data: {"text":"cannot approve it: a "}
+
+event: text_delta
+data: {"text":"person decides in the "}
+
+event: text_delta
+data: {"text":"Approvals tab."}
+
+event: done
+data: {"conversation_id":"cv-01hx7m3k9q","message_id":"m-0008","stop_reason":"end_turn","prompt_version":"fixture-1"}
+
