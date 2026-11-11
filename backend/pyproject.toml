@@ -75,10 +75,14 @@ select = [
     "RUF",   # ruff's own rules
 ]
 
+[tool.ruff.lint.isort]
+# `tests` is importable from the backend directory (pytest `pythonpath = ["."]`).
+known-first-party = ["veranico", "tests"]
+
 [tool.mypy]
 python_version = "3.12"
 strict = true
-files = ["src"]
+files = ["src", "tests/fakes"]
 plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
