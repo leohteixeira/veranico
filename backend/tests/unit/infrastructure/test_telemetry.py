@@ -1,18 +1,22 @@
-from fastapi import FastAPI
+"""The telemetry entry points every caller relies on.
 
-from tests.fakes.settings import settings_for_tests
+Their behaviour is covered by `tests/unit/delivery/test_telemetry.py`; this test only pins the
+four names and signatures that `main.py`, `problems.py` and the modules call.
+"""
+
+import inspect
+
 from veranico.shared.infrastructure import telemetry
 
 
-def test_the_four_entry_points_exist_and_do_nothing() -> None:
-    assert telemetry.setup_telemetry(settings_for_tests(), FastAPI()) is None  # type: ignore[func-returns-value]  # asserting the no-op
-    assert telemetry.shutdown() is None  # type: ignore[func-returns-value]  # asserting the no-op
+def test_the_four_entry_points_keep_their_names_and_signatures() -> None:
+    assert list(inspect.signature(telemetry.setup_telemetry).parameters) == ["settings", "app"]
+    assert list(inspect.signature(telemetry.shutdown).parameters) == []
+    assert list(inspect.signature(telemetry.current_trace_id).parameters) == []
+    assert callable(telemetry.tracer)
+
+
+def test_there_is_no_trace_id_outside_a_span() -> None:
+    telemetry.shutdown()
+
     assert telemetry.current_trace_id() is None
-
-
-def test_the_tracer_opens_spans_that_record_nothing() -> None:
-    with telemetry.tracer().start_as_current_span("climate.ingest") as span:
-        span.set_attribute("climate.attempts", 2)
-
-        assert span.is_recording() is False
-        assert span.get_span_context().is_valid is False
