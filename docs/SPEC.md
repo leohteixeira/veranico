@@ -522,3 +522,4 @@ Do not rely on memory for these: the CDS dataset name and request fields for ERA
 | Landing page | none | presentation page in the portfolio repository with a live map embed | 0015 |
 | Evapotranspiration | ingested next to precipitation | not ingested: no index uses it | none (scope reduction) |
 | Point weather source | ERA5-Land from Open-Meteo, the same product as the cubes | ERA5 (0.25°) from Open-Meteo, labelled `era5/open-meteo`: Open-Meteo serves no ERA5-Land precipitation. Amends the first sentence of section 4 and the product named in section 4.2 | 0017 |
+| Cube weather source | ERA5-Land daily statistics requested from the Climate Data Store | Hourly ERA5-Land accumulated precipitation at two time steps a day, summed to local days by the download step: the daily statistics entry omits accumulated variables. Amends step 1 of section 4.1 | 0018 |
