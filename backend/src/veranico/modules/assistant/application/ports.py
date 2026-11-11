@@ -8,7 +8,7 @@ adapter in `infrastructure` maps it to a provider (the Anthropic Messages API) o
 script (deterministic tests, `make dev` without a key).
 """
 
-from collections.abc import AsyncIterator, Mapping, Sequence
+from collections.abc import AsyncGenerator, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Literal, Protocol
@@ -91,7 +91,18 @@ class ModelCompleted:
     usage: ModelUsage
 
 
-ModelEvent = ModelTextDelta | ModelToolCall | ModelCompleted
+@dataclass(frozen=True, slots=True)
+class ModelUsageSoFar:
+    """What the provider has counted until now, for a call that may not reach its end.
+
+    Optional. The loop charges the latest one when a call is cut by a disconnect or a
+    shutdown, so tokens the provider billed are not lost. `ModelCompleted` replaces it.
+    """
+
+    usage: ModelUsage
+
+
+ModelEvent = ModelTextDelta | ModelToolCall | ModelUsageSoFar | ModelCompleted
 
 
 class ModelUnavailable(ModelUnavailableError):  # noqa: N818 - named after its code, as the port says
@@ -171,10 +182,11 @@ class ConversationStore(Protocol):
 
 
 class ModelClient(Protocol):
-    def stream(self, request: ModelRequest) -> AsyncIterator[ModelEvent]:
+    def stream(self, request: ModelRequest) -> AsyncGenerator[ModelEvent]:
         """Text deltas and tool calls as they arrive, then one `ModelCompleted`.
 
         Raises `ModelUnavailable` when the provider or the transport fails, before or after
-        the first event.
+        the first event. The loop closes the generator when it stops reading early (a
+        disconnect, a shutdown), which is when an adapter releases its connection.
         """
         ...

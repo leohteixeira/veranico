@@ -15,7 +15,7 @@ words. It decides from the tool results already in the request, and every figure
 copied from one of them.
 """
 
-from collections.abc import AsyncIterator, Callable, Mapping, Sequence
+from collections.abc import AsyncGenerator, Callable, Mapping, Sequence
 from dataclasses import dataclass
 
 from veranico.modules.access.contracts import ModelUsage
@@ -61,7 +61,7 @@ class ScriptedModelClient:
     def happy_path(cls) -> "ScriptedModelClient":
         return cls(happy_path_policy)
 
-    async def stream(self, request: ModelRequest) -> AsyncIterator[ModelEvent]:
+    async def stream(self, request: ModelRequest) -> AsyncGenerator[ModelEvent]:
         self.requests.append(request)
         played = self._next(request)
         if isinstance(played, FailAfter):
