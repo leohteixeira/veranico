@@ -85,6 +85,65 @@ export const en = {
   "step.term_sheet": "Term sheet",
   "step.approval": "Approval",
 
+  // Tabs
+  "tab.risk": "Risk",
+  "tab.history": "History",
+  "tab.quote": "Quote",
+  "tab.approvals": "Approvals",
+
+  // Conversation card
+  "chat.title": "Conversation",
+  "chat.restart": "Start over",
+  "chat.progress": "Progress",
+  "chat.step_of": "Step {step} of {count}: {name}",
+  "chat.steps_done": "All {count} steps done",
+  "chat.step.done": "{name}: done",
+  "chat.step.current": "{name}: next",
+  "chat.step.todo": "{name}: not started",
+  "chat.meter.one": "{count} message left today",
+  "chat.meter.other": "{count} messages left today",
+  "chat.messages": "Messages",
+  "chat.you": "You",
+  "chat.working": "The agent is working",
+  "chat.first.title": "Describe an exposure, or start from one of these",
+  "chat.first.body":
+    "The agent asks for anything essential that is missing, then backtests and prices the cover with the tools listed in each step.",
+  "chat.example.rainfall_below":
+    "Farm near {label}. The client worries about too little rain from {start} to {end}. Pay when rainfall is below {trigger}, in full at {exit}. Limit {limit}.",
+  "chat.example.dry_spell_above":
+    "Farm near {label}. The client worries about a dry spell from {start} to {end}. Pay when the longest dry spell is above {trigger}, in full at {exit}. Limit {limit}.",
+  "chat.input": "Message to the agent",
+  "chat.placeholder": "Crop, place, peril, coverage window, limit",
+  "chat.send": "Send",
+  "chat.hint": "Enter sends. Shift+Enter starts a new line.",
+  "chat.map_point": "Point from the map: {lat}, {lon}",
+  "chat.map_point_remove": "Remove the point",
+  "chat.map_point_request": "Price a cover for the point I marked on the map ({lat}, {lon}).",
+  "chat.tool.running": "running",
+  "chat.tool.ok": "done",
+  "chat.tool.failed": "failed",
+  "chat.tool.arguments": "Arguments",
+  "chat.figure.open": "{value}: show its source in the {tab} tab",
+  "chat.figure.flagged": "not found in any tool output",
+  "chat.flagged.one":
+    "1 figure in this answer was not found in any tool output. Treat it as unverified.",
+  "chat.flagged.other":
+    "{count} figures in this answer were not found in any tool output. Treat them as unverified.",
+  "chat.interrupted": "The connection closed before the answer finished.",
+  "chat.completed": "Completed before the interruption: {tools}.",
+  "chat.completed_none": "No tool had completed.",
+  "chat.approval": "A person decides this submission in the Approvals tab.",
+  "chat.open_approvals": "Open approvals",
+  "chat.replay.offer":
+    "You can still watch a recorded conversation. The map, the history and the public API keep working.",
+  "chat.replay.play": "Play the recorded conversation",
+  "chat.replay.again": "Play it again",
+  "chat.replay.loading": "Loading the recording",
+  "chat.replay.failed": "The recording did not load.",
+  "chat.replay.banner":
+    "Recording. This conversation was recorded earlier; nothing here is created or sent.",
+  "chat.replay.ended": "The recording has ended.",
+
   // Tool names, as labels beside the identifier
   "toolname.resolve_location": "Resolve the location",
   "toolname.get_weather_history": "Load the weather history",

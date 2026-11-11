@@ -351,9 +351,27 @@ export function problem(code: string, status: number, replayAvailable = false): 
   };
 }
 
-export const FREQUENCY_BREAKS = [0.06, 0.12, 0.18, 0.24, 0.32];
-export const ANOMALY_BREAKS = [-0.4, -0.2, -0.05, 0.05, 0.2, 0.4];
+/** Five frequency classes and six anomaly classes, as the API classifies them. */
+export const FREQUENCY_CLASSES = 5;
+export const ANOMALY_CLASSES = 6;
 export const SUGGESTED_SEASON = 1987;
+
+/**
+ * Class edges as the API returns them, both ends included: `classes + 1` edges. Frequency runs
+ * from the lowest value of the grid to the highest; anomaly is symmetric around zero.
+ */
+function classEdges(values: readonly (number | null)[], metric: Schemas["CellGrid"]["metric"]) {
+  const present = values.filter((value): value is number => value !== null);
+  if (present.length === 0) return [];
+  const symmetric = Math.max(...present.map((value) => Math.abs(value)));
+  const low = metric === "trigger_frequency" ? Math.min(...present) : -symmetric;
+  const high = metric === "trigger_frequency" ? Math.max(...present) : symmetric;
+  if (low === high) return [low, high];
+  const classes = metric === "trigger_frequency" ? FREQUENCY_CLASSES : ANOMALY_CLASSES;
+  return Array.from({ length: classes + 1 }, (_, at) =>
+    at === classes ? high : Math.round((low + ((high - low) * at) / classes) * 1e6) / 1e6,
+  );
+}
 
 interface CellGridRequest {
   metric: Schemas["CellGrid"]["metric"];
@@ -394,7 +412,7 @@ export function cellGrid(
     west: region.west,
     step_deg: region.step_deg,
     values,
-    breaks: request.metric === "trigger_frequency" ? FREQUENCY_BREAKS : ANOMALY_BREAKS,
+    breaks: classEdges(values, request.metric),
     seasons: SEASONS,
     cells_paying:
       request.metric === "season_anomaly"

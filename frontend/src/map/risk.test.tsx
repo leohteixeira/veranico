@@ -24,7 +24,7 @@ import {
   valueAt,
   type CellRef,
 } from "./geometry";
-import { classColour, classOf, colourAt, rampFor, rgbaCss, sampleRamp } from "./ramps";
+import { classColour, classCount, classOf, colourAt, rampFor, rgbaCss, sampleRamp } from "./ramps";
 import { FEATHER, rasterSize, renderSurface } from "./surface";
 
 type Schemas = components["schemas"];
@@ -46,7 +46,8 @@ function smallGrid(values?: (number | null)[]): CellGrid {
     west: -46,
     step_deg: 0.1,
     values: values ?? Array.from({ length: 16 }, (_, index) => 0.02 + index * 0.025),
-    breaks: [0.1, 0.2, 0.3],
+    // Four classes: five edges, both ends included.
+    breaks: [0, 0.1, 0.2, 0.3, 0.4],
     seasons: [2001, 2002],
     cells_paying: null,
     suggested_season: null,
@@ -79,44 +80,65 @@ function expectClose(actual: number[], expected: number[]): void {
 
 describe("ramps [R-12.2-2] [R-16.7-1]", () => {
   it("class_of_value_uses_the_api_breaks", () => {
-    const breaks = [0.06, 0.12, 0.18, 0.24, 0.32];
+    // The edges the API returned for a real grid: five classes, from its minimum to its maximum.
+    const breaks = [0.447368, 0.547368, 0.647368, 0.747368, 0.847368, 0.947368];
+    expect(classCount(breaks)).toBe(5);
 
-    expect(classOf(0, breaks)).toBe(0);
-    expect(classOf(0.0599, breaks)).toBe(0);
-    // A value on a boundary belongs to the class above it.
-    expect(classOf(0.06, breaks)).toBe(1);
-    expect(classOf(0.2, breaks)).toBe(3);
-    expect(classOf(0.32, breaks)).toBe(5);
-    expect(classOf(0.9, breaks)).toBe(5);
-    expect(classOf(-0.3, [-0.4, -0.2, -0.05, 0.05, 0.2, 0.4])).toBe(1);
+    expect(classOf(0.447368, breaks)).toBe(0);
+    expect(classOf(0.5, breaks)).toBe(0);
+    // A value on an inner edge belongs to the class above it.
+    expect(classOf(0.547368, breaks)).toBe(1);
+    expect(classOf(0.8, breaks)).toBe(3);
+    expect(classOf(0.9, breaks)).toBe(4);
+    // The maximum is the last edge and belongs to the last class: there is no class beyond it.
+    expect(classOf(0.947368, breaks)).toBe(4);
+    // Six anomaly classes, symmetric around zero: zero opens the first wet class.
+    const anomaly = [-0.6, -0.4, -0.2, 0, 0.2, 0.4, 0.6];
+    expect(classCount(anomaly)).toBe(6);
+    expect(classOf(-0.6, anomaly)).toBe(0);
+    expect(classOf(-0.01, anomaly)).toBe(2);
+    expect(classOf(0, anomaly)).toBe(3);
+    expect(classOf(0.6, anomaly)).toBe(5);
+    // Every cell equal: one class. No cell with a value: none.
+    expect(classCount([0.2, 0.2])).toBe(1);
+    expect(classOf(0.2, [0.2, 0.2])).toBe(0);
+    expect(classCount([])).toBe(0);
+    expect(classOf(0.2, [])).toBe(0);
   });
 
   it("ramp_is_sampled_to_the_number_of_classes", () => {
     const paint = MAP_PAINT.light;
 
-    // The fixture breaks give as many classes as the paint has stops: the stops themselves.
-    expect(rampFor("trigger_frequency", paint, GRID.breaks)).toEqual(paint.sequential);
-    expect(rampFor("season_anomaly", paint, [-0.4, -0.2, -0.05, 0.05, 0.2, 0.4])).toEqual(
-      paint.diverging,
-    );
+    // One colour per class: n + 1 edges give n swatches, from the first stop to the last.
+    const frequency = rampFor("trigger_frequency", paint, GRID.breaks);
+    expect(GRID.breaks).toHaveLength(6);
+    expect(frequency).toHaveLength(5);
+    expect(frequency[0]).toEqual(paint.sequential[0]);
+    expect(frequency[4]).toEqual(paint.sequential[5]);
 
-    // Other breaks from the API: one colour per class, from the first stop to the last.
-    const three = rampFor("trigger_frequency", paint, [0.1, 0.2]);
-    expect(three).toHaveLength(3);
-    expect(three[0]).toEqual(paint.sequential[0]);
-    expect(three[2]).toEqual(paint.sequential[5]);
-    expect(sampleRamp(paint.diverging, 9)).toHaveLength(9);
-    expect(sampleRamp(paint.diverging, 9)[4]).toEqual(paint.diverging[3]);
+    const anomaly = rampFor("season_anomaly", paint, [-0.6, -0.4, -0.2, 0, 0.2, 0.4, 0.6]);
+    expect(anomaly).toHaveLength(6);
+    expect(anomaly[0]).toEqual(paint.diverging[0]);
+    expect(anomaly[5]).toEqual(paint.diverging[6]);
+
+    expect(rampFor("trigger_frequency", paint, [0.2, 0.2])).toHaveLength(1);
+    expect(rampFor("trigger_frequency", paint, [])).toEqual([]);
+    expect(sampleRamp(paint.diverging, 7)).toEqual(paint.diverging);
   });
 
-  it("the continuous colour is the class colour at the middle of a class and clamps outside", () => {
-    const breaks = [0.1, 0.2, 0.3];
+  it("the continuous colour is the class colour at the middle of a class, between the edges", () => {
+    const breaks = [0, 0.1, 0.2, 0.3, 0.4];
 
     expectClose(bytes(colourAt(0.15, breaks, RAMP)), bytes(RAMP[1] as Rgba));
     expectClose(bytes(colourAt(0.25, breaks, RAMP)), bytes(RAMP[2] as Rgba));
-    expect(colourAt(-5, breaks, RAMP)).toEqual(RAMP[0]);
-    expect(colourAt(5, breaks, RAMP)).toEqual(RAMP[3]);
+    // The two ends take the first and last colour; nothing lies beyond them.
+    expect(colourAt(0, breaks, RAMP)).toEqual(RAMP[0]);
+    expect(colourAt(0.4, breaks, RAMP)).toEqual(RAMP[3]);
     expect(classColour(0.15, breaks, RAMP)).toEqual(RAMP[1]);
+    expect(classColour(0.4, breaks, RAMP)).toEqual(RAMP[3]);
+    // A grid where every cell is equal still has a colour.
+    expect(colourAt(0.2, [0.2, 0.2], [RAMP[1] as Rgba])).toEqual(RAMP[1]);
+    expect(colourAt(0.2, [], [])).toEqual([0, 0, 0, 0]);
     expect(rgbaCss([250.4, 230, 200, 0.6])).toBe("rgba(250,230,200,0.600)");
   });
 });

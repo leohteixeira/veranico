@@ -77,8 +77,15 @@ const DEFAULT_BASEMAPS: Record<BasemapId, BasemapConfig> = {
   },
 };
 
-// The three example covers of the approved preview (`design-reference/vr/engine.js`). The API has
-// no default cover per region, so the first view takes it from here.
+// The three example covers of the approved preview (`design-reference/vr/engine.js`): its places,
+// windows and limits. The API has no default cover per region, so the first view takes it from
+// here.
+//
+// The triggers and exits are TUNED TO THE SYNTHETIC CUBES (`make build-cube ... SYNTHETIC=1`,
+// seeds 1, 2 and 3 for the three regions), so that each example pays in roughly one season in
+// seven or eight (checked against `GET /weather/seasons` on 2026-11-11: 11 of 76, 10 of 76 and
+// 8 of 75 seasons). They are not agronomic figures. Re-tune them when the real ERA5-Land cubes
+// arrive (gate H1).
 const DEFAULT_EXAMPLE_COVERS: Record<string, ExampleCover> = {
   "sul-de-minas": {
     point: { lat: -21.41, lon: -45.48 },
@@ -87,8 +94,8 @@ const DEFAULT_EXAMPLE_COVERS: Record<string, ExampleCover> = {
       index: {
         index_type: "rainfall_below",
         window: { start: "09-01", end: "10-31" },
-        trigger: 150,
-        exit: 75,
+        trigger: 80,
+        exit: 40,
       },
       limit: { amount_cents: 30_000_000, currency: "BRL" },
     },
@@ -100,8 +107,8 @@ const DEFAULT_EXAMPLE_COVERS: Record<string, ExampleCover> = {
       index: {
         index_type: "rainfall_below",
         window: { start: "10-01", end: "11-30" },
-        trigger: 280,
-        exit: 160,
+        trigger: 190,
+        exit: 110,
       },
       limit: { amount_cents: 50_000_000, currency: "BRL" },
     },

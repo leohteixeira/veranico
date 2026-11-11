@@ -80,6 +80,65 @@ export const ptBR: Messages = {
   "step.term_sheet": "Term sheet",
   "step.approval": "Aprovação",
 
+  // Tabs
+  "tab.risk": "Risco",
+  "tab.history": "Histórico",
+  "tab.quote": "Cotação",
+  "tab.approvals": "Aprovações",
+
+  // Conversation card
+  "chat.title": "Conversa",
+  "chat.restart": "Recomeçar",
+  "chat.progress": "Progresso",
+  "chat.step_of": "Passo {step} de {count}: {name}",
+  "chat.steps_done": "Os {count} passos foram concluídos",
+  "chat.step.done": "{name}: concluído",
+  "chat.step.current": "{name}: próximo",
+  "chat.step.todo": "{name}: não iniciado",
+  "chat.meter.one": "{count} mensagem restante hoje",
+  "chat.meter.other": "{count} mensagens restantes hoje",
+  "chat.messages": "Mensagens",
+  "chat.you": "Você",
+  "chat.working": "O agente está trabalhando",
+  "chat.first.title": "Descreva uma exposição ou comece por um destes exemplos",
+  "chat.first.body":
+    "O agente pergunta o que for essencial e estiver faltando; depois faz o backtest e precifica a cobertura com as ferramentas listadas em cada passo.",
+  "chat.example.rainfall_below":
+    "Fazenda perto de {label}. O cliente teme pouca chuva de {start} a {end}. Pagar quando a chuva ficar abaixo de {trigger}, integral em {exit}. Limite de {limit}.",
+  "chat.example.dry_spell_above":
+    "Fazenda perto de {label}. O cliente teme um veranico de {start} a {end}. Pagar quando o maior período seco passar de {trigger}, integral em {exit}. Limite de {limit}.",
+  "chat.input": "Mensagem para o agente",
+  "chat.placeholder": "Cultura, local, risco, janela de cobertura, limite",
+  "chat.send": "Enviar",
+  "chat.hint": "Enter envia. Shift+Enter abre uma nova linha.",
+  "chat.map_point": "Ponto do mapa: {lat}, {lon}",
+  "chat.map_point_remove": "Remover o ponto",
+  "chat.map_point_request":
+    "Precifique uma cobertura para o ponto que marquei no mapa ({lat}, {lon}).",
+  "chat.tool.running": "em execução",
+  "chat.tool.ok": "concluída",
+  "chat.tool.failed": "falhou",
+  "chat.tool.arguments": "Argumentos",
+  "chat.figure.open": "{value}: mostrar a origem na aba {tab}",
+  "chat.figure.flagged": "não encontrado em nenhuma saída de ferramenta",
+  "chat.flagged.one":
+    "1 número desta resposta não foi encontrado em nenhuma saída de ferramenta. Trate-o como não verificado.",
+  "chat.flagged.other":
+    "{count} números desta resposta não foram encontrados em nenhuma saída de ferramenta. Trate-os como não verificados.",
+  "chat.interrupted": "A conexão caiu antes de a resposta terminar.",
+  "chat.completed": "Concluído antes da interrupção: {tools}.",
+  "chat.completed_none": "Nenhuma ferramenta havia concluído.",
+  "chat.approval": "Uma pessoa decide esta submissão na aba Aprovações.",
+  "chat.open_approvals": "Abrir aprovações",
+  "chat.replay.offer":
+    "Você ainda pode assistir a uma conversa gravada. O mapa, o histórico e a API pública continuam funcionando.",
+  "chat.replay.play": "Reproduzir a conversa gravada",
+  "chat.replay.again": "Reproduzir de novo",
+  "chat.replay.loading": "Carregando a gravação",
+  "chat.replay.failed": "A gravação não carregou.",
+  "chat.replay.banner": "Gravação. Esta conversa foi gravada antes; nada aqui é criado ou enviado.",
+  "chat.replay.ended": "A gravação terminou.",
+
   // Tool names, as labels beside the identifier
   "toolname.resolve_location": "Resolver o local",
   "toolname.get_weather_history": "Carregar o histórico de clima",
