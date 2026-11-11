@@ -26,6 +26,8 @@ from fastapi.concurrency import run_in_threadpool
 from fastapi.security import APIKeyCookie, HTTPBearer
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
+from starlette.datastructures import MutableHeaders
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from veranico.shared.infrastructure.settings import Settings
 from veranico.shared.kernel.errors import ForbiddenError
@@ -73,7 +75,12 @@ def install_auth(
     settings: Settings,
     verify_id_token: IdTokenVerifier = verify_google_id_token,
 ) -> None:
-    """Bind the dependencies of this file to a facade and settings."""
+    """Bind the dependencies of this file to a facade and settings.
+
+    Call it while the application is being built: it also adds the middleware that sends
+    a newly issued workspace cookie.
+    """
+    app.add_middleware(WorkspaceCookieMiddleware, settings=settings)
     app.state.auth = AuthContext(access=access, settings=settings, verify_id_token=verify_id_token)
 
 
@@ -113,22 +120,57 @@ def _bearer(request: Request) -> str:
     return credential
 
 
-async def _from_cookie(request: Request, response: Response) -> Principal:
-    context = _context(request)
-    principal, new_cookie = await context.access.open_workspace(
+async def _from_cookie(request: Request) -> Principal:
+    principal, new_cookie = await _context(request).access.open_workspace(
         request.cookies.get(WORKSPACE_COOKIE)
     )
     if new_cookie is not None:
-        response.set_cookie(
+        # Sent by `WorkspaceCookieMiddleware` on whatever response this request gets.
+        request.state.new_workspace_cookie = new_cookie
+    return principal
+
+
+class WorkspaceCookieMiddleware:
+    """Set a newly issued workspace cookie on the response, whatever kind it is.
+
+    FastAPI copies a cookie set by a dependency only onto a response it builds itself from
+    a returned value. A problem document, a stream or any `Response` the handler returns
+    would lose it, and the visitor's next request would open a second workspace. So the
+    dependency leaves the cookie in the request state and this middleware adds the header
+    when the response starts.
+    """
+
+    def __init__(self, app: ASGIApp, settings: Settings) -> None:
+        self._app = app
+        self._max_age = settings.access.workspace_ttl_days * 24 * 60 * 60
+        self._secure = settings.environment != "development"
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self._app(scope, receive, send)
+            return
+        state = scope.setdefault("state", {})
+
+        async def send_with_cookie(message: Message) -> None:
+            cookie = state.get("new_workspace_cookie")
+            if message["type"] == "http.response.start" and cookie is not None:
+                MutableHeaders(scope=message).append("Set-Cookie", self._header(cookie))
+            await send(message)
+
+        await self._app(scope, receive, send_with_cookie)
+
+    def _header(self, value: str) -> str:
+        carrier = Response()
+        carrier.set_cookie(
             WORKSPACE_COOKIE,
-            new_cookie,
-            max_age=context.settings.access.workspace_ttl_days * 24 * 60 * 60,
+            value,
+            max_age=self._max_age,
             path="/",
             httponly=True,
             samesite="lax",
-            secure=context.settings.environment != "development",
+            secure=self._secure,
         )
-    return principal
+        return carrier.headers["set-cookie"]
 
 
 async def _from_api_key(request: Request) -> Principal:
@@ -140,11 +182,10 @@ async def _from_api_key(request: Request) -> Principal:
 
 async def browser_principal(
     request: Request,
-    response: Response,
     _documented: Annotated[object, Depends(_cookie_scheme)],
 ) -> Principal:
     """The workspace of the browser. An `Authorization` header is ignored."""
-    return await _from_cookie(request, response)
+    return await _from_cookie(request)
 
 
 async def api_key_principal(
@@ -157,14 +198,13 @@ async def api_key_principal(
 
 async def any_principal(
     request: Request,
-    response: Response,
     _documented_key: Annotated[object, Depends(_api_key_scheme)],
     _documented_cookie: Annotated[object, Depends(_cookie_scheme)],
 ) -> Principal:
     """A bearer when the header is present, and then never the cookie; else the cookie."""
     if "Authorization" in request.headers:
         return await _from_api_key(request)
-    return await _from_cookie(request, response)
+    return await _from_cookie(request)
 
 
 def client_address(request: Request) -> str:

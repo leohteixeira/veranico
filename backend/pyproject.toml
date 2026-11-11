@@ -290,6 +290,7 @@ id = "wiring-only-in-bootstrap"
 type = "forbidden"
 # Everything except `veranico.bootstrap` and each module's own `module.py`.
 source_modules = [
+    "veranico.main",
     "veranico.shared",
     "veranico.modules.*.contracts",
     "veranico.modules.*.domain",
@@ -298,3 +299,5 @@ source_modules = [
     "veranico.modules.*.http",
 ]
 forbidden_modules = ["veranico.modules.*.module"]
+# Direct imports only: `main` reaches the modules through `bootstrap`, which is the point.
+allow_indirect_imports = true

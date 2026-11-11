@@ -1,10 +1,11 @@
 import logging
-from collections.abc import Mapping
+from collections.abc import AsyncIterator, Mapping
 from typing import Annotated, Any
 
 import httpx
 import pytest
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, Response
+from fastapi.responses import StreamingResponse
 
 from tests.fakes.access import FakeAccessFacade
 from tests.fakes.settings import settings_for_tests
@@ -19,6 +20,7 @@ from veranico.shared.infrastructure.http_auth import (
 )
 from veranico.shared.infrastructure.problems import install_problem_handlers
 from veranico.shared.infrastructure.settings import Settings
+from veranico.shared.kernel.errors import AllowanceExhaustedError
 from veranico.shared.kernel.principal import Principal
 
 AUDIENCE = "https://veranico.example"
@@ -63,6 +65,26 @@ def build(
     async def visitor(ref: Annotated[VisitorRef, Depends(visitor_ref)]) -> VisitorRef:
         return ref
 
+    @app.get("/browser/fails")
+    async def fails(principal: Annotated[Principal, Depends(browser_principal)]) -> None:
+        raise AllowanceExhaustedError
+
+    @app.get("/browser/stream")
+    async def stream(
+        principal: Annotated[Principal, Depends(browser_principal)],
+    ) -> StreamingResponse:
+        async def events() -> AsyncIterator[bytes]:
+            yield b"event: started\ndata: {}\n\n"
+            yield b"event: done\ndata: {}\n\n"
+
+        return StreamingResponse(events(), media_type="text/event-stream")
+
+    @app.get("/browser/own-response")
+    async def own_response(
+        principal: Annotated[Principal, Depends(browser_principal)],
+    ) -> Response:
+        return Response(b"%PDF", media_type="application/pdf")
+
     @app.post("/internal", dependencies=[Depends(require_service_identity)])
     async def internal() -> dict[str, bool]:
         return {"accepted": True}
@@ -101,6 +123,42 @@ async def test_first_request_gets_a_workspace_and_the_cookie_with_its_attributes
     assert "vr_ws=cookie-1" in attributes
     assert {"httponly", "samesite=lax", "path=/", "secure"} <= attributes
     assert f"max-age={14 * 24 * 60 * 60}" in attributes
+
+
+@pytest.mark.parametrize(
+    ("path", "status", "content_type"),
+    [
+        ("/browser/fails", 429, "application/problem+json"),
+        ("/browser/stream", 200, "text/event-stream"),
+        ("/browser/own-response", 200, "application/pdf"),
+        ("/any", 200, "application/json"),
+    ],
+)
+async def test_a_new_cookie_is_sent_on_every_kind_of_response(
+    path: str, status: int, content_type: str
+) -> None:
+    client, _ = build()
+
+    response = await client.get(path)
+
+    assert response.status_code == status
+    assert response.headers["content-type"].startswith(content_type)
+    cookie = response.headers["set-cookie"]
+    assert cookie.startswith("vr_ws=cookie-1;")
+    assert "HttpOnly" in cookie
+    assert response.headers.get_list("set-cookie") == [cookie]
+
+
+async def test_a_failed_first_request_does_not_fork_the_workspace() -> None:
+    # Development settings: the test client talks plain HTTP and would not return a Secure cookie.
+    client, access = build(settings=settings_for_tests(environment="development"))
+
+    await client.get("/browser/fails")  # the client keeps the cookie of the problem response
+    second = await client.get("/browser")
+
+    assert second.json()["workspace_id"] == "ws-1"
+    assert "set-cookie" not in second.headers
+    assert [name for name, _ in access.calls] == ["open_workspace", "open_workspace"]
 
 
 async def test_cookie_is_not_secure_in_development_only() -> None:
