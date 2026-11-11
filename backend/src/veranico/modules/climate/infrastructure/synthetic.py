@@ -16,7 +16,8 @@ from statistics import NormalDist
 
 import numpy as np
 
-from veranico.modules.climate.contracts import Region, RegionCube
+from veranico.modules.climate.application.served_region import served_region
+from veranico.modules.climate.contracts import RegionCube
 from veranico.modules.climate.domain.regions import Grid, RegionDef, cell_centre
 from veranico.modules.climate.infrastructure.yearly_file import write_yearly_file
 
@@ -51,19 +52,7 @@ def generate_cube(region: RegionDef, first_year: int, last_year: int, seed: int)
         for year in range(first_year, last_year + 1)
     ]
     return RegionCube(
-        region=Region(
-            region_id=region.region_id,
-            name=region.name,
-            crop=region.crop,
-            north=region.north,
-            south=region.south,
-            west=region.west,
-            east=region.east,
-            step_deg=region.step_deg,
-            nx=region.nx,
-            ny=region.ny,
-            synthetic=True,
-        ),
+        region=served_region(region, "synthetic"),
         dates=_days(first_year, last_year),
         precipitation_mm=np.concatenate(years),
     )

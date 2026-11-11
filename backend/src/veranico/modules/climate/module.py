@@ -68,4 +68,5 @@ def assemble(
         resolve=ResolveLocation(geocoder),
         ensure=EnsureHistory(store, archive, clock, first_year=settings.first_year),
         export=ExportEvidence(store, encode_evidence),
+        cube_cache_size=settings.cube_cache_size,
     )

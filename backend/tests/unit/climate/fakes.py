@@ -11,9 +11,16 @@ from dataclasses import dataclass, field
 import numpy as np
 
 from veranico.modules.climate.application.cells import h3_cell_of
-from veranico.modules.climate.application.ports import CubeSource, PointFetch, Provenance
-from veranico.modules.climate.contracts import DailySeries, DatasetRef, GridPoint
-from veranico.modules.climate.domain.validation import validate_daily
+from veranico.modules.climate.application.ports import (
+    CubeSource,
+    CubeWrite,
+    PointFetch,
+    Provenance,
+)
+from veranico.modules.climate.application.served_region import served_region
+from veranico.modules.climate.contracts import DailySeries, DatasetRef, GridPoint, RegionCube
+from veranico.modules.climate.domain.regions import region_by_id
+from veranico.modules.climate.domain.validation import validate_cube, validate_daily
 from veranico.shared.kernel.errors import DatasetNotFoundError
 from veranico.shared.kernel.ids import DatasetId
 
@@ -74,12 +81,17 @@ class InMemoryWeatherStore:
     requests: dict[DatasetId, dict[str, str]] = field(default_factory=dict)
     writes: int = 0
     cube_sources: dict[str, CubeSource] = field(default_factory=dict)
+    cubes: dict[str, RegionCube] = field(default_factory=dict)
+    cube_writes: int = 0
 
     async def locate(self, lat: float, lon: float) -> DatasetId | None:
         return self.aliases.get(h3_cell_of(lat, lon))
 
     async def cube_source(self, region_id: str) -> CubeSource | None:
         return self.cube_sources.get(region_id)
+
+    async def cube_version(self, region_id: str) -> str | None:
+        return f"write-{self.cube_writes}" if region_id in self.cubes else None
 
     async def describe(self, dataset_id: DatasetId) -> DatasetRef:
         return (await self.read_series(dataset_id)).dataset
@@ -101,3 +113,20 @@ class InMemoryWeatherStore:
         self.series[series.dataset.dataset_id] = series
         self.requests[series.dataset.dataset_id] = dict(request)
         self.aliases[requested_h3] = series.dataset.dataset_id
+
+    async def read_cube(self, region_id: str) -> RegionCube:
+        if region_id not in self.cubes:
+            raise DatasetNotFoundError
+        return self.cubes[region_id]
+
+    async def write_cube(self, cube: CubeWrite) -> None:
+        region = region_by_id(cube.region_id)
+        assert region is not None
+        validate_cube(cube.dates, cube.precipitation_mm)
+        self.cube_writes += 1
+        self.cube_sources[cube.region_id] = cube.source
+        self.cubes[cube.region_id] = RegionCube(
+            region=served_region(region, cube.source),
+            dates=cube.dates,
+            precipitation_mm=cube.precipitation_mm,
+        )

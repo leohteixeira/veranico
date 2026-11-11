@@ -6,7 +6,7 @@ from typing import Literal, Protocol
 
 import numpy as np
 
-from veranico.modules.climate.contracts import DailySeries, DatasetRef, GridPoint
+from veranico.modules.climate.contracts import DailySeries, DatasetRef, GridPoint, RegionCube
 from veranico.shared.kernel.ids import DatasetId
 
 CubeSource = Literal["era5-land/cds", "synthetic"]
@@ -45,6 +45,18 @@ class GeocodeHit:
     country_code: str  # ISO 3166-1 alpha-2
 
 
+@dataclass(frozen=True, slots=True)
+class CubeWrite:
+    """A whole regional cube to install, with where it came from."""
+
+    region_id: str
+    source: CubeSource
+    dates: np.ndarray  # datetime64[D], every day of the years, ascending
+    precipitation_mm: np.ndarray  # float64, shape (days, ny, nx); row 0 is the northern edge
+    request: Mapping[str, str]  # what was asked of the source, kept as provenance
+    year_checksums: Mapping[int, str]  # checksum of the yearly file each year was read from
+
+
 class Geocoder(Protocol):
     async def search(self, name: str) -> list[GeocodeHit]:
         """Places matching a name, best match first; empty when nothing matches.
@@ -78,6 +90,13 @@ class WeatherStore(Protocol):
         """The source of the region's installed cube, or `None` when none is installed."""
         ...
 
+    async def cube_version(self, region_id: str) -> str | None:
+        """A name that changes whenever the region's cube is replaced; `None` without a cube.
+
+        It lets a caller keep a decoded cube and learn cheaply that it is still current.
+        """
+        ...
+
     async def describe(self, dataset_id: DatasetId) -> DatasetRef: ...
 
     async def read_series(self, dataset_id: DatasetId) -> DailySeries: ...
@@ -95,5 +114,18 @@ class WeatherStore(Protocol):
         the dataset, so the next request from that cell is answered locally. `request` is
         what was asked of the source, kept as provenance. A series that breaks a rule of
         `validate_daily` raises `WeatherDataError` and nothing changes.
+        """
+        ...
+
+    async def read_cube(self, region_id: str) -> RegionCube:
+        """The region's installed cube, whole. `Region.synthetic` follows its source."""
+        ...
+
+    async def write_cube(self, cube: CubeWrite) -> None:
+        """Replace the region's cube. From then on a point inside the region resolves to
+        its cell, `cube:<region_id>:<row>:<col>`.
+
+        A cube of another shape than the region's grid, or with a cell that breaks a rule
+        of `validate_daily`, raises `WeatherDataError` and nothing changes.
         """
         ...

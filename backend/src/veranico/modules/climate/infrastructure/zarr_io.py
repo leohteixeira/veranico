@@ -18,6 +18,9 @@ import xarray as xr
 ZARR_FORMAT = 3
 TIME = "time"
 PRECIPITATION = "precipitation_mm"
+LAT = "lat"
+LON = "lon"
+CELL_CHUNK = 10  # cells per chunk along each side of a cube
 
 
 def write_series(target: Path, dates: np.ndarray, precipitation_mm: np.ndarray) -> None:
@@ -34,6 +37,61 @@ def write_series(target: Path, dates: np.ndarray, precipitation_mm: np.ndarray) 
         zarr_format=ZARR_FORMAT,
         encoding={PRECIPITATION: {"chunks": (days,)}, TIME: {"chunks": (days,)}},
     )
+
+
+def write_cube(
+    target: Path,
+    dates: np.ndarray,
+    latitudes: np.ndarray,
+    longitudes: np.ndarray,
+    precipitation_mm: np.ndarray,
+) -> None:
+    """Write a cube of shape (days, ny, nx) as a new store.
+
+    Chunks: the whole time axis by at most 10 by 10 cells, so the series of one cell is one
+    chunk object and the whole cube is a handful (the layout ADR 0016 will confirm or
+    replace from measurements).
+    """
+    days, ny, nx = precipitation_mm.shape
+    dataset = xr.Dataset(
+        {PRECIPITATION: ((TIME, LAT, LON), precipitation_mm.astype(np.float64))},
+        coords={
+            TIME: dates.astype("datetime64[ns]"),
+            LAT: latitudes.astype(np.float64),
+            LON: longitudes.astype(np.float64),
+        },
+    )
+    dataset.to_zarr(
+        target,
+        mode="w-",
+        consolidated=False,
+        zarr_format=ZARR_FORMAT,
+        encoding={
+            PRECIPITATION: {"chunks": cube_chunks(days, ny, nx)},
+            TIME: {"chunks": (days,)},
+        },
+    )
+
+
+def cube_chunks(days: int, ny: int, nx: int) -> tuple[int, int, int]:
+    return (days, min(CELL_CHUNK, ny), min(CELL_CHUNK, nx))
+
+
+def read_cube(source: Path) -> tuple[np.ndarray, np.ndarray]:
+    """Return (dates as datetime64[D], precipitation in mm as float64 (days, ny, nx))."""
+    with xr.open_zarr(source, consolidated=False, zarr_format=ZARR_FORMAT, chunks=None) as dataset:
+        dates = dataset[TIME].to_numpy().astype("datetime64[D]")
+        precipitation = dataset[PRECIPITATION].to_numpy().astype(np.float64)
+    return dates, precipitation
+
+
+def read_cell(source: Path, row: int, col: int) -> tuple[np.ndarray, np.ndarray]:
+    """The series of one cell of a cube; only the chunk that holds the cell is read."""
+    with xr.open_zarr(source, consolidated=False, zarr_format=ZARR_FORMAT, chunks=None) as dataset:
+        dates = dataset[TIME].to_numpy().astype("datetime64[D]")
+        cell = dataset[PRECIPITATION].isel({LAT: row, LON: col})
+        precipitation = cell.to_numpy().astype(np.float64)
+    return dates, precipitation
 
 
 def read_series(source: Path) -> tuple[np.ndarray, np.ndarray]:

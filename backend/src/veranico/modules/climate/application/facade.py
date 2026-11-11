@@ -1,9 +1,13 @@
 """The implementation of `ClimateFacade`: thin, it delegates to the use cases and the store."""
 
+import asyncio
+from collections import OrderedDict
+
 from veranico.modules.climate.application.ensure_history import EnsureHistory
 from veranico.modules.climate.application.export_evidence import ExportEvidence
 from veranico.modules.climate.application.ports import WeatherStore
 from veranico.modules.climate.application.resolve_location import ResolveLocation
+from veranico.modules.climate.application.served_region import served_region
 from veranico.modules.climate.contracts import (
     DailySeries,
     DatasetRef,
@@ -14,11 +18,9 @@ from veranico.modules.climate.contracts import (
     RegionCube,
 )
 from veranico.modules.climate.domain.brazil import in_brazil_box
-from veranico.modules.climate.domain.regions import REGIONS, RegionDef
+from veranico.modules.climate.domain.regions import REGIONS
 from veranico.shared.kernel.errors import DatasetNotFoundError, OutsideCoverageError
 from veranico.shared.kernel.ids import DatasetId
-
-REAL_CUBE_SOURCE = "era5-land/cds"
 
 
 class Climate:
@@ -28,11 +30,15 @@ class Climate:
         resolve: ResolveLocation,
         ensure: EnsureHistory,
         export: ExportEvidence,
+        cube_cache_size: int,
     ) -> None:
         self._store = store
         self._resolve = resolve
         self._ensure = ensure
         self._export = export
+        self._cube_cache_size = cube_cache_size
+        self._cubes: OrderedDict[str, tuple[str, RegionCube]] = OrderedDict()
+        self._cube_lock = asyncio.Lock()
 
     async def resolve_location(
         self, query: str | None, lat: float | None, lon: float | None
@@ -51,31 +57,36 @@ class Climate:
         return await self._store.read_series(dataset_id)
 
     async def regions(self) -> list[Region]:
-        return [await self._region(definition) for definition in REGIONS]
+        return [
+            served_region(definition, await self._store.cube_source(definition.region_id))
+            for definition in REGIONS
+        ]
 
     async def region_cube(self, region_id: str) -> RegionCube:
-        raise DatasetNotFoundError  # no cube can be installed before plan task 9
+        """The installed cube, decoded once and kept while it is among the most recent.
+
+        A decoded cube of the full history is about 89 MB, so the number kept is small and
+        configured. The store's cube version tells a kept cube from a newer build, and
+        costs one small read. The lock keeps concurrent first requests from decoding the
+        same cube several times at once. The arrays are shared between callers and
+        read-only.
+        """
+        async with self._cube_lock:
+            version = await self._store.cube_version(region_id)
+            if version is None:
+                raise DatasetNotFoundError
+            kept = self._cubes.get(region_id)
+            if kept is not None and kept[0] == version:
+                self._cubes.move_to_end(region_id)
+                return kept[1]
+            cube = await self._store.read_cube(region_id)
+            cube.dates.flags.writeable = False
+            cube.precipitation_mm.flags.writeable = False
+            self._cubes[region_id] = (version, cube)
+            self._cubes.move_to_end(region_id)
+            while len(self._cubes) > self._cube_cache_size:
+                self._cubes.popitem(last=False)
+            return cube
 
     async def export_evidence(self, request: EvidenceRequest) -> bytes:
         return await self._export(request)
-
-    async def _region(self, definition: RegionDef) -> Region:
-        """The region as served: synthetic unless its installed cube is the real one.
-
-        A region with a synthetic cube and a region with no cube at all both answer
-        `synthetic = True`: neither shows real weather history (human gate H1).
-        """
-        source = await self._store.cube_source(definition.region_id)
-        return Region(
-            region_id=definition.region_id,
-            name=definition.name,
-            crop=definition.crop,
-            north=definition.north,
-            south=definition.south,
-            west=definition.west,
-            east=definition.east,
-            step_deg=definition.step_deg,
-            nx=definition.nx,
-            ny=definition.ny,
-            synthetic=source != REAL_CUBE_SOURCE,
-        )

@@ -18,11 +18,11 @@ from tests.integration.climate.store_contract import (
 )
 from veranico.modules.climate.application.cells import h3_cell_of
 from veranico.modules.climate.infrastructure.local_store import LocalWeatherStore
-from veranico.modules.climate.infrastructure.manifest import PointManifest
+from veranico.modules.climate.infrastructure.manifest import CubeManifest, PointManifest
 
 
 class _FailingSwitch(LocalWeatherStore):
-    def _switch_manifest(self, path: Path, manifest: PointManifest) -> str | None:
+    def _switch_manifest(self, path: Path, manifest: PointManifest | CubeManifest) -> str | None:
         raise InjectedError
 
 

@@ -31,6 +31,24 @@ def validate_daily(dates: np.ndarray, precipitation_mm: np.ndarray) -> int:
     return int(np.isnan(precipitation_mm).sum())
 
 
+def validate_cube(dates: np.ndarray, precipitation_mm: np.ndarray) -> np.ndarray:
+    """Check every cell of a cube of shape (days, ny, nx) with `validate_daily`.
+
+    Returns the number of missing values per cell, shape (ny, nx).
+    """
+    if precipitation_mm.ndim != 3:
+        raise WeatherDataError(f"a cube has three dimensions, not {precipitation_mm.ndim}")
+    _, ny, nx = precipitation_mm.shape
+    missing = np.zeros((ny, nx), dtype=np.int64)
+    for row in range(ny):
+        for col in range(nx):
+            try:
+                missing[row, col] = validate_daily(dates, precipitation_mm[:, row, col])
+            except WeatherDataError as error:
+                raise WeatherDataError(f"cell ({row}, {col}): {error}") from None
+    return missing
+
+
 def _first(dates: np.ndarray, breaks: np.ndarray) -> np.datetime64:
     """The date that ends the first offending step."""
     found: np.datetime64 = dates[int(np.argmax(breaks)) + 1]
