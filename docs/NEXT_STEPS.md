@@ -37,6 +37,7 @@ Interface:
 * **The point chip.** Every map click adds the removable point to the composer.
 * **Timeline width.** Between 1100 and 1240 px with a wide tab open the timeline is about 300 px wide.
 * **Basemap fallback.** When EOX tiles are rate limited the interface only says the basemap did not load; a tile service with an agreed quota removes the risk.
+* **Narration before tool calls.** The model writes a sentence before most tool calls although the prompt asks it not to; withholding the text of a step that ends in a tool call would hide it, and changes what the stream shows.
 * **Markdown in answers.** The prompt asks for plain text; a count of answers with Markdown marks per evaluation run would show whether the model complies.
 
 Backend:
