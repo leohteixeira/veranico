@@ -114,12 +114,14 @@ export function distanceKm(a: LatLon, b: LatLon): number {
   return 2 * EARTH_RADIUS_KM * Math.asin(Math.min(1, Math.sqrt(h)));
 }
 
-/** The step of the ERA5 family grids the point path reads, in degrees. */
-export const POINT_CELL_STEP = 0.1;
+/** The step of the ERA5 grid the point path reads through Open-Meteo, in degrees (ADR 0017). */
+export const POINT_CELL_STEP = 0.25;
 
 /**
- * The grid cell around a point that lies outside the showcase regions: the 0.1° cell whose centre
- * is the nearest grid node. Shown as an outline only; it carries no value.
+ * A cell of the ERA5 0.25° grid around a point that lies outside the showcase regions: the one
+ * whose centre is the nearest grid node. It is drawn for scale only. It carries no value and it is
+ * not "the cell the quote used": the quote uses the grid point the weather source returned, which
+ * the browser does not compute.
  */
 export function pointCell(point: LatLon, step = POINT_CELL_STEP): LatLngBoundsTuple {
   const lat = Math.round(point.lat / step) * step;

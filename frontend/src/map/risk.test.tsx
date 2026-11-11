@@ -254,13 +254,17 @@ describe("geometry [R-12.2-3] [R-12-2] [R-16.7-1]", () => {
     expect(distanceKm(POINT, POINT)).toBe(0);
   });
 
-  it("the cell of a point outside the regions is the 0.1 degree cell around its grid node", () => {
+  it("the outline of a point outside the regions is a cell of the ERA5 0.25 degree grid", () => {
     const [[south, west], [north, east]] = pointCell({ lat: -12.62, lon: -55.66 });
 
-    expect(south).toBeCloseTo(-12.65, 9);
-    expect(north).toBeCloseTo(-12.55, 9);
-    expect(west).toBeCloseTo(-55.75, 9);
-    expect(east).toBeCloseTo(-55.65, 9);
+    expect(south).toBeCloseTo(-12.625, 9);
+    expect(north).toBeCloseTo(-12.375, 9);
+    expect(west).toBeCloseTo(-55.875, 9);
+    expect(east).toBeCloseTo(-55.625, 9);
+    // It says nothing about which grid point the quote used: the note names the source's.
+    expect(translate("en", "map.outside_showcase")).toContain(
+      "the ERA5 grid point the weather source returned",
+    );
   });
 });
 

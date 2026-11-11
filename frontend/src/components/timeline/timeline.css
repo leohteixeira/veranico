@@ -1,0 +1,151 @@
+/* The season timeline card. Where it sits on the stage is the shell's decision. */
+
+.timeline {
+  display: grid;
+  gap: 6px;
+  padding: 12px 16px 10px;
+}
+
+/* The readout and the key share the left; the switch keeps its place on the right. */
+.timeline__head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 2px 16px;
+}
+
+.timeline__what {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 16px;
+  min-width: 0;
+}
+
+.timeline__readout {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: var(--display-weight);
+  font-size: 1.0625rem;
+  line-height: 1.3;
+  color: var(--ink);
+}
+
+.timeline__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--ink-2);
+}
+
+.timeline__key {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.timeline__key::before {
+  content: "";
+  flex: none;
+}
+
+/* The payout key repeats the mark of the chart: the colour, and the tick under the baseline. */
+.timeline__key--pay::before {
+  width: 6px;
+  height: 11px;
+  border-radius: 2px 2px 0 0;
+  background: var(--pay);
+  box-shadow: 0 4px 0 -1px var(--pay);
+  margin-bottom: 3px;
+}
+
+.timeline__key--trigger::before {
+  width: 16px;
+  border-top: 1px dashed var(--ink-3);
+}
+
+.timeline__track {
+  position: relative;
+  cursor: ew-resize;
+  touch-action: pan-y;
+  border-radius: 4px;
+}
+
+.timeline__track:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* The range input lies over the bars, unseen: it takes the keyboard, the bars take the pointer. */
+.timeline__range {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.timeline-bars {
+  min-height: 61px;
+}
+
+.timeline-bars svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.timeline-bars__bar {
+  fill: var(--bar);
+}
+
+.timeline-bars__bar--pay,
+.timeline-bars__mark {
+  fill: var(--pay);
+}
+
+.timeline-bars__hit {
+  fill: transparent;
+}
+
+.timeline-bars__trigger {
+  stroke: var(--ink-3);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.timeline-bars__cursor {
+  stroke: var(--ink);
+  stroke-width: 1.5;
+}
+
+.timeline-bars__decade {
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+  fill: var(--ink-3);
+}
+
+.timeline__state {
+  display: flex;
+  align-items: center;
+  gap: 8px 12px;
+  min-height: 61px;
+  font-size: 0.8125rem;
+  color: var(--ink-2);
+}
+
+.timeline__attribution {
+  padding-top: 6px;
+  border-top: 1px solid var(--line);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .timeline-bars__bar {
+    transition: opacity 160ms var(--ease-out);
+  }
+}
