@@ -148,6 +148,57 @@ def test_the_load_block_shows_identity_counts_latency_thresholds_and_limits(root
     assert "- Not a capacity estimate." in text
 
 
+MINIMAL_SUMMARIES: dict[str, dict[str, Any]] = {
+    "traceability": {
+        "requirements": 1,
+        "passed": 1,
+        "failed": 0,
+        "no_passing_test": 0,
+        "not_passed": [],
+    },
+    "mutation": {
+        "catalogue_size": 0,
+        "minimum_catalogue_size": 0,
+        "tests": "tests/unit/pricing",
+        "killed": 0,
+        "survived": 0,
+        "stale": 0,
+        "errors": 0,
+        "mutants": [],
+    },
+    "failure": {"tests": 0, "passed": 0, "failed": 0, "scenarios": []},
+    "load": LOAD_SUMMARY,
+    "evals": {},
+}
+
+
+@pytest.mark.req("R-16.8-2")
+def test_the_result_of_every_kind_names_the_commit_it_was_measured_on(root: Path) -> None:
+    assert set(MINIMAL_SUMMARIES) == set(evidence.KINDS)
+    for kind, summary in MINIMAL_SUMMARIES.items():
+        store(root, result(kind, "20261111T120000Z", summary))
+
+    rendered = evidence.render(DOCUMENT, root)
+
+    for kind in evidence.KINDS:
+        head = block_of(rendered, kind).splitlines()[0]
+        assert "run `20261111T120000Z` · `0123456` · measured" in head, kind
+
+
+@pytest.mark.req("R-16.8-2")
+def test_a_result_measured_on_a_changed_tree_names_the_commit_it_was_based_on(root: Path) -> None:
+    dirty = {"commit": COMMIT, "dirty": True}
+    for kind, summary in MINIMAL_SUMMARIES.items():
+        store(root, result(kind, "20261111T120000Z", summary, identity=dirty))
+
+    rendered = evidence.render(DOCUMENT, root)
+
+    for kind in evidence.KINDS:
+        head = block_of(rendered, kind).splitlines()[0]
+        assert "working tree, 2026-11-11 UTC, based on `0123456`" in head, kind
+
+
+@pytest.mark.req("R-16.8-3")
 def test_of_two_load_runs_only_the_newest_appears_and_nothing_is_summed(root: Path) -> None:
     older = {**LOAD_SUMMARY, "quotes_stored": 177, "evidence_lines": 1477}
     store(root, result("load", "20261110T090000Z", older))

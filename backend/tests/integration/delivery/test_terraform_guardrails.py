@@ -22,6 +22,8 @@ TERRAFORM_DIR = Path(__file__).resolve().parents[4] / "infra" / "terraform"
 
 GUARDRAIL_RUNS = (
     "services_scale_from_zero_to_two",
+    "no_domain_is_mapped_unless_one_is_given",
+    "a_given_domain_is_mapped_to_the_api_service",
     "every_regional_resource_is_in_us_central1",
     "another_region_is_rejected",
     "bucket_is_private",
@@ -68,12 +70,31 @@ def test_the_configuration_is_formatted_and_valid() -> None:
     assert valid.returncode == 0, f"{valid.stdout}\n{valid.stderr}"
 
 
-@pytest.mark.req("R-17-3", "R-17-5", "R-15-6")
-@pytest.mark.usefixtures("initialised")
-def test_every_guardrail_run_passes() -> None:
-    result = _terraform("test")
+@pytest.fixture(scope="module")
+def guardrails(initialised: None) -> subprocess.CompletedProcess[str]:
+    """One `terraform test` for the module: its exit status and the list of runs."""
+    return _terraform("test")
 
-    assert result.returncode == 0, f"{result.stdout}\n{result.stderr}"
+
+@pytest.mark.req("R-17-3", "R-17-5", "R-15-6")
+def test_every_guardrail_run_passes(guardrails: subprocess.CompletedProcess[str]) -> None:
+    assert guardrails.returncode == 0, f"{guardrails.stdout}\n{guardrails.stderr}"
     # A run that was renamed or removed must not go unnoticed behind a green exit status.
     for run in GUARDRAIL_RUNS:
-        assert f'run "{run}"... pass' in result.stdout, f"guardrail run missing: {run}"
+        assert f'run "{run}"... pass' in guardrails.stdout, f"guardrail run missing: {run}"
+
+
+@pytest.mark.req("R-17-4")
+def test_the_address_is_the_cloud_run_url_and_a_domain_is_optional(
+    guardrails: subprocess.CompletedProcess[str],
+) -> None:
+    """The product's address is the service's own URL; a domain is mapped only when given."""
+    outputs = (TERRAFORM_DIR / "outputs.tf").read_text(encoding="utf-8")
+    api_url = outputs.split('output "api_url"')[1].split("}")[0]
+    assert "google_cloud_run_v2_service.api.uri" in api_url
+
+    for run in (
+        "no_domain_is_mapped_unless_one_is_given",
+        "a_given_domain_is_mapped_to_the_api_service",
+    ):
+        assert f'run "{run}"... pass' in guardrails.stdout, guardrails.stdout

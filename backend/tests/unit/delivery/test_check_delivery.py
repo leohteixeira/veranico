@@ -206,6 +206,7 @@ def test_an_empty_terraform_directory_is_a_finding(tmp_path: Path) -> None:
     assert checker.check_terraform_keys(tmp_path) != []
 
 
+@pytest.mark.req("R-16.9-6")
 def test_the_real_workflows_and_terraform_pass() -> None:
     assert checker.check_workflows() == []
     assert checker.check_terraform_keys() == []

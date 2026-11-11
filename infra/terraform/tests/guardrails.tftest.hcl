@@ -101,6 +101,36 @@ run "services_scale_from_zero_to_two" {
   }
 }
 
+run "no_domain_is_mapped_unless_one_is_given" {
+  command = plan
+
+  assert {
+    condition     = length(google_cloud_run_domain_mapping.api) == 0
+    error_message = "Without custom_domain the Cloud Run address is the address: no mapping."
+  }
+}
+
+run "a_given_domain_is_mapped_to_the_api_service" {
+  command = plan
+
+  variables {
+    custom_domain = "veranico.leohteixeira.com"
+  }
+
+  assert {
+    condition     = length(google_cloud_run_domain_mapping.api) == 1
+    error_message = "A given custom_domain must produce one domain mapping."
+  }
+  assert {
+    condition     = google_cloud_run_domain_mapping.api[0].name == "veranico.leohteixeira.com"
+    error_message = "The mapping must be for the given domain."
+  }
+  assert {
+    condition     = google_cloud_run_domain_mapping.api[0].spec[0].route_name == google_cloud_run_v2_service.api.name
+    error_message = "The domain must point at the API service."
+  }
+}
+
 run "every_regional_resource_is_in_us_central1" {
   command = plan
 
