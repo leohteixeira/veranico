@@ -20,7 +20,7 @@ from veranico.modules.carriers.contracts import Receipt, WebhookEnvelope
 from veranico.modules.carriers.domain.signing import Verification, verify
 from veranico.shared.kernel import ids
 from veranico.shared.kernel.clock import Clock
-from veranico.shared.kernel.errors import DomainError, InvalidArgumentsError
+from veranico.shared.kernel.errors import InvalidArgumentsError
 from veranico.shared.kernel.ids import EventId
 
 _logger = logging.getLogger(__name__)
@@ -34,22 +34,34 @@ _EVENT_ID = re.compile(r"\A[A-Za-z0-9_-]{1,128}\Z")
 _MAX_ROUNDS = 3
 
 
-# The answers of the mock carrier that contracts section 6 fixes by status. The API role
-# reads only the status; these codes exist on the carrier's own wire and nowhere else.
-class InvalidSignatureError(DomainError):
+class CarrierRejectionError(Exception):
+    """An answer of the mock carrier that contracts section 6 fixes by status.
+
+    Deliberately not a `DomainError`: those are the product's error codes, one per contract
+    code, all defined in the kernel. These three exist only on the mock carrier's own wire
+    (the API role reads just the status), so the carrier route maps them itself.
+    """
+
+    code: str
+    status: int
+
+    def __init__(self) -> None:
+        super().__init__(self.code)
+
+
+class InvalidSignatureError(CarrierRejectionError):
     code = "invalid_signature"
     status = 401
 
 
-class StaleTimestampError(DomainError):
+class StaleTimestampError(CarrierRejectionError):
     code = "stale_timestamp"
     status = 400
 
 
-class CarrierUnavailableError(DomainError):
+class CarrierUnavailableError(CarrierRejectionError):
     code = "carrier_unavailable"
     status = 503
-    retryable = True
 
 
 @dataclass(frozen=True, slots=True)
