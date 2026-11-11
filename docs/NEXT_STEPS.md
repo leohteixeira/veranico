@@ -20,6 +20,35 @@ What was deliberately left out of Veranico, with the reason. The scope is locked
 * **Mobile-first layout.** The layout is laptop first; on narrow screens the same pieces stack and mobile is best effort (SPEC section 12.1).
 * **Commercial tile licence.** Sentinel-2 cloudless imagery after 2016 is CC BY-NC-SA 4.0, so the demo is non-commercial; a commercial use needs another satellite layer or a licence (ADR 0011).
 
+## Found during the build
+
+Each item was noticed while building or reviewing and is outside the locked scope.
+
+Interface:
+
+* **Place names and a label on the cube frame.** The finish review asked for them; the approved direction draws the map without labels.
+* **A jump to the conversation in the stacked layout.** At 390 px the conversation sits far below the map; the specification fixes that order.
+* **One authored moment of motion on the risk surface.** The review asked for it; the specification asks for none.
+* **Map notes on narrow screens.** At 390 px the notes card covers the lower part of the fitted region.
+* **Smaller first load.** The main bundle is over 500 kB; the tabs (charts) and the map can be split.
+* **Map cells by keyboard.** Cells are reachable through the Risk tab's neighbourhood, not on the map itself.
+* **Empty conversation with an exhausted allowance.** The list area is blank; it could explain the replay.
+* **A quote opened from the approval queue** does not move the map to its cover.
+* **The point chip.** Every map click adds the removable point to the composer.
+* **Timeline width.** Between 1100 and 1240 px with a wide tab open the timeline is about 300 px wide.
+* **Basemap fallback.** When EOX tiles are rate limited the interface only says the basemap did not load; a tile service with an agreed quota removes the risk.
+* **Markdown in answers.** The prompt asks for plain text; a count of answers with Markdown marks per evaluation run would show whether the model complies.
+
+Backend:
+
+* **Per-season index values kept between requests.** They are recomputed from the kept cube on each uncached request; the load campaign passes without a second cache.
+* **Memory headroom of the API role.** With the three cubes decoded the API peaks at about 958 MiB of its 1 GiB limit under the load campaign. A fourth region needs a larger instance or a smaller cache (`VERANICO_CLIMATE__CUBE_CACHE_SIZE`).
+* **Memory figures in the stored load result.** They were read from the containers by hand; the runner does not record them.
+* **Retry of a failed audit entry after a document was written.** The entry is not retried today; the document itself is safe.
+* **Rendering off the request.** The term sheet renders synchronously; a queue is not justified at this size.
+* **Closing the model client at shutdown.** The connection pool of the Anthropic client is not closed; the process ends anyway.
+* **Caching the growing message history.** Only the stable prefix (tools and system prompt) is cached; a second breakpoint would save tokens in long tool loops.
+
 ## Not in this list
 
 Open human gates are not omissions and are tracked in the goal contract (`docs/veranico/goal.md` in the workspace repository): the three real cubes and ADR 0016 (chunking) need a Copernicus CDS account; the deployment needs a Google Cloud project.
