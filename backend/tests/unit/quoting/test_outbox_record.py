@@ -51,6 +51,22 @@ def test_marking_enqueued_moves_only_a_pending_record() -> None:
     assert not enqueued.terminal
 
 
+@pytest.mark.req("R-7-11")
+def test_an_open_record_is_due_when_no_call_is_scheduled_or_its_time_has_come() -> None:
+    for status in ("pending", "enqueued"):
+        fresh = _record(status)
+        scheduled = fresh.after_dispatch(NOW)
+
+        assert fresh.due(NOW)
+        assert (scheduled.dispatch_count, scheduled.next_attempt_at) == (1, NOW)
+        assert not scheduled.due(NOW - TICK)
+        assert scheduled.due(NOW)
+        assert scheduled.after_dispatch(NOW + TICK).dispatch_count == 2
+    for status in ("delivered", "abandoned"):
+        assert not _record(status).due(NOW)
+        assert not replace(_record(status), next_attempt_at=NOW - TICK).due(NOW)
+
+
 @pytest.mark.req("R-7-13")
 def test_an_enqueued_record_is_silent_only_once_the_window_has_passed() -> None:
     just_inside = replace(_record("enqueued"), enqueued_at=EDGE)

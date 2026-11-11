@@ -419,10 +419,12 @@ def test_a_redelivery_starts_a_new_round_after_the_recorded_attempts() -> None:
         step = quote.record_attempt(record.mark_enqueued(NOW), _attempt(number), at=NOW)
         quote, record = step.quote, step.outbox[0]
     step = quote.mark_abandoned(record, at=NOW)
-    quote, record = step.quote, step.outbox[0]
+    quote, record = step.quote, step.outbox[0].after_dispatch(LATER).after_dispatch(LATER)
 
     mutation = quote.request_redelivery(record, actor="human", at=LATER)
 
+    assert (record.round, record.dispatch_count) == (0, 2)
+    assert (mutation.outbox[0].round, mutation.outbox[0].dispatch_count) == (1, 0)
     assert mutation.quote.status == "approved"
     assert _delivery(mutation.quote).status == "delivering"
     assert _delivery(mutation.quote).attempts == 3

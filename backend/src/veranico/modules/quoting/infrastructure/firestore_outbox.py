@@ -49,3 +49,24 @@ class FirestoreOutboxStore:
                 )
 
         await run_in_transaction(self._client, body)
+
+    async def record_dispatch(self, event_id: EventId, next_attempt_at: datetime) -> None:
+        reference = self._collection.document(event_id)
+
+        async def body(transaction: AsyncTransaction) -> None:
+            document = (await reference.get(transaction=transaction)).to_dict()
+            if document is None:
+                return
+            record = outbox_from_document(document)
+            if record.terminal:
+                return
+            dispatched = record.after_dispatch(next_attempt_at)
+            transaction.update(
+                reference,
+                {
+                    "dispatch_count": dispatched.dispatch_count,
+                    "next_attempt_at": dispatched.next_attempt_at,
+                },
+            )
+
+        await run_in_transaction(self._client, body)

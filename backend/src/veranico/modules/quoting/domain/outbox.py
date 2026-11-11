@@ -26,9 +26,14 @@ class OutboxRecord:
     recorded_attempts: tuple[int, ...] = ()
     # Highest attempt number recorded when the current round was enqueued.
     attempt_base: int = 0
+    # Delivery round: 0 after the approval, one more after each manual redelivery. A queue
+    # that reserves the names of finished tasks needs a new task name for each round.
+    round: int = 0
     enqueued_at: datetime | None = None
     last_attempt_at: datetime | None = None
-    next_attempt_at: datetime | None = None  # relay only
+    # Relay only: the calls it made in the current round and when the next one is due.
+    dispatch_count: int = 0
+    next_attempt_at: datetime | None = None
 
     @property
     def event_id(self) -> EventId:
@@ -43,6 +48,16 @@ class OutboxRecord:
         if self.status != "pending":
             return self
         return replace(self, status="enqueued", enqueued_at=at)
+
+    def after_dispatch(self, next_attempt_at: datetime) -> "OutboxRecord":
+        """The relay called the deliver endpoint and the delivery is still open."""
+        return replace(
+            self, dispatch_count=self.dispatch_count + 1, next_attempt_at=next_attempt_at
+        )
+
+    def due(self, now: datetime) -> bool:
+        """An open delivery the relay should call now."""
+        return not self.terminal and (self.next_attempt_at is None or self.next_attempt_at <= now)
 
 
 def is_silent(record: OutboxRecord, now: datetime, retry_window_seconds: int) -> bool:

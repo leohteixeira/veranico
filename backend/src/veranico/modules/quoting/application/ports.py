@@ -78,3 +78,10 @@ class OutboxStore(Protocol):
     async def mark_enqueued(self, event_id: EventId, at: datetime) -> None:
         """Move a `pending` record to `enqueued`; any other record is left as it is."""
         ...
+
+    async def record_dispatch(self, event_id: EventId, next_attempt_at: datetime) -> None:
+        """Relay only: count one call of the deliver endpoint and store when the next is due.
+
+        A delivered or abandoned record is left as it is.
+        """
+        ...

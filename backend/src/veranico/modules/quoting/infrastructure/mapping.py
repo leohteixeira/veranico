@@ -64,9 +64,11 @@ def outbox_document(record: OutboxRecord, expires_at: datetime) -> dict[str, Any
         "status": record.status,
         "recorded_attempts": list(record.recorded_attempts),
         "attempt_base": record.attempt_base,
+        "round": record.round,
         "created_at": record.created_at,
         "enqueued_at": record.enqueued_at,
         "last_attempt_at": record.last_attempt_at,
+        "dispatch_count": record.dispatch_count,
         "next_attempt_at": record.next_attempt_at,
         "expires_at": expires_at,
     }
@@ -80,8 +82,10 @@ def outbox_from_document(document: dict[str, Any]) -> OutboxRecord:
         created_at=_plain(document["created_at"]),
         recorded_attempts=tuple(document["recorded_attempts"]),
         attempt_base=document["attempt_base"],
+        round=document["round"],
         enqueued_at=_optional(document["enqueued_at"]),
         last_attempt_at=_optional(document["last_attempt_at"]),
+        dispatch_count=document["dispatch_count"],
         next_attempt_at=_optional(document["next_attempt_at"]),
     )
 

@@ -31,6 +31,11 @@ class MemoryOutboxStore:
         if record is not None:
             self.records[event_id] = record.mark_enqueued(at)
 
+    async def record_dispatch(self, event_id: EventId, next_attempt_at: datetime) -> None:
+        record = self.records.get(event_id)
+        if record is not None and not record.terminal:
+            self.records[event_id] = record.after_dispatch(next_attempt_at)
+
 
 class MemoryQuoteRepository:
     def __init__(self, outbox: MemoryOutboxStore | None = None) -> None:

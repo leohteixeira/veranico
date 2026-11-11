@@ -251,7 +251,9 @@ class Quote:
             record,
             status="pending",
             attempt_base=max(record.recorded_attempts, default=0),
+            round=record.round + 1,
             enqueued_at=None,
+            dispatch_count=0,
             next_attempt_at=None,
         )
         return Mutation(
