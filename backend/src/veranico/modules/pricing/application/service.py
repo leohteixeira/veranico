@@ -52,6 +52,8 @@ class PricingService:
         self._climate = climate
         self._settings = settings
         self.cell_cache = CellCache(settings.cell_cache_entries)
+        # Grids being computed now, by request. Touched from the event loop only.
+        self._computing: dict[CellMetricRequest, asyncio.Future[CellGrid]] = {}
 
     async def backtest(self, dataset_id: DatasetId, cover: CoverDefinition) -> BacktestResult:
         _check_cover(cover)
@@ -126,6 +128,24 @@ class PricingService:
         cached = self.cell_cache.get(request)
         if cached is not None:
             return cached
+        # One computation per uncached request, shared by everyone who asks for it meanwhile.
+        # Without this, identical requests arriving while the first is still computing each
+        # fetched the cube and computed the grid again (measured under load: 33 computations
+        # for 24 distinct requests), and each waited its own turn for the cube.
+        computing = self._computing.get(request)
+        if computing is None:
+            computing = asyncio.ensure_future(self._compute_cell_grid(request))
+            self._computing[request] = computing
+            computing.add_done_callback(lambda done: self._computed(request, done))
+        # Shielded: a caller that goes away must not cancel the computation of the others.
+        return await asyncio.shield(computing)
+
+    def _computed(self, request: CellMetricRequest, done: asyncio.Future[CellGrid]) -> None:
+        del self._computing[request]
+        if not done.cancelled():
+            done.exception()  # each waiter got it; marks it retrieved when all of them left
+
+    async def _compute_cell_grid(self, request: CellMetricRequest) -> CellGrid:
         cube = await self._climate.region_cube(request.region_id)
         # Up to a second of NumPy work: off the event loop, so open streams keep flowing.
         grid = await asyncio.to_thread(self._cell_grid, cube, request)
