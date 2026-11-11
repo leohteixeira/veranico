@@ -30,6 +30,7 @@ from typing import TextIO
 
 BACKEND = Path(__file__).resolve().parent.parent
 REPO = BACKEND.parent
+FRONTEND = REPO / "frontend"
 
 OPEN_EXIT_CODE = 3
 
@@ -183,11 +184,107 @@ GATES: dict[str, Gate] = {
                 BACKEND,
             ),
             Step("failure campaign with the fault proxy", "make test-failure", REPO),
+            # Paid: calls the model API, prints the cost and stops at its own spend limit.
+            Step(
+                "evaluation suite at or above its threshold (open without the model key)",
+                "uv run python -m tests.evals.run",
+                BACKEND,
+                may_be_open=True,
+            ),
         ),
     ),
-    "m4": Gate(plans="plan 08"),
-    "m5": Gate(plans="plan 09"),
-    "m6": Gate(plans="plans 09, 10"),
+    "m4": Gate(
+        plans="plan 08",
+        steps=(
+            Step(
+                "frontend dependencies, lint and type check",
+                "pnpm install --frozen-lockfile && pnpm lint && pnpm typecheck",
+                FRONTEND,
+            ),
+            Step("frontend unit tests", "pnpm test", FRONTEND),
+            Step("frontend build without the mock layer", "pnpm build", FRONTEND),
+            Step(
+                "Playwright happy path, embed route and screenshots at 1440 and 390",
+                "pnpm e2e",
+                FRONTEND,
+            ),
+            Step(
+                "frame-ancestors header of the embed route and of every other page",
+                "uv run pytest tests/api/test_static_frontend.py -q",
+                BACKEND,
+            ),
+        ),
+    ),
+    "m5": Gate(
+        plans="plan 09",
+        steps=(
+            Step("emulators up", _EMULATORS_UP, REPO),
+            Step("delivery unit tests", "uv run pytest tests/unit/delivery -q", BACKEND),
+            Step(
+                "delivery integration tests (spans, redaction, shutdown, Terraform guardrails)",
+                'uv run pytest tests/integration/delivery -m "integration and not evidence" -q',
+                BACKEND,
+            ),
+            Step("load fixture and oracle tests", "uv run pytest ../load/tests -q", BACKEND),
+            Step(
+                "image builds and passes the container smoke test",
+                "docker build -t veranico:smoke . && infra/smoke/container_smoke.sh veranico:smoke",
+                REPO,
+            ),
+            Step(
+                "Terraform format, validate and tests (nothing is applied)",
+                "terraform fmt -check -recursive && terraform init -backend=false -input=false"
+                " && terraform validate && terraform test",
+                REPO / "infra" / "terraform",
+            ),
+            Step(
+                "workflows pinned and least-privilege",
+                "uv run python ../.github/scripts/check_delivery.py workflows",
+                BACKEND,
+            ),
+            Step(
+                "no service account key in Terraform",
+                "uv run python ../.github/scripts/check_delivery.py terraform-keys",
+                BACKEND,
+            ),
+            Step("load campaign on the local stack", "make load", REPO),
+            Step(
+                "stored load result passed",
+                "uv run pytest tests/integration/delivery/test_load_result.py -m evidence -q",
+                BACKEND,
+            ),
+        ),
+    ),
+    # The repository part of M6. The portfolio page (plan 10) lives in another repository
+    # and is verified there.
+    "m6": Gate(
+        plans="plans 09, 10",
+        steps=(
+            Step(
+                "traceability, every requirement with a passing test",
+                "make traceability REQUIRE_ALL=1",
+                REPO,
+            ),
+            Step("evidence campaigns and the rendered record", "make evidence", REPO),
+            Step(
+                "verification record matches passed results on HEAD",
+                "uv run python scripts/evidence.py check"
+                " --require traceability,mutation,failure,load,evals",
+                BACKEND,
+            ),
+            Step(
+                "README structure",
+                "uv run python ../.github/scripts/check_delivery.py readme",
+                BACKEND,
+            ),
+            # Isolated: its own Compose project, so it runs next to the shared emulators.
+            Step(
+                "clean copy: verify-m0 and make dev",
+                "ISOLATED=1 infra/smoke/clean_copy.sh",
+                REPO,
+            ),
+        ),
+    ),
 }
 
 
