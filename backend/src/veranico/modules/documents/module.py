@@ -1,6 +1,8 @@
 """Wiring of `documents`. Only `bootstrap.py` imports this file.
 
-Stub of the foundation milestone: plan 05 replaces the body of `build` and keeps its signature.
+`settings`, `clock` and `access` are part of the dependencies `bootstrap.py` passes and are
+not used: nothing here is configurable, no clock is read (a stored document never depends on
+when it was rendered) and the principal arrives from `http_auth`.
 """
 
 from collections.abc import Sequence
@@ -10,14 +12,16 @@ from fastapi import APIRouter
 
 from veranico.modules.access.contracts import AccessFacade
 from veranico.modules.climate.contracts import ClimateFacade
-from veranico.modules.documents.contracts import DocumentRef, DocumentsFacade
+from veranico.modules.documents.application.evidence import Evidence
+from veranico.modules.documents.application.facade import DocumentsService
+from veranico.modules.documents.application.term_sheets import TermSheets
+from veranico.modules.documents.contracts import DocumentsFacade
 from veranico.modules.documents.http.router import build_router
-from veranico.modules.quoting.contracts import Actor, QuotingFacade
+from veranico.modules.documents.infrastructure.pdf_renderer import ReportlabTermSheetRenderer
+from veranico.modules.quoting.contracts import QuotingFacade
 from veranico.shared.infrastructure.blobs import BlobStore
 from veranico.shared.infrastructure.settings import Settings
 from veranico.shared.kernel.clock import Clock
-from veranico.shared.kernel.ids import Locale, QuoteId
-from veranico.shared.kernel.principal import Principal
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -36,19 +40,11 @@ class DocumentsModule:
     routers: Sequence[APIRouter]
 
 
-class _StubDocumentsFacade:
-    async def render_term_sheets(
-        self, principal: Principal, quote_id: QuoteId, actor: Actor
-    ) -> list[DocumentRef]:
-        raise NotImplementedError
-
-    async def term_sheet(self, principal: Principal, quote_id: QuoteId, locale: Locale) -> bytes:
-        raise NotImplementedError
-
-    async def evidence(self, principal: Principal, quote_id: QuoteId) -> bytes:
-        raise NotImplementedError
-
-
 def build(deps: DocumentsDeps) -> DocumentsModule:
-    facade = _StubDocumentsFacade()
+    facade = DocumentsService(
+        term_sheets=TermSheets(
+            quoting=deps.quoting, blobs=deps.blobs, renderer=ReportlabTermSheetRenderer()
+        ),
+        evidence=Evidence(quoting=deps.quoting, climate=deps.climate, blobs=deps.blobs),
+    )
     return DocumentsModule(facade=facade, routers=(build_router(facade),))
