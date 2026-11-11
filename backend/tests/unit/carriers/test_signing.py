@@ -127,6 +127,14 @@ def test_request_exactly_at_the_tolerance_verifies() -> None:
 
 
 @pytest.mark.req("R-7-8")
+def test_sub_second_part_of_the_clock_does_not_age_a_request_at_the_tolerance() -> None:
+    # The header carries whole seconds: the sender's own sub-second part was cut off.
+    now = SENT_AT + timedelta(seconds=300, milliseconds=999)
+
+    assert _verify(now=now) is Verification.OK
+
+
+@pytest.mark.req("R-7-8")
 def test_request_one_second_past_the_tolerance_is_stale() -> None:
     assert _verify(now=SENT_AT + timedelta(seconds=301)) is Verification.STALE
 

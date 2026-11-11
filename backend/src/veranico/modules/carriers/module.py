@@ -9,9 +9,12 @@ from google.cloud.firestore import AsyncClient
 
 from veranico.modules.carriers.application.deliver import DeliveryService
 from veranico.modules.carriers.application.delivery_call import DeliveryCalls
+from veranico.modules.carriers.application.receive import Receiver
 from veranico.modules.carriers.contracts import CarriersFacade, DeliveryOutcome
 from veranico.modules.carriers.domain.directory import CarrierDirectory
-from veranico.modules.carriers.http.router import build_carrier_router, build_router
+from veranico.modules.carriers.http.carrier_router import build_carrier_router
+from veranico.modules.carriers.http.router import build_router
+from veranico.modules.carriers.infrastructure.receipts import FirestoreReceiptStore
 from veranico.modules.carriers.infrastructure.webhook_sender import HttpxWebhookSender
 from veranico.modules.quoting.contracts import CarrierCatalog, QuotingFacade
 from veranico.shared.infrastructure.settings import Settings
@@ -50,16 +53,27 @@ class _CarrierRoleFacade:
 
 def build(deps: CarriersDeps) -> CarriersModule:
     delivery = deps.settings.delivery
+    if delivery.webhook_signing_secret is None:
+        # Settings validation already requires it on both roles; this narrows the type.
+        raise RuntimeError("the webhook signing secret is not configured")
+    signing_secret = delivery.webhook_signing_secret.get_secret_value()
     directory = CarrierDirectory(delivery.carrier_base_url)
-    carrier_router = build_carrier_router()
+    # Built on both roles because `CarriersModule` carries it; only the carrier role mounts
+    # it, so the API role never reads or writes the receipts collection.
+    carrier_router = build_carrier_router(
+        Receiver(
+            store=FirestoreReceiptStore(deps.firestore),
+            clock=deps.clock,
+            signing_secret=signing_secret,
+            tolerance_seconds=delivery.timestamp_tolerance_seconds,
+            fail_first_attempt=delivery.carrier_fail_first_attempt,
+        )
+    )
     if deps.quoting is None:
         # Carrier role: only the mock carrier's router; the delivery use case is not built.
         return CarriersModule(
             facade=_CarrierRoleFacade(directory), routers=(), carrier_router=carrier_router
         )
-    if delivery.webhook_signing_secret is None:
-        # Settings validation already requires it on both roles; this narrows the type.
-        raise RuntimeError("the webhook signing secret is not configured")
     service = DeliveryService(
         quoting=deps.quoting,
         directory=directory,
@@ -69,7 +83,7 @@ def build(deps: CarriersDeps) -> CarriersModule:
             total_timeout_seconds=delivery.webhook_total_timeout_seconds,
         ),
         clock=deps.clock,
-        signing_secret=delivery.webhook_signing_secret.get_secret_value(),
+        signing_secret=signing_secret,
     )
     calls = DeliveryCalls(
         carriers=service, quoting=deps.quoting, attempt_limit=delivery.attempt_limit

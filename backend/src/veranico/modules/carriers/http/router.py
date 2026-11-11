@@ -1,20 +1,17 @@
-"""Routes of `carriers`: the delivery call (API role) and the mock carrier (carrier role).
+"""The API-role route of `carriers`: the delivery call. The mock carrier's route is in
+`carrier_router.py`.
 
 Path, method, operation id, security scheme and schemas are final since the foundation
 milestone; only handler bodies change.
 """
 
-from typing import Annotated
-
-from fastapi import APIRouter, Depends, Header, Request
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
-from fastapi.security import APIKeyHeader
 
 from veranico.modules.carriers.application.delivery_call import DeliveryCalls
-from veranico.modules.carriers.contracts import DeliveryOutcome, Receipt, WebhookEnvelope
-from veranico.modules.carriers.domain.signing import SIGNATURE_HEADER, TIMESTAMP_HEADER
+from veranico.modules.carriers.contracts import DeliveryOutcome
 from veranico.shared.infrastructure.http_auth import require_service_identity
-from veranico.shared.kernel.errors import InvalidArgumentsError, NotImplementedYetError
+from veranico.shared.kernel.errors import InvalidArgumentsError
 from veranico.shared.kernel.ids import EventId
 
 # The attempt headers of the delivery call. Both are trusted only because the route
@@ -26,15 +23,6 @@ RETRY_COUNT_HEADER = "X-CloudTasks-TaskRetryCount"
 # Set by the dispatcher of `quoting`: the highest attempt number recorded before this
 # delivery round. Absent means 0.
 ATTEMPT_BASE_HEADER = "Veranico-Attempt-Base"
-
-# Describes the credential in OpenAPI only (`auto_error=False`): the handler verifies the
-# signature over the raw body, so a missing or malformed header is its 401, not a 422.
-_signature_scheme = APIKeyHeader(
-    name=SIGNATURE_HEADER,
-    scheme_name="WebhookSignature",
-    description='`v1=<hex>`: HMAC SHA-256 of "<timestamp>.<raw body>" under the shared secret.',
-    auto_error=False,
-)
 
 
 def build_router(calls: DeliveryCalls) -> APIRouter:
@@ -70,20 +58,3 @@ def _count(request: Request, header: str) -> int:
     if not (value.isascii() and value.isdigit()):
         raise InvalidArgumentsError
     return int(value)
-
-
-def build_carrier_router() -> APIRouter:
-    """The carrier-role router, mounted at the root."""
-    router = APIRouter(tags=["carrier"])
-
-    @router.post("/carrier/v1/submissions", operation_id="receive_submission")
-    async def receive_submission(
-        envelope: WebhookEnvelope,
-        signature: Annotated[str | None, Depends(_signature_scheme)],
-        timestamp: Annotated[
-            str | None, Header(alias=TIMESTAMP_HEADER, description="Unix seconds.")
-        ] = None,
-    ) -> Receipt:
-        raise NotImplementedYetError
-
-    return router

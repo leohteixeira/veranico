@@ -42,7 +42,8 @@ def verify(
 
     The signature is checked first, so only a correctly signed request can be told that it
     is stale; anything unsigned, malformed or tampered is `BAD_SIGNATURE`. `now` is
-    timezone-aware. A request is stale when it is more than `tolerance_seconds` old.
+    timezone-aware. A request is stale when it is more than `tolerance_seconds` old, counted
+    in whole seconds.
     """
     if not timestamp_header or not signature_header:
         return Verification.BAD_SIGNATURE
@@ -54,7 +55,9 @@ def verify(
     expected = _signature(secret, timestamp_header, body)
     if not hmac.compare_digest(expected.encode("ascii"), signature_header.encode("utf-8")):
         return Verification.BAD_SIGNATURE
-    if now.timestamp() - int(timestamp_header) > tolerance_seconds:
+    # Whole seconds on both sides: the header has that resolution, so a sub-second part of
+    # `now` must not make a request at exactly the tolerance look older than it is.
+    if int(now.timestamp()) - int(timestamp_header) > tolerance_seconds:
         return Verification.STALE
     return Verification.OK
 

@@ -124,7 +124,6 @@ STILL_STUBBED: set[tuple[str, str]] = {
     ("GET", f"{V1}/conversations/{{id}}"),
     ("GET", f"{V1}/replays/{{locale}}"),
     ("POST", f"{V1}/internal/outbox/{{event_id}}/deliver"),
-    ("POST", "/carrier/v1/submissions"),
 }
 
 INDEX = {"index_type", "window_start", "window_end", "trigger", "exit"}
