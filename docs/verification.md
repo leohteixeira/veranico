@@ -227,5 +227,14 @@ Found by the delivery checks of this record and fixed before the results above:
 | Span tree test, on its second run | the test used a fixed visitor on the shared emulator, so the daily allowance ran out and the turn was refused | each test application uses a Firestore project of its own in the emulator |
 | The same test, once the allowance was fixed | the default scripted turn called the real geocoding and archive services from a test | the delivery tests answer every outgoing call locally; the weather archive is a stand-in inside the test |
 
-Defects found by the campaigns of the other modules are recorded in the commits that fixed
-them and are not repeated here.
+Found by the campaigns and suites of the modules. Each row was checked against the commit
+it names:
+
+| Found by | Defect | State |
+|---|---|---|
+| Load campaign, run `20261111T114945Z` | under simultaneous quote pricing the per-cell route had a 95th percentile of 1,545 ms against the declared 1,000 ms (median 14.6 ms). Idempotency held in the same run: 200 keys, 200 quotes, no duplicate | **open**: being fixed in the service; the threshold and the profile are unchanged, and section 6 shows the newest run |
+| Assistant failure tests (client disconnect) | a client disconnect did not close the content iterator of the stream, so the model call was left open; and a cancelled turn could record an incomplete token total | fixed in `c015f34`, with the tests that found them |
+| Kernel invariant test, in the full suite | the mock carrier's wire errors (`invalid_signature`, `stale_timestamp`, `carrier_unavailable`) subclassed the product's error family, although they are not product error codes | fixed in `21ad632`: the carrier route maps them to problem documents itself |
+| Integration and race tests on the Firestore emulator | concurrent writers on one document are refused by the emulator after about two seconds ("Transaction lock timeout", `ABORTED`) | `quoting` keeps the decision, the audit entry and the outbox event in one transaction, retries it, and answers exhausted contention as `conflict` (409) (`1eed6df`; proven by the race tests of `f44e62e`); the carrier's receipt store treats the same answer as a lost race (`2ddcb1a`) |
+| Web tests of the risk legend | the `breaks` of a cell metric were read as having outer classes; they are class edges, n + 1 edges for n classes | fixed in `27026ab` |
+| gitleaks, on the tree and the history | an invented sentinel value of the redaction test was flagged as an API key | a narrow allowlist for the exact sentinel shape in `.gitleaks.toml` (`db0a7e0`) |

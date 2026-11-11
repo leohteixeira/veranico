@@ -20,8 +20,10 @@ Each command prints one line per finding and exits 1 when there is any, 0 otherw
 
 `terraform-keys` reads `infra/terraform/**/*.tf`: no service account key resource.
 
-`readme` belongs to the README task and is not written yet; it exits 2 so that nothing
-can take it for a passed check.
+`readme` reads `README.md`: the twelve sections of SPEC 19 exist as `## <n>. <title>`
+headings in order; sections 1 to 11 are not empty; section 12 holds only the author's
+placeholder, because that section is written by the author and never generated; and every
+relative link resolves to a file of the repository.
 """
 
 import re
@@ -61,6 +63,14 @@ _DIGEST = re.compile(r"@sha256:[0-9a-f]{64}\b")
 _IMAGE_VARIABLE = re.compile(r"^\s*(?P<name>[A-Z0-9_]*IMAGE):\s*(?P<value>\S.*)$")
 _IMAGE_REFERENCE = re.compile(r"\$\{?[A-Z0-9_]*IMAGE\}?")
 _KEY_RESOURCE = re.compile(r'^\s*resource\s+"google_service_account_key"')
+
+README = REPOSITORY / "README.md"
+README_SECTIONS = 12  # SPEC 19
+# Section 12 ("What I would change") is the author's. Until it is written it holds this
+# line and nothing else; once the author writes it, this check is changed with it.
+README_PLACEHOLDER = "_Written by the author after the build (human gate H3). Not generated._"
+_SECTION_HEADING = re.compile(r"^## (\d+)\. \S.*$", re.MULTILINE)
+_LINK = re.compile(r"\]\(([^)\s]+)\)")
 
 
 def _without_comment(line: str) -> str:
@@ -195,11 +205,45 @@ def check_terraform_keys(directory: Path = TERRAFORM) -> list[str]:
     return findings
 
 
+def check_readme_text(text: str, root: Path = REPOSITORY) -> list[str]:
+    findings: list[str] = []
+    headings = [
+        (int(found[1]), found.start(), found.end()) for found in _SECTION_HEADING.finditer(text)
+    ]
+    numbers = [number for number, _, _ in headings]
+    if numbers != list(range(1, README_SECTIONS + 1)):
+        return [
+            f"README.md: sections must be '## 1.' to '## {README_SECTIONS}.' in order: {numbers}"
+        ]
+    for position, (number, _, end) in enumerate(headings):
+        following = headings[position + 1][1] if position + 1 < len(headings) else len(text)
+        body = text[end:following].strip()
+        if number < README_SECTIONS and not body:
+            findings.append(f"README.md: section {number} is empty")
+        if number == README_SECTIONS and body != README_PLACEHOLDER:
+            findings.append(
+                f"README.md: section {README_SECTIONS} must hold only the author's placeholder"
+            )
+    for target in sorted({found[1] for found in _LINK.finditer(text)}):
+        if "://" in target or target.startswith(("#", "mailto:")):
+            continue
+        if not (root / target.split("#", 1)[0]).exists():
+            findings.append(f"README.md: the link {target} resolves to no file")
+    return findings
+
+
+def check_readme(path: Path = README) -> list[str]:
+    if not path.is_file():
+        return ["README.md: missing"]
+    return check_readme_text(path.read_text(encoding="utf-8"), path.parent)
+
+
 def main(arguments: list[str]) -> int:
-    commands = {"workflows": check_workflows, "terraform-keys": check_terraform_keys}
-    if arguments == ["readme"]:
-        print("readme: this check is not written yet (README task); nothing was checked")
-        return 2
+    commands = {
+        "workflows": check_workflows,
+        "terraform-keys": check_terraform_keys,
+        "readme": check_readme,
+    }
     if len(arguments) != 1 or arguments[0] not in commands:
         print("usage: check_delivery.py workflows | terraform-keys | readme")
         return 2

@@ -125,5 +125,7 @@ jobs:
         run: cd backend && uv run python ../.github/scripts/check_delivery.py workflows
       - name: Terraform holds no service account key
         run: cd backend && uv run python ../.github/scripts/check_delivery.py terraform-keys
+      - name: README has its twelve sections, the author's placeholder and no dead link
+        run: cd backend && uv run python ../.github/scripts/check_delivery.py readme
       - name: actionlint
         run: docker run --rm --volume "$PWD:/repo" --workdir /repo "$ACTIONLINT_IMAGE" -color

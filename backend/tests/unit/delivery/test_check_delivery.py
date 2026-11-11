@@ -214,8 +214,66 @@ def test_the_real_workflows_and_terraform_pass() -> None:
 def test_the_exit_status_follows_the_findings(capsys: pytest.CaptureFixture[str]) -> None:
     assert checker.main(["workflows"]) == 0
     assert checker.main(["terraform-keys"]) == 0
-    # The README check is not written yet and must not read as passed.
-    assert checker.main(["readme"]) == 2
+    assert checker.main(["readme"]) == 0
     assert checker.main(["unknown"]) == 2
     assert checker.main([]) == 2
     assert "usage" in capsys.readouterr().out
+
+
+def _readme(**changes: str) -> str:
+    """A README with the twelve sections; `changes` replaces the body of a section."""
+    bodies = {str(number): f"Text of section {number}." for number in range(1, 12)}
+    bodies["12"] = checker.README_PLACEHOLDER
+    bodies.update(changes)
+    sections = [f"## {number}. Title {number}\n\n{body}\n" for number, body in bodies.items()]
+    return "# Project\n\n> A note near the top.\n\n" + "\n".join(sections)
+
+
+def test_a_readme_with_the_twelve_sections_and_the_placeholder_passes(tmp_path: Path) -> None:
+    assert checker.check_readme_text(_readme(), tmp_path) == []
+
+
+def test_the_real_readme_passes() -> None:
+    assert checker.check_readme() == []
+
+
+def test_a_missing_or_misordered_section_is_reported(tmp_path: Path) -> None:
+    without_seven = _readme().replace("## 7. Title 7", "### 7. Title 7")
+    swapped = _readme().replace("## 3. Title 3", "## 4. Title 3", 1)
+
+    assert "in order" in checker.check_readme_text(without_seven, tmp_path)[0]
+    assert "in order" in checker.check_readme_text(swapped, tmp_path)[0]
+
+
+def test_an_empty_section_is_reported(tmp_path: Path) -> None:
+    assert checker.check_readme_text(_readme(**{"5": ""}), tmp_path) == [
+        "README.md: section 5 is empty"
+    ]
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        "",
+        "I would change the cache.",
+        checker.README_PLACEHOLDER + "\n\nAnd I would also change the cache.",
+    ],
+)
+def test_section_twelve_holds_only_the_placeholder_of_the_author(body: str, tmp_path: Path) -> None:
+    assert checker.check_readme_text(_readme(**{"12": body}), tmp_path) == [
+        "README.md: section 12 must hold only the author's placeholder"
+    ]
+
+
+def test_a_relative_link_must_resolve_and_an_external_one_is_not_followed(tmp_path: Path) -> None:
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "there.md").write_text("x", encoding="utf-8")
+    body = "[a](docs/there.md#part) [b](docs/missing.md) [c](https://example.com/x) [d](#top)"
+
+    assert checker.check_readme_text(_readme(**{"2": body}), tmp_path) == [
+        "README.md: the link docs/missing.md resolves to no file"
+    ]
+
+
+def test_a_missing_readme_is_a_finding(tmp_path: Path) -> None:
+    assert checker.check_readme(tmp_path / "README.md") == ["README.md: missing"]
