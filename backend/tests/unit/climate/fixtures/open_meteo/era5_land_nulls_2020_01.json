@@ -1,0 +1,36 @@
+{
+ "request": {
+  "method": "GET",
+  "url": "https://archive-api.open-meteo.com/v1/archive?latitude=-15.03&longitude=-47.93&daily=precipitation_sum&models=era5_land&timezone=auto&start_date=2020-01-01&end_date=2020-01-05"
+ },
+ "status": 200,
+ "body": {
+  "latitude": -15.0,
+  "longitude": -47.899994,
+  "generationtime_ms": 0.0,
+  "utc_offset_seconds": -10800,
+  "timezone": "America/Sao_Paulo",
+  "timezone_abbreviation": "GMT-3",
+  "elevation": 819.0,
+  "daily_units": {
+   "time": "iso8601",
+   "precipitation_sum": "mm"
+  },
+  "daily": {
+   "time": [
+    "2020-01-01",
+    "2020-01-02",
+    "2020-01-03",
+    "2020-01-04",
+    "2020-01-05"
+   ],
+   "precipitation_sum": [
+    null,
+    null,
+    null,
+    null,
+    null
+   ]
+  }
+ }
+}

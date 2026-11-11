@@ -1,0 +1,11 @@
+{
+ "request": {
+  "method": "GET",
+  "url": "https://archive-api.open-meteo.com/v1/archive?latitude=-15.03&longitude=-47.93&daily=precipitation_sum&models=era5_lnd&timezone=auto&start_date=2020-01-01&end_date=2020-01-05"
+ },
+ "status": 400,
+ "body": {
+  "error": true,
+  "reason": "Invalid value: Cannot initialize MultiDomains from invalid String value era5_lnd"
+ }
+}
