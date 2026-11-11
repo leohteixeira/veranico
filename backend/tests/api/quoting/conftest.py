@@ -118,8 +118,8 @@ def quote_body(**location: Any) -> dict[str, Any]:
     }
 
 
-@pytest.fixture
-async def api() -> AsyncIterator[QuotingApi]:
+def build_api() -> QuotingApi:
+    """The module on the emulator; the caller awaits `close()` when it is done."""
     host, _, port = FIRESTORE_HOST.partition(":")
     try:
         socket.create_connection((host, int(port)), timeout=2).close()
@@ -156,7 +156,7 @@ async def api() -> AsyncIterator[QuotingApi]:
         )
     )
     app = build_test_app(module.routers, access=access, settings=settings)
-    context = QuotingApi(
+    return QuotingApi(
         app=app,
         facade=module.facade,
         access=access,
@@ -167,5 +167,10 @@ async def api() -> AsyncIterator[QuotingApi]:
         start=start,
         firestore=firestore,
     )
+
+
+@pytest.fixture
+async def api() -> AsyncIterator[QuotingApi]:
+    context = build_api()
     yield context
     await context.close()
