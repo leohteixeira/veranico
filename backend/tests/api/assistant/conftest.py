@@ -26,6 +26,7 @@ from tests.fakes.app import build_test_app
 from tests.fakes.settings import settings_for_tests
 from tests.unit.assistant.tools.kit import Kit, build_kit
 from veranico.modules.assistant import module as assistant_module
+from veranico.modules.assistant.application.ports import ModelClient
 from veranico.modules.assistant.infrastructure.scripted_model import ScriptedModelClient, Step
 from veranico.shared.infrastructure.firestore import close_firestore, firestore_client
 from veranico.shared.kernel.clock import SystemClock
@@ -64,6 +65,9 @@ class AssistantApi:
 
     def app(self, *steps: Step) -> FastAPI:
         """The module with a model that plays `steps`, one per model call."""
+        return self.app_with(ScriptedModelClient(steps))
+
+    def app_with(self, model: ModelClient) -> FastAPI:
         settings = settings_for_tests(
             firestore_emulator_host=FIRESTORE_HOST, **self.settings_overrides
         )
@@ -80,7 +84,7 @@ class AssistantApi:
                 quoting=self.tools.quoting,
                 carriers=self.tools.carriers,
                 documents=self.tools.documents,
-                model_client=ScriptedModelClient(steps),
+                model_client=model,
                 shutdown=self.shutdown,
             )
         )

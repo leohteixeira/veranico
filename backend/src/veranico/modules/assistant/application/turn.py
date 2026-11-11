@@ -84,10 +84,10 @@ _UNKNOWN_TOOL: Final = "unknown"
 
 # Work that must finish although its turn was cancelled. The loop keeps only weak references
 # to tasks, so they are held here until they end.
-_settling: set[asyncio.Task[None]] = set()
+_settling: set[asyncio.Task[object]] = set()
 
 
-async def _settled(work: Coroutine[object, object, None]) -> None:
+async def _settled(work: Coroutine[object, object, object]) -> None:
     """Run `work` to its end even when the caller is being cancelled.
 
     A disconnect cancels the turn at whatever it was awaiting. The charge of a model call and
@@ -232,7 +232,11 @@ class Turn:
                     text = "".join(call.text)
                     if text:
                         self._texts.append(text)
-                    await _settled(self._charge(llm_span, call, started_ns))
+                    # The token count is taken here, not in the task below: a cancelled turn
+                    # goes on to release its claim, and the total it writes must be complete.
+                    self._account(llm_span, call, started_ns)
+                    if call.usage is not None:
+                        await _settled(deps.access.record_spend(call.usage))
 
                 if interrupted:
                     ending = _Ending("error", ShuttingDownError.code)
@@ -325,8 +329,8 @@ class Turn:
             finally:
                 span.end()
 
-    async def _charge(self, span: trace.Span, call: _ModelCall, started_ns: int) -> None:
-        """Close the `llm.call` span and charge what the call used (SPEC 10.3)."""
+    def _account(self, span: trace.Span, call: _ModelCall, started_ns: int) -> None:
+        """Close the `llm.call` span and count the tokens the call used."""
         access = self._deps.access
         try:
             span.set_attribute(telemetry.ATTR_LLM_LATENCY_MS, _elapsed_ms(started_ns))
@@ -346,7 +350,6 @@ class Turn:
                 + usage.cache_read_tokens
                 + usage.cache_write_tokens
             )
-            await access.record_spend(usage)
         finally:
             span.end()
 
