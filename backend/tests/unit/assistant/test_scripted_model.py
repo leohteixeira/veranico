@@ -205,8 +205,8 @@ CANNED: dict[str, Mapping[str, object]] = {
     "request_submission": {"submission_id": "S-4T8W2X", "carrier_id": "carrier-2"},
 }
 USER_TURNS = [
-    "Coffee farm near Três Pontas, MG. Pay when Sep-Oct rainfall is below 150 mm, in full at "
-    "75 mm. Limit R$ 300,000.",
+    "Farm near Três Pontas, MG. Pay when Sep-Oct rainfall is below 105 mm, in full at "
+    "70 mm. Limit R$ 300,000.",
     "Yes, price it.",
     "Draft the term sheet.",
     "Request submission.",
@@ -273,8 +273,8 @@ async def test_happy_path_walks_the_flow_over_four_user_turns() -> None:
         "index_type": "rainfall_below",
         "window_start": "09-01",
         "window_end": "10-31",
-        "trigger": 150.0,
-        "exit": 75.0,
+        "trigger": 105.0,
+        "exit": 70.0,
         "limit_cents": 30_000_000,
     }
     assert calls[3].arguments == {
@@ -285,8 +285,8 @@ async def test_happy_path_walks_the_flow_over_four_user_turns() -> None:
         "index_type": "rainfall_below",
         "window_start": "09-01",
         "window_end": "10-31",
-        "trigger": 150.0,
-        "exit": 75.0,
+        "trigger": 105.0,
+        "exit": 70.0,
         "limit_cents": 30_000_000,
         "n": 100_000,
         "seed": 42,

@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import type { AgentEvent } from "../../api/sse";
-import { formatMoney } from "../../i18n/format";
+import { formatMoney, formatRate } from "../../i18n/format";
 import type { Locale } from "../../i18n";
 import { finishedTools, initialSession, sessionReducer } from "../../state/session";
-import { LIMIT_CENTS, PREMIUM_CENTS, QUOTE_ID, pricedCover } from "../../test/fixtures/bodies";
+import { PREMIUM_CENTS, QUOTE_ID, pricedCover } from "../../test/fixtures/bodies";
 import { happyPath } from "../../test/fixtures/streams";
 import { linkFigures, type Segment } from "./figures";
 
@@ -20,7 +20,11 @@ function figures(segments: readonly Segment[]) {
 describe("linkFigures [R-12.3-5]", () => {
   it("links every priced figure to its field in the Quote tab", () => {
     const priced = pricedCover();
-    const text = `Premium ${formatMoney(PREMIUM_CENTS, "en")}, rate on line 8.28%, expected loss ${formatMoney(
+    const text = `Premium ${formatMoney(PREMIUM_CENTS, "en")}, rate on line ${formatRate(
+      priced.premium.rate_on_line,
+      "en",
+      2,
+    )}, expected loss ${formatMoney(
       priced.simulation.expected_loss.amount_cents,
       "en",
     )}, tails ${formatMoney(priced.simulation.payout_1_in_10.amount_cents, "en")} and ${formatMoney(
@@ -28,13 +32,15 @@ describe("linkFigures [R-12.3-5]", () => {
       "en",
     )}, limit R$ 300,000.`;
     const found = figures(linkFigures(text, rowsAfter("en", 2), [], "en"));
+    // In the recording the one-in-a-hundred payout is the whole limit, R$ 300,000.00: the same
+    // text, so the limit links to the first field that holds it.
     expect(found.map((segment) => (segment.kind === "figure" ? segment.key : "flagged"))).toEqual([
       "premium",
       "rate_on_line",
       "expected_loss",
       "payout_1_in_10",
       "payout_1_in_100",
-      "limit",
+      "payout_1_in_100",
     ]);
     expect(found.every((segment) => segment.kind === "figure" && segment.tab === "quote")).toBe(
       true,
@@ -47,7 +53,7 @@ describe("linkFigures [R-12.3-5]", () => {
     const text = `Burn cost ${formatMoney(backtest.burn_cost.amount_cents, "en")}; largest ${formatMoney(
       backtest.max_payout.amount_cents,
       "en",
-    )}; trigger 150.0 mm, exit 75 mm.`;
+    )}; trigger 105.0 mm, exit 70 mm.`;
     expect(figures(linkFigures(text, rows, [], "en"))).toEqual([
       expect.objectContaining({ tab: "history", key: "burn_cost" }),
       expect.objectContaining({ tab: "history", key: "max_payout" }),
@@ -57,13 +63,13 @@ describe("linkFigures [R-12.3-5]", () => {
   });
 
   it("matches the notation of the other language", () => {
-    const text = `O prêmio é de ${formatMoney(PREMIUM_CENTS, "pt-BR")}, com limite de ${formatMoney(
-      LIMIT_CENTS,
+    const text = `O prêmio é de ${formatMoney(PREMIUM_CENTS, "pt-BR")}, com perda esperada de ${formatMoney(
+      pricedCover().simulation.expected_loss.amount_cents,
       "pt-BR",
     )}.`;
     expect(figures(linkFigures(text, rowsAfter("pt-BR", 2), [], "pt-BR"))).toEqual([
       expect.objectContaining({ tab: "quote", key: "premium" }),
-      expect.objectContaining({ tab: "quote", key: "limit" }),
+      expect.objectContaining({ tab: "quote", key: "expected_loss" }),
     ]);
   });
 

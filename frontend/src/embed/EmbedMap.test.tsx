@@ -214,7 +214,15 @@ describe("embed route [R-12.5-1] [R-16.7-1]", () => {
   });
 
   it("embed_keeps_attribution_and_the_synthetic_label [R-12.5-1]", async () => {
-    renderEmbed("?region=sul-de-minas");
+    // The recorded region is real: here the API says every region is generated.
+    renderEmbed("?region=sul-de-minas", {
+      intercept: (request) =>
+        new URL(request.url).pathname === "/api/v1/regions"
+          ? new Response(JSON.stringify(REGIONS.map((item) => ({ ...item, synthetic: true }))), {
+              headers: { "content-type": "application/json" },
+            })
+          : null,
+    });
 
     // `Region.synthetic` says the weather is generated; the label is on the map.
     expect(await screen.findByText(translate("en", "map.synthetic"))).toBeInTheDocument();

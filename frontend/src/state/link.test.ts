@@ -165,7 +165,13 @@ describe("live link [R-12.2-5] [R-16.7-1]", () => {
   it("each call acts once, however often the session changes", () => {
     const first = sessionLink(liveSession(1), REGIONS, new Set());
     expect(first.actions.map((action) => action.type)).toEqual(["point_set", "index_set"]);
-    expect([...first.applied]).toEqual(["call-1", "call-3"]);
+    const callIds = (happyPath("en").turns[0] ?? []).flatMap((event) =>
+      event.type === "tool_started" && event.data.tool !== "get_weather_history"
+        ? [event.data.call_id]
+        : [],
+    );
+    expect(callIds).toHaveLength(2);
+    expect([...first.applied]).toEqual(callIds);
 
     // The same session again asks for nothing: a season the visitor chose is not undone.
     expect(sessionLink(liveSession(1), REGIONS, first.applied).actions).toEqual([]);

@@ -1,37 +1,45 @@
 import type { components } from "../../api/schema";
+import type { Locale } from "../../i18n";
+import { RECORDED_CELLS, recordedIds, recordedResult } from "./recording";
 
 /**
  * Response bodies for the mock layer and the tests, typed by the generated client so a contract
- * change breaks the type check. Every weather value and every figure here is SYNTHETIC: generated
- * from a seed for tests and development, never weather history or a real quote.
+ * change breaks the type check.
+ *
+ * The happy path's bodies come from the recorded conversation (`recording.ts`): the place, the
+ * dataset, the cover, the backtest, the priced quote and the submission are the tool results of
+ * the English recording, and the Sul de Minas region and its cell grids are what the API serves
+ * from the same ERA5-Land cube (`recorded-cells.json`). What the recording cannot hold is authored
+ * here: the workspace, the timestamps of the quote's audit trail, the delivery and its receipt,
+ * the API key, and the two other regions, whose grids and season values stay SYNTHETIC (generated
+ * from a seed and labelled `synthetic: true`), as do the season values of any other cover.
  *
  * Fixture code may compute (it stands in for the backend); the interface never does.
  */
 
 type Schemas = components["schemas"];
 
-export const CONVERSATION_ID = "cv-01hx7m3k9q";
-export const QUOTE_ID = "Q-7K2M9P";
-export const SUBMISSION_ID = "S-4HX8TD";
+const RECORDED: Locale = "en";
+const LOCATION = recordedResult(RECORDED, "resolve_location");
+const HISTORY = recordedResult(RECORDED, "get_weather_history");
+const BACKTEST = recordedResult(RECORDED, "backtest_index") as unknown as Schemas["BacktestResult"];
+const PRICED = recordedResult(RECORDED, "price_cover").priced as Schemas["PricedCover"];
+const SUBMISSION = recordedResult(
+  RECORDED,
+  "request_submission",
+) as unknown as Schemas["Submission"];
+
+export const CONVERSATION_ID = recordedIds(RECORDED).conversationId;
+export const QUOTE_ID = recordedIds(RECORDED).quoteId;
+export const SUBMISSION_ID = recordedIds(RECORDED).submissionId;
 export const RECEIPT_ID = "R-9B3WQZ";
-export const CARRIER_ID = "carrier-1";
-export const CARRIER_NAME = "Aurora Re (mock)";
+export const CARRIER_ID = SUBMISSION.carrier_id;
+/** The name `carriers` gives `carrier-1` (`carriers/domain/directory.py`). */
+export const CARRIER_NAME = "Seguradora Jatobá (mock)";
 export const WORKSPACE_ID = "ws-fixture";
 
 export const REGIONS: Schemas["Region"][] = [
-  {
-    region_id: "sul-de-minas",
-    name: "Sul de Minas",
-    crop: "coffee",
-    north: -20.45,
-    south: -22.45,
-    west: -46.55,
-    east: -44.55,
-    step_deg: 0.1,
-    nx: 20,
-    ny: 20,
-    synthetic: true,
-  },
+  RECORDED_CELLS.region,
   {
     region_id: "sorriso",
     name: "Sorriso",
@@ -60,31 +68,25 @@ export const REGIONS: Schemas["Region"][] = [
   },
 ];
 
-/** The example of the happy path: the coffee farm near Três Pontas. */
-export const POINT = { lat: -21.41, lon: -45.48 };
-export const POINT_LABEL = "Três Pontas, MG";
-export const INSURED_ROW = 9;
-export const INSURED_COL = 10;
-export const DATASET_ID = `cube:sul-de-minas:${INSURED_ROW}:${INSURED_COL}`;
+/** The example of the happy path: the farm near Três Pontas, as the recording located it. */
+export const POINT = { lat: Number(LOCATION.lat), lon: Number(LOCATION.lon) };
+export const POINT_LABEL = String(LOCATION.label);
+export const H3_CELL = String(LOCATION.h3_cell);
+export const ADMIN_REGION = String(LOCATION.admin_region);
+export const DATASET_ID = String(HISTORY.dataset_id);
+const [, , insuredRow, insuredCol] = DATASET_ID.split(":");
+export const INSURED_ROW = Number(insuredRow);
+export const INSURED_COL = Number(insuredCol);
+/** `get_weather_history`'s whole result, as the recording holds it. */
+export const HISTORY_RESULT: Record<string, unknown> = HISTORY;
 
-export const INDEX: Schemas["IndexDefinition"] = {
-  index_type: "rainfall_below",
-  window: { start: "09-01", end: "10-31" },
-  trigger: 150,
-  exit: 75,
-};
-export const LIMIT_CENTS = 30_000_000;
-export const COVER: Schemas["CoverDefinition"] = {
-  index: INDEX,
-  limit: { amount_cents: LIMIT_CENTS, currency: "BRL" },
-};
+export const COVER: Schemas["CoverDefinition"] = BACKTEST.cover;
+export const INDEX: Schemas["IndexDefinition"] = COVER.index;
+export const LIMIT_CENTS = COVER.limit.amount_cents;
 
-export const FIRST_SEASON = 1950;
-export const LAST_SEASON = 2023;
-export const SEASONS: number[] = Array.from(
-  { length: LAST_SEASON - FIRST_SEASON + 1 },
-  (_, offset) => FIRST_SEASON + offset,
-);
+export const SEASONS: number[] = BACKTEST.seasons.map((season) => season.season);
+export const FIRST_SEASON = SEASONS[0] ?? 0;
+export const LAST_SEASON = SEASONS.at(-1) ?? 0;
 
 /** A small seeded generator (mulberry32), so fixtures are the same on every run. */
 function seeded(seed: number): () => number {
@@ -98,9 +100,6 @@ function seeded(seed: number): () => number {
 }
 
 const money = (amount_cents: number): Schemas["Money"] => ({ amount_cents, currency: "BRL" });
-
-/** A rate as the API writes it: six decimal places. */
-const rate = (value: number): string => value.toFixed(6);
 
 function payoutCents(index: Schemas["IndexDefinition"], limitCents: number, value: number): number {
   const share =
@@ -119,11 +118,36 @@ function seasonValues(mean: number, seed: number): number[] {
   });
 }
 
+function sameIndex(a: Schemas["IndexDefinition"], b: Schemas["IndexDefinition"]): boolean {
+  return (
+    a.index_type === b.index_type &&
+    a.window.start === b.window.start &&
+    a.window.end === b.window.end &&
+    a.trigger === b.trigger &&
+    a.exit === b.exit
+  );
+}
+
+/**
+ * `GET /weather/seasons` at the insured point. For the recorded cover it is the recorded backtest's
+ * seasons (without payouts when no limit is asked); any other cover gets SYNTHETIC values.
+ */
 export function seasonSeries(
   index: Schemas["IndexDefinition"] = INDEX,
   limitCents: number | null = LIMIT_CENTS,
   seed = 1107,
 ): Schemas["SeasonSeries"] {
+  if (sameIndex(index, INDEX) && (limitCents === null || limitCents === LIMIT_CENTS)) {
+    return {
+      dataset_id: DATASET_ID,
+      index,
+      seasons: BACKTEST.seasons.map((season) => ({
+        ...season,
+        payout: limitCents === null ? null : season.payout,
+      })),
+      seasons_excluded: BACKTEST.seasons_excluded,
+    };
+  }
   // The mean sits above the trigger so that only some seasons pay.
   const mean = index.index_type === "rainfall_below" ? index.trigger * 1.42 : index.trigger * 0.7;
   return {
@@ -138,86 +162,34 @@ export function seasonSeries(
   };
 }
 
-export function backtestResult(trendSignificant = true): Schemas["BacktestResult"] {
-  const seasons = seasonSeries().seasons;
-  const payouts = seasons.map((season) => season.payout?.amount_cents ?? 0);
-  const paying = payouts.filter((payout) => payout > 0).length;
-  const largest = Math.max(...payouts);
-  return {
-    dataset_id: DATASET_ID,
-    cover: COVER,
-    seasons,
-    seasons_used: seasons.length,
-    seasons_excluded: [],
-    trigger_frequency: rate(paying / seasons.length),
-    burn_cost: money(Math.round(payouts.reduce((sum, payout) => sum + payout, 0) / seasons.length)),
-    max_payout: money(largest),
-    max_payout_season: largest > 0 ? (seasons[payouts.indexOf(largest)]?.season ?? null) : null,
-    trend: { slope_per_decade: -4.2, p_value: "0.031000", significant: trendSignificant },
-    warnings: trendSignificant
-      ? [
-          {
-            code: "warning.trend_significant",
-            params: { slope_per_decade: -4.2, direction: "decreasing" },
-          },
-        ]
-      : [],
-  };
+/** A significant trend, authored: the recorded index has none (p = 0.126). */
+const SIGNIFICANT_TREND: Pick<Schemas["BacktestResult"], "trend" | "warnings"> = {
+  trend: { slope_per_decade: -6.1, p_value: "0.031000", significant: true },
+  warnings: [
+    {
+      code: "warning.trend_significant",
+      params: { slope_per_decade: -6.1, direction: "decreasing" },
+    },
+  ],
+};
+
+/** The recorded backtest; `trendSignificant` swaps in an authored significant trend. */
+export function backtestResult(trendSignificant = false): Schemas["BacktestResult"] {
+  return trendSignificant ? { ...BACKTEST, ...SIGNIFICANT_TREND } : { ...BACKTEST };
 }
 
-const EXPECTED_LOSS_CENTS = 1_620_000;
-const STD_DEV_CENTS = 2_070_000;
-/** Expected loss + 0.3 × standard deviation + 0.15 × expected loss, as `pricing` would return. */
-export const PREMIUM_CENTS = 2_484_000;
+/** The recorded premium of the recorded quote. */
+export const PREMIUM_CENTS = PRICED.premium.premium.amount_cents;
 
+/** The recorded priced cover of `price_cover`. */
 export function pricedCover(): Schemas["PricedCover"] {
-  const backtest = backtestResult();
-  return {
-    backtest,
-    simulation: {
-      method: "gamma_mle",
-      n: 100_000,
-      seed: 42,
-      expected_loss: money(EXPECTED_LOSS_CENTS),
-      std_dev: money(STD_DEV_CENTS),
-      probability_of_payout: "0.171200",
-      payout_1_in_10: money(6_300_000),
-      payout_1_in_100: money(21_450_000),
-      gap_to_burn_cost: money(EXPECTED_LOSS_CENTS - backtest.burn_cost.amount_cents),
-    },
-    premium: {
-      premium: money(PREMIUM_CENTS),
-      rate_on_line: "0.082800",
-      risk_load: "0.300000",
-      expense_load: "0.150000",
-    },
-    assumptions: [
-      { code: "assumption.index_type", params: { index_type: INDEX.index_type } },
-      { code: "assumption.window", params: { start: INDEX.window.start, end: INDEX.window.end } },
-      {
-        code: "assumption.seasons_used",
-        params: {
-          seasons_used: backtest.seasons_used,
-          first_season: FIRST_SEASON,
-          last_season: LAST_SEASON,
-        },
-      },
-      {
-        code: "assumption.simulation_method",
-        params: { method: "gamma_mle", n: 100_000, seed: 42 },
-      },
-      {
-        code: "assumption.loads",
-        params: { risk_load_rate: "0.300000", expense_load_rate: "0.150000" },
-      },
-      { code: "assumption.data_source", params: { source: "synthetic" } },
-    ],
-  };
+  return PRICED;
 }
 
-export const CREATED_AT = "2026-11-10T14:05:00Z";
-export const REQUESTED_AT = "2026-11-10T14:07:30Z";
-export const DECIDED_AT = "2026-11-10T14:09:00Z";
+/** Authored, around the recorded request: the recording holds no quote document or decision. */
+export const CREATED_AT = "2026-11-11T22:58:20Z";
+export const REQUESTED_AT = SUBMISSION.requested_at;
+export const DECIDED_AT = "2026-11-11T23:00:00Z";
 
 export type DeliveryStatus = Schemas["DeliveryState"]["status"];
 
@@ -240,7 +212,7 @@ const AUDIT_CREATED: Schemas["AuditEntry"] = {
   action: { code: "audit.quote_created", params: {} },
 };
 const AUDIT_TERM_SHEET: Schemas["AuditEntry"] = {
-  at: "2026-11-10T14:06:40Z",
+  at: "2026-11-11T22:58:28Z",
   actor: "agent",
   action: { code: "audit.term_sheet_rendered", params: { locale: "en" } },
 };
@@ -254,9 +226,10 @@ export function submission(
   status: DeliveryStatus = "not_started",
   decided = false,
   note: string | null = null,
+  locale: Locale = RECORDED,
 ): Schemas["Submission"] {
   return {
-    submission_id: SUBMISSION_ID,
+    submission_id: recordedIds(locale).submissionId,
     carrier_id: CARRIER_ID,
     requested_at: REQUESTED_AT,
     decided_at: decided ? DECIDED_AT : null,
@@ -265,10 +238,16 @@ export function submission(
   };
 }
 
-/** A quote of the happy path. Without overrides it is the draft the agent has just priced. */
-export function quoteView(overrides: Partial<Schemas["QuoteView"]> = {}): Schemas["QuoteView"] {
+/**
+ * A quote of the happy path. Without overrides it is the draft the agent has just priced. Each
+ * recording priced its own quote (the figures are the same); `locale` picks its identifiers.
+ */
+export function quoteView(
+  overrides: Partial<Schemas["QuoteView"]> = {},
+  locale: Locale = RECORDED,
+): Schemas["QuoteView"] {
   return {
-    quote_id: QUOTE_ID,
+    quote_id: recordedIds(locale).quoteId,
     workspace_id: WORKSPACE_ID,
     created_at: CREATED_AT,
     status: "draft",
@@ -276,8 +255,8 @@ export function quoteView(overrides: Partial<Schemas["QuoteView"]> = {}): Schema
       label: POINT_LABEL,
       lat: POINT.lat,
       lon: POINT.lon,
-      h3_cell: "86a8a0c57ffffff",
-      admin_region: "Minas Gerais",
+      h3_cell: H3_CELL,
+      admin_region: ADMIN_REGION,
     },
     dataset_id: DATASET_ID,
     cover: COVER,
@@ -289,12 +268,15 @@ export function quoteView(overrides: Partial<Schemas["QuoteView"]> = {}): Schema
 }
 
 /** The quote once the agent has requested the submission: waiting for the human decision. */
-export function pendingQuote(): Schemas["QuoteView"] {
-  return quoteView({
-    status: "pending_approval",
-    submission: submission(),
-    audit: [AUDIT_CREATED, AUDIT_TERM_SHEET, AUDIT_REQUESTED],
-  });
+export function pendingQuote(locale: Locale = RECORDED): Schemas["QuoteView"] {
+  return quoteView(
+    {
+      status: "pending_approval",
+      submission: submission("not_started", false, null, locale),
+      audit: [AUDIT_CREATED, AUDIT_TERM_SHEET, AUDIT_REQUESTED],
+    },
+    locale,
+  );
 }
 
 export function quoteSummary(quote: Schemas["QuoteView"]): Schemas["QuoteSummary"] {
@@ -310,10 +292,12 @@ export function quoteSummary(quote: Schemas["QuoteView"]): Schemas["QuoteSummary
 export function approvalView(
   status: Schemas["ApprovalView"]["status"] = "pending",
   deliveryStatus: DeliveryStatus = "not_started",
+  locale: Locale = RECORDED,
 ): Schemas["ApprovalView"] {
+  const ids = recordedIds(locale);
   return {
-    approval_id: SUBMISSION_ID,
-    quote_id: QUOTE_ID,
+    approval_id: ids.submissionId,
+    quote_id: ids.quoteId,
     carrier_id: CARRIER_ID,
     carrier_name: CARRIER_NAME,
     location_label: POINT_LABEL,
@@ -354,7 +338,8 @@ export function problem(code: string, status: number, replayAvailable = false): 
 /** Five frequency classes and six anomaly classes, as the API classifies them. */
 export const FREQUENCY_CLASSES = 5;
 export const ANOMALY_CLASSES = 6;
-export const SUGGESTED_SEASON = 1987;
+/** The season the API suggests for the recorded cover in Sul de Minas. */
+export const SUGGESTED_SEASON = RECORDED_CELLS.trigger_frequency.suggested_season ?? FIRST_SEASON;
 
 /**
  * Class edges as the API returns them, both ends included: `classes + 1` edges. Frequency runs
@@ -376,17 +361,34 @@ function classEdges(values: readonly (number | null)[], metric: Schemas["CellGri
 interface CellGridRequest {
   metric: Schemas["CellGrid"]["metric"];
   season?: number | null;
+  /** The cover's index; absent means the recorded one. */
+  index?: Schemas["IndexDefinition"];
+}
+
+/** The API's grid for the recorded cover in Sul de Minas, or `null` when it has none. */
+function recordedGrid(
+  region: Schemas["Region"],
+  request: CellGridRequest,
+): Schemas["CellGrid"] | null {
+  if (region.region_id !== RECORDED_CELLS.region.region_id) return null;
+  if (request.index !== undefined && !sameIndex(request.index, RECORDED_CELLS.index)) return null;
+  const frequency = RECORDED_CELLS.trigger_frequency;
+  if (request.metric === "trigger_frequency") return frequency;
+  const season = RECORDED_CELLS.season_anomaly[String(request.season ?? "")];
+  return season === undefined ? null : { ...frequency, metric: "season_anomaly", ...season };
 }
 
 /**
- * A synthetic per-cell grid: a smooth field over the 20 by 20 cube, so the surface has a shape.
- * The insured cell carries the trigger frequency of the backtest fixture, so the map and the
- * History tab agree.
+ * A per-cell grid. Sul de Minas with the recorded cover answers what the API computed from the
+ * recording's cube, whose insured cell is the recorded trigger frequency. Anything else gets a
+ * SYNTHETIC smooth field over the 20 by 20 cube, so the surface has a shape.
  */
 export function cellGrid(
   region: Schemas["Region"] = REGIONS[0] as Schemas["Region"],
   request: CellGridRequest = { metric: "trigger_frequency" },
 ): Schemas["CellGrid"] {
+  const recorded = recordedGrid(region, request);
+  if (recorded !== null) return recorded;
   const season = request.season ?? null;
   const phase = season === null ? 0 : (season - FIRST_SEASON) * 0.37;
   const values: (number | null)[] = [];
@@ -399,9 +401,6 @@ export function cellGrid(
       const value = request.metric === "trigger_frequency" ? 0.2 + 0.17 * wave : 0.55 * wave;
       values.push(Math.round(value * 1000) / 1000);
     }
-  }
-  if (request.metric === "trigger_frequency" && region.region_id === "sul-de-minas") {
-    values[INSURED_ROW * region.nx + INSURED_COL] = Number(backtestResult().trigger_frequency);
   }
   return {
     region_id: region.region_id,

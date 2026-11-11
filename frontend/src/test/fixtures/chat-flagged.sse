@@ -1,5 +1,5 @@
 event: started
-data: {"conversation_id":"cv-01hx7m3k9q","message_id":"m-0010"}
+data: {"conversation_id":"ffdb8adc3bee4da48377959b4799d87e","message_id":"m-0010"}
 
 event: text_delta
 data: {"text":"That is roughly R$ 2,070.00 "}
@@ -14,5 +14,5 @@ event: grounding_flagged
 data: {"message_id":"m-0010","values":["R$ 2,070.00"]}
 
 event: done
-data: {"conversation_id":"cv-01hx7m3k9q","message_id":"m-0010","stop_reason":"end_turn","prompt_version":"fixture-1"}
+data: {"conversation_id":"ffdb8adc3bee4da48377959b4799d87e","message_id":"m-0010","stop_reason":"end_turn","prompt_version":"v3"}
 

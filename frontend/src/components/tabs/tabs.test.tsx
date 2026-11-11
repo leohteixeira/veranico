@@ -282,8 +282,8 @@ describe("history tab [R-12.3-2]", () => {
     // dense would sit on the bars.
     const panel = chart("index").closest("figure");
     if (panel === null) throw new Error("the index chart is not in a figure");
-    expect(panel.querySelector('[data-line="trigger"]')).toHaveTextContent("Trigger 150.0 mm");
-    expect(panel.querySelector('[data-line="exit"]')).toHaveTextContent("Exit 75.0 mm");
+    expect(panel.querySelector('[data-line="trigger"]')).toHaveTextContent("Trigger 105.0 mm");
+    expect(panel.querySelector('[data-line="exit"]')).toHaveTextContent("Exit 70.0 mm");
     expect(chart("payout").querySelectorAll(".recharts-reference-line")).toHaveLength(0);
   });
 
@@ -312,9 +312,10 @@ describe("history tab [R-12.3-2]", () => {
   });
 
   it("trend_warning_only_when_significant [R-12.3-2]", () => {
-    renderHistory();
+    // The recorded index has no significant trend; the fixture swaps in an authored one.
+    renderHistory({ backtest: backtestResult(true) });
     expect(document.querySelector('[data-warning="warning.trend_significant"]')).toHaveTextContent(
-      "The index has a significant falling trend of -4.2 per decade. History may misstate current risk.",
+      "The index has a significant falling trend of -6.1 per decade. History may misstate current risk.",
     );
   });
 

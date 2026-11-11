@@ -7,7 +7,7 @@ import { ApiClientProvider, createApiClient } from "../../api/client";
 import type { AgentEvent } from "../../api/sse";
 import { config } from "../../config";
 import { I18nProvider, type Locale } from "../../i18n";
-import { formatMoney } from "../../i18n/format";
+import { formatMoney, formatRate } from "../../i18n/format";
 import { createMockState, handle } from "../../test/mocks/handlers";
 import type { Scenario } from "../../test/mocks/scenarios";
 import {
@@ -20,10 +20,10 @@ import {
 import { ViewProvider, useView } from "../../state/view";
 import {
   ALLOWANCE,
-  POINT,
   POINT_LABEL,
   PREMIUM_CENTS,
   QUOTE_ID,
+  pricedCover,
   problem,
 } from "../../test/fixtures/bodies";
 import {
@@ -38,6 +38,8 @@ import { exampleRequests } from "./exampleRequests";
 import { useConversationCard } from "./useConversationCard";
 
 const BASE_URL = "http://veranico.test";
+/** A point clicked on the map, with no more decimals than the composer shows. */
+const CLICKED = { lat: -21.41, lon: -45.48 };
 const EXAMPLES = exampleRequests(config.exampleCovers, "en");
 
 /** Every space as a plain space, as Testing Library reads the text of the page. */
@@ -185,8 +187,15 @@ describe("conversation card [R-12.1-3]", () => {
   });
 
   it("tool_row_shows_running_then_duration_and_summary [R-12.4-2]", () => {
-    const [started, toolStarted, toolFinished] = happyPath("en").turns[0] ?? [];
-    if (started === undefined || toolStarted === undefined || toolFinished === undefined) {
+    const turn = happyPath("en").turns[0] ?? [];
+    const started = turn.find((event) => event.type === "started");
+    const toolStarted = turn.find((event) => event.type === "tool_started");
+    const toolFinished = turn.find((event) => event.type === "tool_finished");
+    if (
+      started === undefined ||
+      toolStarted === undefined ||
+      toolFinished?.type !== "tool_finished"
+    ) {
       throw new Error("the first turn has no tool");
     }
     const running = reduce([{ type: "user_sent", text: "Coffee farm" }, started, toolStarted]);
@@ -204,7 +213,7 @@ describe("conversation card [R-12.1-3]", () => {
 
     rerender({ session: sessionReducer(running, toolFinished) });
     expect(row()).toHaveAttribute("data-status", "ok");
-    expect(within(row()).getByText("412 ms")).toBeVisible();
+    expect(within(row()).getByText(`${toolFinished.data.duration_ms} ms`)).toBeVisible();
     expect(within(row()).getByText(POINT_LABEL)).toBeVisible();
     expect(within(row()).queryByText("running")).toBeNull();
   });
@@ -302,7 +311,9 @@ describe("conversation card [R-12.1-3]", () => {
     expect(props.onOpen).toHaveBeenLastCalledWith("quote", "premium");
 
     fireEvent.click(
-      screen.getByRole("button", { name: "8.28%: show its source in the Quote tab" }),
+      screen.getByRole("button", {
+        name: `${formatRate(pricedCover().premium.rate_on_line, "en")}: show its source in the Quote tab`,
+      }),
     );
     expect(props.onOpen).toHaveBeenLastCalledWith("quote", "rate_on_line");
 
@@ -479,9 +490,13 @@ describe("conversation card [R-12.1-3]", () => {
 
     // A stream that closes without `done`: the same note, from the tools that finished.
     const turn = happyPath("en").turns[0] ?? [];
+    // Cut right after the second tool finished.
+    const second = turn.findIndex(
+      (event) => event.type === "tool_finished" && event.data.tool === "get_weather_history",
+    );
     const cut = reduce([
       { type: "user_sent", text: "Coffee farm" },
-      ...turn.slice(0, 5),
+      ...turn.slice(0, second + 1),
       { type: "stream_cut" },
     ]);
     rerender({ session: cut });
@@ -496,16 +511,16 @@ describe("conversation card [R-12.1-3]", () => {
     const input = () => screen.getByRole("textbox", { name: "Message to the agent" });
     expect(input()).toHaveValue("");
 
-    rerender({ mapPoint: POINT });
+    rerender({ mapPoint: CLICKED });
     expect(input()).toHaveValue(
-      `Price a cover for the point I marked on the map (${POINT.lat}, ${POINT.lon}).`,
+      `Price a cover for the point I marked on the map (${CLICKED.lat}, ${CLICKED.lon}).`,
     );
-    expect(screen.getByText(`Point from the map: ${POINT.lat}, ${POINT.lon}`)).toBeVisible();
+    expect(screen.getByText(`Point from the map: ${CLICKED.lat}, ${CLICKED.lon}`)).toBeVisible();
 
     fireEvent.click(screen.getByRole("button", { name: "Send" }));
     expect(props.onSend).toHaveBeenCalledExactlyOnceWith(
-      `Price a cover for the point I marked on the map (${POINT.lat}, ${POINT.lon}).`,
-      POINT,
+      `Price a cover for the point I marked on the map (${CLICKED.lat}, ${CLICKED.lon}).`,
+      CLICKED,
     );
     expect(onClearMapPoint).toHaveBeenCalledOnce();
   });
@@ -606,6 +621,7 @@ describe("conversation card [R-12.1-3]", () => {
       .flatMap((event) => (event.type === "text_delta" ? [event.data.text] : []))
       .join("");
     const answers = [...document.querySelectorAll(".msg--agent")];
-    expect(plain(answers.at(-1)?.textContent ?? "")).toContain(plain(priced));
+    // Each paragraph of the answer is its own block: the text reads the same without the breaks.
+    expect(plain(answers.at(-1)?.textContent ?? "")).toContain(plain(priced.replace(/\n+/g, "")));
   });
 });

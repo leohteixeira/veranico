@@ -154,7 +154,10 @@ describe("application shell [R-12.1-1] [R-16.7-1]", () => {
 
     // The conversation is back, with what the visitor asked.
     const [firstRequest] = happyPath("en").requests;
-    expect(await screen.findByText(firstRequest ?? "")).toBeInTheDocument();
+    // (The first example offers the same words until the conversation is restored.)
+    await waitFor(() => {
+      expect(document.querySelector(".msg--user .msg__text")?.textContent).toBe(firstRequest);
+    });
 
     // The priced quote is pinned: its tab is open on it, and the approval waits in the queue.
     await waitFor(() => {
@@ -190,8 +193,9 @@ describe("application shell [R-12.1-1] [R-16.7-1]", () => {
     await waitFor(() => {
       expect(cellCalls(calls).at(-1)?.get("trigger")).toBe(String(EXAMPLE.cover.index.trigger));
     });
-    const [firstRequest] = happyPath("en").requests;
-    expect(screen.queryByText(firstRequest ?? "")).not.toBeInTheDocument();
+    // The conversation is gone; the region's example is offered again.
+    expect(document.querySelector(".msg--user")).toBeNull();
+    expect(screen.getByRole("button", { name: new RegExp(EXAMPLE.label) })).toBeVisible();
   });
 
   it("the conversation stops saying an approval waits once a person has decided it [R-12.4-7]", async () => {
@@ -291,7 +295,15 @@ describe("application shell [R-12.1-1] [R-16.7-1]", () => {
   });
 
   it("a synthetic region is not credited to ERA5-Land in the attribution [R-12.6-2]", async () => {
-    renderApp();
+    // The recorded region is real: here the API says every region is generated.
+    renderApp({
+      intercept: (request) =>
+        new URL(request.url).pathname === "/api/v1/regions"
+          ? new Response(JSON.stringify(REGIONS.map((item) => ({ ...item, synthetic: true }))), {
+              headers: { "content-type": "application/json" },
+            })
+          : null,
+    });
 
     await screen.findByRole("slider");
     const attribution = screen.getByLabelText(translate("en", "attribution.label"));

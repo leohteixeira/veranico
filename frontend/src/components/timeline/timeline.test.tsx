@@ -90,7 +90,7 @@ describe("season timeline [R-12.1-5] [R-16.7-1]", () => {
     expect(container.querySelectorAll(".timeline-bars__trigger")).toHaveLength(1);
     expect(container.querySelector(".timeline-bars__cursor")).toBeNull();
     expect(screen.getByText(`${FIRST_SEASON}–${LAST_SEASON}`)).toBeInTheDocument();
-    expect(screen.getByText("Trigger 150.0 mm")).toBeInTheDocument();
+    expect(screen.getByText("Trigger 105.0 mm")).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Seasons" })).toBeInTheDocument();
   });
 

@@ -2,7 +2,15 @@ import { describe, expect, it } from "vitest";
 
 import { createApiClient } from "../../api/client";
 import { parseEventText } from "../../api/sse";
-import { CONVERSATION_ID, QUOTE_ID, SUBMISSION_ID } from "../fixtures/bodies";
+import {
+  CONVERSATION_ID,
+  INDEX,
+  LIMIT_CENTS,
+  POINT,
+  QUOTE_ID,
+  SUBMISSION_ID,
+  backtestResult,
+} from "../fixtures/bodies";
 import { chatEvents, happyPath } from "../fixtures/streams";
 import { MOCK_SENTINEL, createMockState, handle } from "./handlers";
 import { SCENARIOS, scenarioFrom, type Scenario } from "./scenarios";
@@ -32,8 +40,9 @@ describe("mock API [R-12-1] [R-16.7-1]", () => {
       "sorriso",
       "ribeirao-preto",
     ]);
-    // The mock fixtures are synthetic data, so every fixture region is labelled synthetic.
-    expect(regions.data?.every((region) => region.synthetic)).toBe(true);
+    // Sul de Minas is the recording's region, served from the real cube; the others are
+    // synthetic fixtures and labelled so.
+    expect(regions.data?.map((region) => region.synthetic)).toEqual([false, true, true]);
 
     const cells = await client.GET("/api/v1/regions/{id}/cells", {
       params: {
@@ -55,18 +64,19 @@ describe("mock API [R-12-1] [R-16.7-1]", () => {
     const seasons = await client.GET("/api/v1/weather/seasons", {
       params: {
         query: {
-          lat: -21.41,
-          lon: -45.48,
-          limit_cents: 30_000_000,
-          index_type: "rainfall_below",
-          window_start: "09-01",
-          window_end: "10-31",
-          trigger: 150,
-          exit: 75,
+          lat: POINT.lat,
+          lon: POINT.lon,
+          limit_cents: LIMIT_CENTS,
+          index_type: INDEX.index_type,
+          window_start: INDEX.window.start,
+          window_end: INDEX.window.end,
+          trigger: INDEX.trigger,
+          exit: INDEX.exit,
         },
       },
     });
-    expect(seasons.data?.seasons).toHaveLength(74);
+    // The recorded cover answers the recorded backtest's seasons.
+    expect(seasons.data?.seasons).toEqual(backtestResult().seasons);
     expect(seasons.data?.seasons.some((season) => (season.payout?.amount_cents ?? 0) > 0)).toBe(
       true,
     );

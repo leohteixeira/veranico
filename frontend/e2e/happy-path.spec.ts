@@ -2,7 +2,7 @@ import { join } from "node:path";
 
 import { expect, test, type Page } from "@playwright/test";
 
-import { QUOTE_ID, RECEIPT_ID } from "../src/test/fixtures/bodies";
+import { INDEX, QUOTE_ID, RECEIPT_ID } from "../src/test/fixtures/bodies";
 import { happyPath } from "../src/test/fixtures/streams";
 import { LIVE_TILES, mockNetwork } from "./routes";
 
@@ -39,7 +39,8 @@ test("happy path: example, quote, season view, approval, delivery [R-16.7-2] [R-
   await page.goto("/");
   await expect(page.getByRole("combobox", { name: "Region" })).toHaveValue("sul-de-minas");
 
-  // Turn 1: the first example. The recorded stream plays: location, history, backtest.
+  // Turn 1: the first example, whose words are the recording's first request. The recorded stream
+  // plays: location, history, backtest.
   await page.locator(".first__example").first().click();
   await expect(page.locator(".steps__label")).toHaveText("Step 4 of 6: Price");
   await expect(page.locator(".tool__id", { hasText: "backtest_index" })).toBeVisible();
@@ -53,7 +54,7 @@ test("happy path: example, quote, season view, approval, delivery [R-16.7-2] [R-
         .at(-1)
         ?.query.get("trigger"),
     )
-    .toBe("150");
+    .toBe(String(INDEX.trigger));
   const painted = await page.locator("canvas.risk-layer").evaluate((canvas: HTMLCanvasElement) => {
     const context = canvas.getContext("2d");
     if (context === null) return 0;
@@ -128,8 +129,9 @@ test("happy path: example, quote, season view, approval, delivery [R-16.7-2] [R-
   await expect(approved).toContainText(DECISION_NOTE);
   await approved.scrollIntoViewIfNeeded();
 
-  // The weather is synthetic and the screen says so wherever its figures are.
-  await expect(page.locator(".map-notes__synthetic")).toBeVisible();
+  // The weather is the recording's ERA5-Land cube: no synthetic label, and the reanalysis is credited.
+  await expect(page.locator(".map-notes__synthetic")).toHaveCount(0);
+  await expect(page.getByLabel("Sources and licences")).toContainText("ERA5-Land");
   await page.screenshot({ path: join(EVIDENCE, "happy-path-1440.png") });
 
   // The same state on a phone: the pieces stack in order and nothing scrolls sideways.

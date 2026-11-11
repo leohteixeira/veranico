@@ -4,11 +4,8 @@ import type { AgentEvent } from "../../api/sse";
 import {
   ALLOWANCE,
   API_KEY,
-  CONVERSATION_ID,
   DECIDED_AT,
-  QUOTE_ID,
   REGIONS,
-  SUBMISSION_ID,
   approvalView,
   cellGrid,
   pendingQuote,
@@ -27,13 +24,15 @@ import {
   replayEvents,
   serialise,
 } from "../fixtures/streams";
+import { recordedIds } from "../fixtures/recording";
 import { DEFAULT_SCENARIO, type Scenario } from "./scenarios";
 
 /**
  * The mock of the Veranico API for tests: pure handlers over one small state object, typed by the
  * generated `paths`, so a contract change breaks the type check here. Unit tests call it as a
  * `fetch`, and the Playwright flow answers `/api/v1/**` with it in the test process. It serves
- * SYNTHETIC fixtures and is never part of a build: `scripts/check-dist.mjs` looks for the
+ * the recorded happy path and the bodies derived from it (`fixtures/bodies.ts` says which parts
+ * are authored or synthetic), and is never part of a build: `scripts/check-dist.mjs` looks for the
  * sentinel below in the built files.
  */
 export const MOCK_SENTINEL = "veranico-development-mock-layer";
@@ -166,7 +165,7 @@ function deliveryStatus(state: MockState): DeliveryStatus {
 /** The audit trail once a human decided: the pending trail, then the decision with its note. */
 function decidedAudit(state: MockState, approved: boolean): Schemas["AuditEntry"][] {
   return [
-    ...pendingQuote().audit,
+    ...pendingQuote(state.locale).audit,
     {
       at: DECIDED_AT,
       actor: "human",
@@ -181,23 +180,23 @@ function currentQuote(state: MockState): Schemas["QuoteView"] | null {
     case "none":
       return null;
     case "draft":
-      return quoteView();
+      return quoteView({}, state.locale);
     case "pending":
-      return pendingQuote();
+      return pendingQuote(state.locale);
     case "approved": {
       const status = deliveryStatus(state);
       return {
-        ...pendingQuote(),
+        ...pendingQuote(state.locale),
         status: status === "delivered" ? "submitted" : "approved",
-        submission: submission(status, true, state.decisionNote),
+        submission: submission(status, true, state.decisionNote, state.locale),
         audit: decidedAudit(state, true),
       };
     }
     case "rejected":
       return {
-        ...pendingQuote(),
+        ...pendingQuote(state.locale),
         status: "rejected",
-        submission: { ...submission("not_started", true, state.decisionNote) },
+        submission: { ...submission("not_started", true, state.decisionNote, state.locale) },
         audit: decidedAudit(state, false),
       };
   }
@@ -209,11 +208,11 @@ function currentApproval(state: MockState): Schemas["ApprovalView"] | null {
     case "draft":
       return null;
     case "pending":
-      return approvalView("pending");
+      return approvalView("pending", "not_started", state.locale);
     case "approved":
-      return approvalView("approved", deliveryStatus(state));
+      return approvalView("approved", deliveryStatus(state), state.locale);
     case "rejected":
-      return approvalView("rejected");
+      return approvalView("rejected", "not_started", state.locale);
   }
 }
 
@@ -255,6 +254,17 @@ function chat(call: Call, state: MockState): Response {
 
 const NOT_FOUND = () => problem("not_found", 404);
 
+/** The index a reference route names in its query. */
+function indexFrom(query: URLSearchParams): Schemas["IndexDefinition"] {
+  return {
+    index_type:
+      query.get("index_type") === "dry_spell_above" ? "dry_spell_above" : "rainfall_below",
+    window: { start: query.get("window_start") ?? "", end: query.get("window_end") ?? "" },
+    trigger: Number(query.get("trigger")),
+    exit: Number(query.get("exit")),
+  };
+}
+
 export const ROUTES: readonly Route[] = [
   json("/api/v1/regions", "get", () => REGIONS),
   json("/api/v1/regions/{id}/cells", "get", ({ params, query }) => {
@@ -264,20 +274,12 @@ export const ROUTES: readonly Route[] = [
     return cellGrid(region, {
       metric: query.get("metric") === "season_anomaly" ? "season_anomaly" : "trigger_frequency",
       season: season === null ? null : Number(season),
+      index: indexFrom(query),
     });
   }),
   json("/api/v1/weather/seasons", "get", ({ query }) => {
     const limit = query.get("limit_cents");
-    return seasonSeries(
-      {
-        index_type:
-          query.get("index_type") === "dry_spell_above" ? "dry_spell_above" : "rainfall_below",
-        window: { start: query.get("window_start") ?? "", end: query.get("window_end") ?? "" },
-        trigger: Number(query.get("trigger")),
-        exit: Number(query.get("exit")),
-      },
-      limit === null ? null : Number(limit),
-    );
+    return seasonSeries(indexFrom(query), limit === null ? null : Number(limit));
   }),
   json("/api/v1/quotes", "get", (_call, state) => {
     const quote = currentQuote(state);
@@ -285,7 +287,7 @@ export const ROUTES: readonly Route[] = [
   }),
   json("/api/v1/quotes/{id}", "get", ({ params }, state) => {
     const quote = currentQuote(state);
-    return quote === null || params.id !== QUOTE_ID ? NOT_FOUND() : quote;
+    return quote === null || params.id !== quote.quote_id ? NOT_FOUND() : quote;
   }),
   json("/api/v1/approvals", "get", ({ query }, state) => {
     if (state.stage === "approved") state.deliveryReads += 1;
@@ -295,7 +297,8 @@ export const ROUTES: readonly Route[] = [
     return [approval];
   }),
   json("/api/v1/approvals/{id}/decision", "post", ({ params, body }, state) => {
-    if (params.id !== SUBMISSION_ID || state.stage === "none" || state.stage === "draft") {
+    const submissionId = recordedIds(state.locale).submissionId;
+    if (params.id !== submissionId || state.stage === "none" || state.stage === "draft") {
       return NOT_FOUND();
     }
     if (state.stage !== "pending") return problem("invalid_state", 409);
@@ -306,7 +309,9 @@ export const ROUTES: readonly Route[] = [
     return currentApproval(state) ?? NOT_FOUND();
   }),
   json("/api/v1/approvals/{id}/redeliver", "post", ({ params }, state) => {
-    if (params.id !== SUBMISSION_ID || state.stage !== "approved") return NOT_FOUND();
+    if (params.id !== recordedIds(state.locale).submissionId || state.stage !== "approved") {
+      return NOT_FOUND();
+    }
     state.deliveryReads = 1;
     return currentApproval(state) ?? NOT_FOUND();
   }),
@@ -317,7 +322,7 @@ export const ROUTES: readonly Route[] = [
   ),
   json("/api/v1/workspace/api-keys", "post", () => API_KEY),
   json("/api/v1/conversations/{id}", "get", ({ params }, state) =>
-    params.id === CONVERSATION_ID && state.turns > 0
+    params.id === recordedIds(state.locale).conversationId && state.turns > 0
       ? conversationView(state.locale, state.turns)
       : NOT_FOUND(),
   ),

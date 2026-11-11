@@ -9,7 +9,7 @@ import { serialiseEvent, type AgentEvent } from "../api/sse";
 import { createMockState, handle, type MockState } from "../test/mocks/handlers";
 import type { Scenario } from "../test/mocks/scenarios";
 import { CONVERSATION_ID, INDEX, QUOTE_ID, SUBMISSION_ID, problem } from "../test/fixtures/bodies";
-import { happyPath } from "../test/fixtures/streams";
+import { conversationView, happyPath } from "../test/fixtures/streams";
 import {
   ALLOWANCE_CODE_STORAGE_KEY,
   CONVERSATION_STORAGE_KEY,
@@ -240,9 +240,10 @@ describe("useChat [R-12-1] [R-12.4-2] [R-16.7-1]", () => {
     expect(result.current.session.interrupted).toBe(true);
     expect(result.current.session.streaming).toBe(false);
     // The stored turn replaces what was streamed.
+    const [answer] = conversationView("en", 1).messages.filter((m) => m.role === "assistant");
     expect(result.current.session.messages.map((message) => message.id)).toEqual([
       "m-0001",
-      "m-0002",
+      answer?.message_id,
     ]);
   });
 

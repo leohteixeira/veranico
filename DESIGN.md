@@ -391,19 +391,25 @@ was verified in EOX's own documents on 2026-11-11 (sources in `frontend/src/conf
 
 ### Test data
 
-The stream fixtures under `frontend/src/test/fixtures/` (the four turns of the happy path, the
-replay, the flagged and the error streams) are authored, synthetic and internally consistent: they
-mirror the scripted model in the wire format of the stream, and the mock API answers with bodies
-that agree with them (the same quote, cover and figures). The real conversation now exists: since
-human gate H1 closed (2026-11-11), `backend/src/veranico/modules/assistant/replays/` holds one
-recording per language, made on the real ERA5-Land cubes and served by `GET /replays/{locale}`.
-The fixtures have not been regenerated from those recordings yet. That is open work, not a
-choice: SPEC 16.7 asks for the Playwright flow to run "against a recorded agent stream", and the
-plan of the interface replaces the happy-path fixtures with the recordings once they exist. The
-regeneration also has to bring the mock bodies (quote, cells, approvals) and the flow's
-assertions in line with the recorded figures, which is why it is not a file swap. Until it is
-done the Playwright flow plays the authored stream, and the screenshots in
-`frontend/e2e/evidence/` show its synthetic figures, labelled as such.
+The happy path the tests play is the recorded conversation. `frontend/src/test/fixtures/recording.ts`
+reads `backend/src/veranico/modules/assistant/replays/<locale>.jsonl` (the recordings of human gate
+H1: claude-haiku-5-5, prompt v3, the real ERA5-Land cube of Sul de Minas) and the fixtures derive
+everything from it: the four turns of `POST /chat`, the replay stream, and the bodies the mock API
+answers in that flow (the place, the dataset, the cover, the backtest and the season values for
+that cover, the priced quote, the submission and the approval). A new recording changes the tests'
+figures without an edit; `UPDATE_FIXTURES=1 pnpm test src/test/fixtures` rewrites the `.sse` files.
+The recording carries no per-cell grid, so `backend/scripts/export_cells.py` writes
+`recorded-cells.json` from the same cube (it refuses a cube whose checksum differs from the
+recording's): the region as `GET /regions` serves it (`synthetic: false`), the trigger frequency of
+the recorded cover and the anomaly of every season. The Playwright flow and the two screenshots in
+`frontend/e2e/evidence/` therefore show recorded figures over the real surface (trigger 105 mm,
+exit 70 mm, 11 of 76 seasons paying, premium R$ 40,637.88), with no synthetic label.
+
+Authored, because no recording holds them: the timestamps of the quote's audit trail, the human
+decision, the delivery and its receipt, the API key, the flagged and the error streams, a
+significant trend for the warning tests, and the two other regions, whose grids and season values
+stay synthetic and are labelled `synthetic: true`. Both recordings price the same figures; the mock
+serves one quote body with each recording's own identifiers.
 
 ## Finish review
 

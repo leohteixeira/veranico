@@ -138,12 +138,12 @@ describe("quote tab [R-12.3-3]", () => {
     expect(field("payout_1_in_100")).toBe(money(simulation.payout_1_in_100));
     expect(field("gap_to_burn_cost")).toBe(money(simulation.gap_to_burn_cost));
     expect(field("limit")).toBe(money(quote.cover.limit));
-    expect(field("trigger")).toBe("150.0 mm");
-    expect(field("exit")).toBe("75.0 mm");
+    expect(field("trigger")).toBe("105.0 mm");
+    expect(field("exit")).toBe("70.0 mm");
     expect(field("window")).toBe("Sep 1 – Oct 31");
     expect(field("index")).toBe("rainfall below a trigger");
     expect(field("dataset")).toBe(DATASET_ID);
-    expect(field("location")).toBe(`${POINT_LABEL} · -21.41, -45.48`);
+    expect(field("location")).toBe(`${POINT_LABEL} · -21.3667, -45.5125`);
     // The field a figure link asked for is highlighted, and only that one.
     const highlighted = [...document.querySelectorAll('[data-highlight="true"]')];
     expect(highlighted.map((element) => element.getAttribute("data-field"))).toEqual([
@@ -159,10 +159,10 @@ describe("quote tab [R-12.3-3]", () => {
     expect(assumptions).toEqual([
       "Index: rainfall below a trigger.",
       "Coverage window from Sep 1 to Oct 31; a season is labelled by its start year.",
-      "74 seasons used, 1950 to 2023.",
+      "76 seasons used, 1950 to 2025.",
       "Gamma distribution fitted to the seasonal totals; 100,000 simulated seasons; seed 42.",
       "Risk load of 30% on the standard deviation; expense load of 15% on the expected loss.",
-      "Weather data: synthetic cube (generated for the demo, not weather history).",
+      "Weather data: ERA5-Land, Copernicus Climate Change Service.",
     ]);
     const actions = [...document.querySelectorAll(".audit__action")].map(
       (item) => item.textContent,
@@ -174,7 +174,7 @@ describe("quote tab [R-12.3-3]", () => {
     ]);
     const entry = document.querySelector('[data-action="audit.quote_created"]');
     expect(entry?.querySelector("[data-actor]")).toHaveTextContent("Agent");
-    expect(entry?.querySelector("time")).toHaveAttribute("datetime", "2026-11-10T14:05:00Z");
+    expect(entry?.querySelector("time")).toHaveAttribute("datetime", "2026-11-11T22:58:20Z");
     expect(screen.getByText("Pending approval")).toBeVisible();
   });
 

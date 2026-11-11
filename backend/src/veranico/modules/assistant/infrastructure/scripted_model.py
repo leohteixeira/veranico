@@ -58,8 +58,12 @@ class ScriptedModelClient:
         self.requests: list[ModelRequest] = []
 
     @classmethod
-    def happy_path(cls) -> "ScriptedModelClient":
-        return cls(happy_path_policy)
+    def happy_path(cls, cover: Mapping[str, object] | None = None) -> "ScriptedModelClient":
+        """The built-in policy; `cover` replaces `HAPPY_PATH_COVER` (an evaluation case's)."""
+        if cover is None:
+            return cls(happy_path_policy)
+        chosen = cover
+        return cls(lambda request: happy_path_policy(request, chosen))
 
     async def stream(self, request: ModelRequest) -> AsyncGenerator[ModelEvent]:
         self.requests.append(request)
@@ -139,24 +143,26 @@ def _deltas(text: str) -> tuple[ModelTextDelta, ...]:
 
 # The built-in scenario
 
-# The scripted scenario's own cover, independent of the interface's example covers
-# (`frontend/src/config.ts`): a coffee farm near Três Pontas, in the Sul de Minas showcase
-# region; rainfall below 150 mm from 1 September to 31 October pays linearly down to 75 mm,
-# with a limit of R$ 300,000.
+# The cover of the interface's first example (`frontend/src/config.ts`, Sul de Minas), so a
+# visitor without a key who clicks it sees the conversation they asked for: a farm near Três
+# Pontas; rainfall below 105 mm from 1 September to 31 October pays linearly down to 70 mm,
+# with a limit of R$ 300,000. Change both places together.
 HAPPY_PATH_QUERY = "Três Pontas"
 HAPPY_PATH_COVER: Mapping[str, object] = {
     "index_type": "rainfall_below",
     "window_start": "09-01",
     "window_end": "10-31",
-    "trigger": 150.0,
-    "exit": 75.0,
+    "trigger": 105.0,
+    "exit": 70.0,
     "limit_cents": 30_000_000,
 }
 HAPPY_PATH_SIMULATION: Mapping[str, object] = {"n": 100_000, "seed": 42}
 _FALLBACK_CARRIER = "carrier-1"
 
 
-def happy_path_policy(request: ModelRequest) -> Played:
+def happy_path_policy(
+    request: ModelRequest, cover: Mapping[str, object] = HAPPY_PATH_COVER
+) -> Played:
     """The next step of SPEC section 2, from the tool results the request already holds."""
     usage = no_usage(request.model)
     results = tool_results(request)
@@ -178,7 +184,7 @@ def happy_path_policy(request: ModelRequest) -> Played:
             point = _point(block.content)
             return call("get_weather_history", {"lat": point["lat"], "lon": point["lon"]})
         if name == "get_weather_history":
-            arguments = {"dataset_id": block.content["dataset_id"], **HAPPY_PATH_COVER}
+            arguments = {"dataset_id": block.content["dataset_id"], **cover}
             return call("backtest_index", arguments)
         if name == "backtest_index":
             return say(_backtest_answer(block.content, latest), usage=usage)
@@ -193,7 +199,7 @@ def happy_path_policy(request: ModelRequest) -> Played:
         return call("resolve_location", {"query": HAPPY_PATH_QUERY})
     if "price_cover" not in latest:
         point = _point(latest.get("resolve_location", {}))
-        arguments = {**point, **HAPPY_PATH_COVER, **HAPPY_PATH_SIMULATION}
+        arguments = {**point, **cover, **HAPPY_PATH_SIMULATION}
         return call("price_cover", arguments)
     quote_id = latest["price_cover"].get("quote_id")
     if "draft_term_sheet" not in latest:

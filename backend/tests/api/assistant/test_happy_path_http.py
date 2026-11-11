@@ -42,8 +42,8 @@ HAPPY_PATH_TOOLS = [
     "request_submission",
 ]
 FLOW = (
-    "A coffee farm near Três Pontas: rainfall below 150 mm from 1 September to 31 October, "
-    "paying down to 75 mm, limit R$ 300,000.",
+    "A farm near Três Pontas: rainfall below 105 mm from 1 September to 31 October, "
+    "paying down to 70 mm, limit R$ 300,000.",
     "Price it.",
     "Draft the term sheet.",
     "Request submission to the carrier.",

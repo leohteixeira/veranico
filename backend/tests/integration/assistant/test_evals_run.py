@@ -25,15 +25,25 @@ from veranico.shared.infrastructure.settings import Settings
 pytestmark = pytest.mark.integration
 
 HAPPY, CLARIFY = "happy_full_flow_sul_de_minas", "clarify_missing_limit"
+# The cover the case `happy_full_flow_sul_de_minas` asks for (`tests/evals/cases.yaml`). The
+# script's own cover is the interface's first example, which the evaluation suite does not use.
+HAPPY_CASE_COVER = {
+    "index_type": "rainfall_below",
+    "window_start": "09-01",
+    "window_end": "10-31",
+    "trigger": 150.0,
+    "exit": 75.0,
+    "limit_cents": 30_000_000,
+}
 # Per model call, at the prices of the test settings: 1,000 input and 100 output tokens.
 CALL_USD_MICROS = 150
 
 
 class PricedScript:
-    """The happy path script, reporting usage on every call as the real client does."""
+    """The happy path script on the happy case's cover, reporting usage as the real client does."""
 
     def __init__(self, settings: Settings) -> None:
-        self._script = ScriptedModelClient.happy_path()
+        self._script = ScriptedModelClient.happy_path(HAPPY_CASE_COVER)
 
     async def stream(self, request: ModelRequest) -> AsyncGenerator[ModelEvent]:
         async for event in self._script.stream(request):
