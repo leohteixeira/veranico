@@ -11,8 +11,10 @@ from veranico.shared.kernel.ids import DatasetId
 from veranico.shared.kernel.principal import Principal
 
 DESCRIPTION = (
-    "Backtest an index over every season available in a dataset. Returns per-season index "
-    "values and payouts, and the aggregates: seasons used and excluded, `trigger_frequency` "
+    "Backtest an index over every season available in a dataset. Call it only when the user "
+    "gave the window and the limit; when one is missing, ask for it instead. Returns "
+    "per-season index values and payouts, and the aggregates: seasons used and excluded, "
+    "`trigger_frequency` "
     "(share of seasons that paid), `burn_cost` (average historical payout), the largest payout "
     "and its season, the trend of the index and warnings. Money is integer BRL centavos in "
     '`amount_cents` (1234567 is R$ 12,345.67); rates are fractions as strings ("0.125000" is '

@@ -37,10 +37,12 @@ Longitude = Annotated[float, Field(ge=-180, le=180, description="Longitude in de
 LimitCents = Annotated[
     int,
     Field(
+        gt=0,
         description=(
             "Cover limit in integer BRL centavos: R$ 300,000 is 30000000. "
-            "Only a limit the user stated."
-        )
+            "Only a limit the user stated, never a placeholder: without one, ask the user "
+            "instead of calling the tool."
+        ),
     ),
 ]
 
@@ -51,7 +53,11 @@ class ToolInput(BaseModel):
 
 class ResolveLocationInput(ToolInput):
     query: str | None = Field(
-        default=None, description="Place name exactly as the user wrote it, for example a town."
+        default=None,
+        description=(
+            "Place name whole, exactly as the user wrote it, for example a town. "
+            "Do not trim or correct it."
+        ),
     )
     lat: Latitude | None = None
     lon: Longitude | None = None

@@ -83,6 +83,23 @@ async def test_validation_error_becomes_invalid_arguments_with_field_and_reason(
 
 
 @pytest.mark.req("R-9.4-9")
+async def test_a_placeholder_limit_is_refused_before_any_module_is_called() -> None:
+    # The first evaluation run saw `limit_cents: 0` sent when the user had given no limit.
+    kit = build_kit()
+    arguments = {"dataset_id": kit.dataset.dataset_id, **INDEX_ARGUMENTS, "limit_cents": 0}
+
+    outcome = await kit.registry.execute(BROWSER, "backtest_index", arguments)
+
+    assert outcome.error is not None
+    assert outcome.error.error_code == "invalid_arguments"
+    assert outcome.error.message.startswith("limit_cents: ")
+    assert kit.pricing.calls == []
+    schemas = {spec.name: spec.input_schema for spec in kit.registry.definitions()}
+    for tool in ("backtest_index", "price_cover"):
+        assert schemas[tool]["properties"]["limit_cents"]["exclusiveMinimum"] == 0
+
+
+@pytest.mark.req("R-9.4-9")
 async def test_unknown_field_is_invalid_arguments() -> None:
     kit = build_kit()
 

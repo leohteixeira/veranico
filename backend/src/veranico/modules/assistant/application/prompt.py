@@ -40,6 +40,11 @@ from veranico.shared.infrastructure.settings import Settings
 # SHA-256 of each prompt file. Add a line with a new version; never change an existing one.
 PROMPT_SHA256 = {
     "v1": "a82f4eca0c769fd6587baef837b9a6fd0abf228f4e32cc3f2797a86d8251b89a",
+    # v2, after the first evaluation run: no pricing tool and no placeholder argument while an
+    # essential is missing, no example amount for the limit, a place name passed whole, and
+    # one answer after the tools instead of a narration between them, questions that end with
+    # a question mark, and no Markdown marks (the interface shows the text as written).
+    "v2": "3020e73e8e6aa63d04f90099e71e4f4253d3b58699a07e6c071a3ca618a54f65",
 }
 
 _PROMPT_FILE = re.compile(r"^system\.v(\d+)\.md$")

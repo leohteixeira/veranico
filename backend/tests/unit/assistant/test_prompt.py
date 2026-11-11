@@ -1,6 +1,8 @@
 """The versioned system prompt and the request built from a stored history (SPEC 9.2, 9.3)."""
 
+import hashlib
 import re
+from importlib.resources import files
 from pathlib import Path
 
 import pytest
@@ -90,7 +92,7 @@ def test_prompt_never_lets_synthetic_figures_pass_as_real_history() -> None:
 
 @pytest.mark.req("R-9.3-8")
 def test_version_comes_from_the_file_name() -> None:
-    assert PROMPT.version == "v1"
+    assert PROMPT.version == "v2"
     assert PROMPT.text.startswith("You are the cover structuring agent of Veranico.")
 
 
@@ -119,7 +121,31 @@ def test_a_directory_without_a_prompt_fails_loudly(tmp_path: Path) -> None:
 def test_prompt_text_matches_the_checksum_recorded_for_its_version() -> None:
     # An edit without a new version fails here: add `system.v<N+1>.md` and its checksum instead.
     assert PROMPT.sha256 == PROMPT_SHA256[PROMPT.version]
-    assert set(PROMPT_SHA256) == {"v1"}
+    assert set(PROMPT_SHA256) == {"v1", "v2"}
+
+
+@pytest.mark.req("R-9.3-8")
+def test_every_earlier_version_is_kept_unchanged() -> None:
+    prompts = files("veranico.modules.assistant.application") / "prompts"
+
+    for version, checksum in PROMPT_SHA256.items():
+        text = (prompts / f"system.{version}.md").read_bytes()
+        assert hashlib.sha256(text).hexdigest() == checksum, version
+
+
+@pytest.mark.req("R-9.3-1", "R-9.3-6")
+def test_the_prompt_closes_what_the_first_evaluation_run_showed() -> None:
+    numbered = rules()
+
+    # A backtest was tried with a limit of zero, and an example amount was proposed.
+    assert "call neither of them" in numbered[1]
+    assert "placeholder" in numbered[1]
+    assert "Do not propose an amount for the limit" in numbered[1]
+    # A place name that carried an instruction was trimmed before it reached the tool.
+    assert "whole, exactly as the user wrote it" in numbered[6]
+    assert "do not trim, correct or complete it" in numbered[6]
+    # Text written between tool calls contradicted the final answer.
+    assert "Write nothing before or between tool calls" in PROMPT.text
 
 
 def user(seq: int, turn: int, text: str) -> UserEntry:
