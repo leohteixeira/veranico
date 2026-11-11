@@ -42,6 +42,7 @@ Interface:
 
 Backend:
 
+* **A public place-name lookup route.** The agent resolves a place name through `resolve_location`; the public API of SPEC 11 takes coordinates only, which is the one exception to SPEC 3.2 that the tests name.
 * **Per-season index values kept between requests.** They are recomputed from the kept cube on each uncached request; the load campaign passes without a second cache.
 * **Memory headroom of the API role.** With the three cubes decoded the API peaks at about 958 MiB of its 1 GiB limit under the load campaign. A fourth region needs a larger instance or a smaller cache (`VERANICO_CLIMATE__CUBE_CACHE_SIZE`).
 * **Memory figures in the stored load result.** They were read from the containers by hand; the runner does not record them.

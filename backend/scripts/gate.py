@@ -260,12 +260,17 @@ GATES: dict[str, Gate] = {
     "m6": Gate(
         plans="plans 09, 10",
         steps=(
-            Step(
-                "traceability, every requirement with a passing test",
-                "make traceability REQUIRE_ALL=1",
-                REPO,
-            ),
             Step("evidence campaigns and the rendered record", "make evidence", REPO),
+            # The matrix of the run above, read again by the script itself: through Make its
+            # exit 3 (only requirements that wait for a human gate are unproven) would be lost.
+            Step(
+                "traceability, every requirement with a passing test (open on a human gate)",
+                'run="$(ls -d ../.evidence/traceability/*/ | tail -n 1)"'
+                " && uv run python scripts/traceability.py --check-ids --require-all"
+                ' $(printf -- "--report %s " "$run"*.req.json)',
+                BACKEND,
+                may_be_open=True,
+            ),
             Step(
                 "verification record matches passed results on HEAD",
                 "uv run python scripts/evidence.py check"

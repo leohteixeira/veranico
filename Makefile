@@ -227,36 +227,44 @@ load:
 	@if [ ! -f load/run.py ]; then echo "load: not implemented in this milestone (plan 09)" >&2; exit 2; fi
 	cd backend && uv run python ../load/run.py
 
-# The requirement-to-test matrix of the current tree, from every suite that can run here.
+# The requirement-to-test matrix of the current tree, from every suite that can run here:
+# the backend suites, the failure campaign (`make test-failure`, under the same run id), the
+# frontend unit tests and the Playwright flow on a fresh build.
 # Results: .evidence/traceability/<run_id>/{backend.req.json,backend-integration.req.json,
-# frontend.req.json (when the frontend suite writes frontend/.cache/req.json),matrix.json,matrix.md}.
-# `REQUIRE_ALL=1` also fails when a requirement has no passing test. The matrix is written
-# even when a test fails; the target then exits non-zero.
+# failure.req.json,frontend.req.json,matrix.json,matrix.md} and .evidence/failure/<run_id>/.
+# `REQUIRE_ALL=1` also fails when a requirement has no passing test, including one that
+# waits for a human gate. The matrix is written even when a test fails; the target then
+# exits non-zero.
 TRACE := $(EVIDENCE)/traceability/$(RUN_ID)
 traceability: frontend/node_modules/.modules.yaml
 	@mkdir -p $(TRACE); status=0; \
 	(cd backend && uv run pytest tests -q -m "$(FAST)" --req-report=$(TRACE)/backend.req.json) || status=1; \
 	($(call with_emulators,uv run pytest tests -q -m "integration or evidence" --req-report=$(TRACE)/backend-integration.req.json)) || status=1; \
-	rm -f frontend/.cache/req.json; \
+	$(MAKE) test-failure RUN_ID=$(RUN_ID) || status=1; \
+	rm -f frontend/.cache/req.json frontend/.cache/vitest.json frontend/.cache/playwright.json; \
 	pnpm --dir frontend test || status=1; \
+	(pnpm --dir frontend build && pnpm --dir frontend exec playwright test) || status=1; \
+	pnpm --dir frontend req-report || status=1; \
 	reports="--report $(TRACE)/backend.req.json --report $(TRACE)/backend-integration.req.json"; \
-	if [ -f frontend/.cache/req.json ]; then \
-		cp frontend/.cache/req.json $(TRACE)/frontend.req.json; \
-		reports="$$reports --report $(TRACE)/frontend.req.json"; \
-	fi; \
+	for report in failure:$(EVIDENCE)/failure/$(RUN_ID)/req.json frontend:frontend/.cache/req.json; do \
+		if [ -f "$${report#*:}" ]; then \
+			cp "$${report#*:}" "$(TRACE)/$${report%%:*}.req.json"; \
+			reports="$$reports --report $(TRACE)/$${report%%:*}.req.json"; \
+		fi; \
+	done; \
 	(cd backend && uv run python scripts/traceability.py --check-ids --matrix --json $(TRACE)/matrix.json \
 		$(if $(filter 1,$(REQUIRE_ALL)),--require-all) $$reports > $(TRACE)/matrix.md) || status=1; \
 	echo "traceability: results in $(TRACE)"; \
 	exit $$status
 
 # The three campaigns run even when one fails, so the record shows the failure; the target
-# then exits non-zero. Load and evaluation sections come from their newest stored run.
+# then exits non-zero. The failure campaign runs inside the traceability run. Load and
+# evaluation sections come from their newest stored run.
 evidence:
 	@if [ ! -f backend/scripts/evidence.py ]; then echo "evidence: not implemented in this milestone (plan 09)" >&2; exit 2; fi
 	@status=0; \
 	$(MAKE) traceability || status=1; \
 	$(MAKE) mutation-proof || status=1; \
-	$(MAKE) test-failure || status=1; \
 	(cd backend && uv run python scripts/evidence.py render) || status=1; \
 	exit $$status
 

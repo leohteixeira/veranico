@@ -53,10 +53,11 @@ def test_identifiers_are_unique_and_match_the_pattern() -> None:
     assert [i for i in identifiers if not IDENTIFIER.match(i)] == []
 
 
-def test_every_entry_has_exactly_the_four_fields_as_non_empty_strings() -> None:
+def test_every_entry_has_the_four_fields_and_at_most_a_human_gate() -> None:
     for entry in entries():
-        assert set(entry) == {"id", "section", "text", "plan"}, entry
+        assert set(entry) - {"gate"} == {"id", "section", "text", "plan"}, entry
         assert all(isinstance(value, str) and value.strip() for value in entry.values()), entry
+        assert entry.get("gate", "H1") in {"H1", "H2", "H3"}, entry
 
 
 def test_the_section_of_an_entry_is_the_one_in_its_identifier() -> None:
@@ -217,6 +218,36 @@ def test_require_all_passes_when_every_requirement_is_proven(small: Path) -> Non
     result = run("--require-all", "--check-ids", *reports(small))
 
     assert result.returncode == 0, result.stderr
+
+
+def _gate_the_untested_requirement(directory: Path) -> None:
+    path = directory / "requirements.yaml"
+    loaded = yaml.safe_load(path.read_text())
+    loaded["requirements"][2]["gate"] = "H1"  # R-2-1, whose only test is skipped
+    path.write_text(yaml.safe_dump(loaded))
+
+
+@pytest.mark.req("R-16.8-1")
+def test_require_all_reports_a_gated_requirement_as_open_and_not_as_passed(small: Path) -> None:
+    _gate_the_untested_requirement(small)
+    proven = [{"id": "t::two", "req": ["R-1-1", "R-1-2"], "outcome": "passed"}]
+    (small / "backend.json").write_text(json.dumps({"tests": proven}))
+    (small / "frontend.json").write_text(json.dumps({"tests": []}))
+
+    result = run("--require-all", *reports(small))
+
+    assert result.returncode == 3
+    assert "R-2-1: open, waits for human gate H1" in result.stderr
+
+
+@pytest.mark.req("R-16.8-1")
+def test_an_open_gate_does_not_hide_another_unproven_requirement(small: Path) -> None:
+    _gate_the_untested_requirement(small)
+
+    result = run("--require-all", *reports(small))
+
+    assert result.returncode == 1  # R-1-2 has a failing test
+    assert "R-1-2: failed" in result.stderr
 
 
 def test_a_report_in_another_shape_or_a_missing_report_is_an_error(small: Path) -> None:

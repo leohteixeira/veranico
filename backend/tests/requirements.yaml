@@ -8,6 +8,9 @@
 # item inside the section; a statement of a tabulated section that its table does not list
 # takes the next free number.
 # plan: the plan or plans that prove the requirement.
+# gate (optional): the human gate of the goal contract (H1, H2 or H3) that must close before
+# the requirement can be proven. Until a test proves it, the requirement is reported as open,
+# never as passed.
 #
 # Section 16.1 lists tests of requirements stated elsewhere and has no entry. The Anthropic
 # Console spend limit (last bullet of section 10.3) is an operational step and has no entry.
@@ -561,6 +564,7 @@ requirements:
   section: '9.6'
   text: a reviewed recording of the full flow exists per language as a versioned fixture
   plan: '06'
+  gate: H1
 - id: R-9.6-2
   section: '9.6'
   text: '`GET /replays/{locale}` serves the recording, with the recorded requests as `user_message` events; a replay creates no quote and no approval'

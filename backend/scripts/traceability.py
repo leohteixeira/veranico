@@ -17,7 +17,12 @@ are merged; a test listed in more than one report counts once per report.
 Outcome of a requirement: `failed` when any of its tests failed, `passed` when at least one
 passed and none failed, otherwise `no passing test`.
 
-Exit codes: 0 success, 1 a check failed, 2 the input could not be read.
+A requirement may name a human gate (`gate: H1`): it cannot be proven before that gate
+closes. Without a passing test it is still `no passing test` in the matrix; `--require-all`
+reports it as open and, when nothing else is wrong, exits 3 instead of 1. Open is not passed.
+
+Exit codes: 0 success, 1 a check failed, 2 the input could not be read, 3 `--require-all`
+found only requirements that wait for a human gate.
 """
 
 import argparse
@@ -31,6 +36,7 @@ import yaml
 
 DEFAULT_REQUIREMENTS = Path(__file__).resolve().parent.parent / "tests" / "requirements.yaml"
 OUTCOMES = {"passed", "failed", "skipped"}
+OPEN_EXIT_CODE = 3
 
 
 class InputError(Exception):
@@ -43,6 +49,7 @@ class Requirement:
     section: str
     text: str
     plan: str
+    gate: str | None = None
 
 
 @dataclass(frozen=True)
@@ -56,7 +63,9 @@ def load_requirements(path: Path) -> list[Requirement]:
     try:
         loaded = yaml.safe_load(path.read_text(encoding="utf-8"))
         return [
-            Requirement(entry["id"], entry["section"], entry["text"], entry["plan"])
+            Requirement(
+                entry["id"], entry["section"], entry["text"], entry["plan"], entry.get("gate")
+            )
             for entry in loaded["requirements"]
         ]
     except (OSError, yaml.YAMLError, KeyError, TypeError) as error:
@@ -183,12 +192,24 @@ def main() -> int:
     if arguments.json is not None:
         arguments.json.parent.mkdir(parents=True, exist_ok=True)
         arguments.json.write_text(json.dumps(as_json(rows), indent=2) + "\n", encoding="utf-8")
+    waiting = False
     if arguments.require_all:
         for requirement, _, outcome in rows:
-            if outcome != "passed":
+            if outcome == "passed":
+                continue
+            if outcome == "no passing test" and requirement.gate:
+                print(
+                    f"traceability: {requirement.identifier}: open, waits for human gate"
+                    f" {requirement.gate}",
+                    file=sys.stderr,
+                )
+                waiting = True
+            else:
                 print(f"traceability: {requirement.identifier}: {outcome}", file=sys.stderr)
                 failed = True
-    return 1 if failed else 0
+    if failed:
+        return 1
+    return OPEN_EXIT_CODE if waiting else 0
 
 
 if __name__ == "__main__":
