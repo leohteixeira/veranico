@@ -62,6 +62,26 @@ class FakeClimateFacade:
         self._cubes[cube.region.region_id] = cube
         return cube.region
 
+    def with_synthetic_region(
+        self, region_id: str, seed: int, *, first_year: int = 2000, last_year: int = 2019
+    ) -> Region:
+        """Register the full-size (20 by 20) synthetic cube of a showcase region.
+
+        The cube comes from the generator `climate` itself uses for the showcase regions, so a
+        consumer's test gets the real shape without importing the module's internals. Twenty
+        years by default: the whole history from 1950 takes over a second to generate.
+        """
+        # The one import of a module's internals in the fakes, kept local to this method.
+        from veranico.modules.climate.domain.regions import region_by_id
+        from veranico.modules.climate.infrastructure.synthetic import (
+            generate_cube,
+        )
+
+        definition = region_by_id(region_id)
+        if definition is None:
+            raise ValueError(f"unknown showcase region: {region_id}")
+        return self.add_cube(generate_cube(definition, first_year, last_year, seed))
+
     def add_location(self, query: str, location: Location) -> None:
         self._names[query.casefold()] = location
 

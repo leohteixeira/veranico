@@ -202,3 +202,18 @@ async def test_calls_lists_what_was_received_in_order() -> None:
         ("resolve_location", (None, LAT, LON)),
         ("ensure_history", (LAT, LON)),
     ]
+
+
+async def test_synthetic_region_is_the_full_size_seeded_cube() -> None:
+    fake = FakeClimateFacade()
+
+    area = fake.with_synthetic_region("sorriso", seed=7, first_year=2018, last_year=2019)
+    cube = await fake.region_cube("sorriso")
+    again = FakeClimateFacade()
+    again.with_synthetic_region("sorriso", seed=7, first_year=2018, last_year=2019)
+
+    assert (area.nx, area.ny, area.synthetic) == (20, 20, True)
+    assert cube.precipitation_mm.shape == (730, 20, 20)
+    assert (cube.precipitation_mm == (await again.region_cube("sorriso")).precipitation_mm).all()
+    with pytest.raises(ValueError, match="unknown showcase region"):
+        fake.with_synthetic_region("atlantis", seed=1)
