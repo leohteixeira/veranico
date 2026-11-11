@@ -36,6 +36,27 @@ _SMOOTH_SHARE = 0.75
 _COARSE = 5  # the smooth part is drawn on a 5 by 5 grid and interpolated
 _AMOUNT_JITTER = 0.25  # log-scale spread of the amount between cells of one day
 
+# Named in a cube's manifest. Change the version whenever the model or a value above
+# changes, so a stored cube says which generator made it.
+GENERATOR = "veranico-synthetic/1"
+
+
+def generator_parameters() -> dict[str, str]:
+    """The values of the model, recorded with a generated cube as its provenance."""
+    return {
+        "wet_peak_day": str(_WET_PEAK_DAY),
+        "wet_day_share_dry_season": str(_WET_DAY_SHARE_DRY_SEASON),
+        "wet_day_share_wet_season": str(_WET_DAY_SHARE_WET_SEASON),
+        "gamma_shape": str(_GAMMA_SHAPE),
+        "mean_scale_mm_dry_season": str(_MEAN_SCALE_MM_DRY_SEASON),
+        "mean_scale_mm_wet_season": str(_MEAN_SCALE_MM_WET_SEASON),
+        "gradient": str(_GRADIENT),
+        "year_sigma": str(_YEAR_SIGMA),
+        "smooth_share": str(_SMOOTH_SHARE),
+        "coarse_nodes": str(_COARSE),
+        "amount_jitter": str(_AMOUNT_JITTER),
+    }
+
 
 def generate_cube(region: RegionDef, first_year: int, last_year: int, seed: int) -> RegionCube:
     """A full-size synthetic cube of `region` for the years `first_year` to `last_year`.

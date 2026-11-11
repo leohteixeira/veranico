@@ -60,6 +60,15 @@ def convert_years(paths: Sequence[Path], region: Grid) -> xr.Dataset:
     )
 
 
+def convert_to_arrays(paths: Sequence[Path], region: Grid) -> tuple[np.ndarray, np.ndarray]:
+    """`convert_years` as (dates as datetime64[D], millimetres of shape (days, ny, nx))."""
+    cube = convert_years(paths, region)
+    return (
+        cube[zarr_io.TIME].to_numpy().astype("datetime64[D]"),
+        cube[zarr_io.PRECIPITATION].to_numpy(),
+    )
+
+
 def file_checksum(path: Path) -> str:
     """SHA-256 of a file's bytes, the checksum a manifest records per yearly file."""
     digest = hashlib.sha256()
@@ -93,10 +102,8 @@ def _read_year(
                 f"expected {yearly_file.UNITS!r}"
             )
         stamps = dataset[yearly_file.TIME].to_numpy().astype("datetime64[ns]")
-        rows = _matching(path, "latitude", dataset[yearly_file.LATITUDE].to_numpy(), latitudes)
-        columns = _matching(
-            path, "longitude", dataset[yearly_file.LONGITUDE].to_numpy(), longitudes
-        )
+        rows = matching(path, "latitude", dataset[yearly_file.LATITUDE].to_numpy(), latitudes)
+        columns = matching(path, "longitude", dataset[yearly_file.LONGITUDE].to_numpy(), longitudes)
         metres = variable.transpose(*wanted).to_numpy().astype(np.float64)
 
     days = stamps.astype("datetime64[D]")
@@ -113,7 +120,7 @@ def _read_year(
     return year, days, metres[:, rows][:, :, columns] * MM_PER_M
 
 
-def _matching(path: Path, name: str, found: np.ndarray, wanted: np.ndarray) -> np.ndarray:
+def matching(path: Path, name: str, found: np.ndarray, wanted: np.ndarray) -> np.ndarray:
     """For every wanted coordinate, the index of the file's coordinate that equals it."""
     distance = np.abs(found.astype(np.float64)[None, :] - wanted[:, None])
     nearest: np.ndarray = distance.argmin(axis=1)
