@@ -159,6 +159,12 @@ GATES: dict[str, Gate] = {
                 BACKEND,
             ),
             Step(
+                "quoting unit, integration and API tests",
+                "uv run pytest tests/unit/quoting tests/integration/quoting"
+                ' tests/api/quoting -m "not live" -q',
+                BACKEND,
+            ),
+            Step(
                 "carriers unit, integration and API tests",
                 "uv run pytest tests/unit/carriers tests/integration/carriers"
                 ' tests/api/carriers -m "not live" -q',
