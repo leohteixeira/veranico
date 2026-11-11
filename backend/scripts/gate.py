@@ -53,9 +53,10 @@ class Gate:
 _SMOKE = "make test-integration TESTS=tests/integration/test_emulators_smoke.py"
 # `-q` prints nothing: without it the resolved file, with interpolated values, would be shown.
 _COMPOSE_CONFIG = (
-    "docker compose -p veranico config -q && docker compose -p veranico --profile failure config -q"
+    "docker compose --env-file /dev/null -p veranico config -q"
+    " && docker compose --env-file /dev/null -p veranico --profile failure config -q"
 )
-_EMULATORS_UP = "docker compose -p veranico up -d --wait firestore storage"
+_EMULATORS_UP = "docker compose --env-file /dev/null -p veranico up -d --wait firestore storage"
 _GITLEAKS = (
     "gitleaks dir . --config .gitleaks.toml --redact --no-banner"
     " && gitleaks git . --config .gitleaks.toml --redact --no-banner"
@@ -168,6 +169,17 @@ GATES: dict[str, Gate] = {
                 "carriers unit, integration and API tests",
                 "uv run pytest tests/unit/carriers tests/integration/carriers"
                 ' tests/api/carriers -m "not live" -q',
+                BACKEND,
+            ),
+            Step(
+                "assistant unit, integration, API and failure tests",
+                "uv run pytest tests/unit/assistant tests/integration/assistant"
+                ' tests/api/assistant tests/failure/assistant -m "not live" -q',
+                BACKEND,
+            ),
+            Step(
+                "happy path over HTTP on the real modules, scripted model",
+                "uv run pytest tests/api/assistant/test_happy_path_http.py -q",
                 BACKEND,
             ),
             Step("failure campaign with the fault proxy", "make test-failure", REPO),

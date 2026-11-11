@@ -118,6 +118,7 @@ markers = [
     "live: touches a public network service",
     "slow: a benchmark, excluded from mutation runs",
     "external: shells out to a tool outside the Python environment, such as terraform",
+    "evidence: reads a stored campaign result and fails until that campaign has passed",
 ]
 
 [tool.importlinter]
