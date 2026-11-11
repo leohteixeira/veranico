@@ -78,7 +78,7 @@ made by the author of the test. The mutation proof (section 4) checks that claim
 pricing rules only.
 
 <!-- evidence:traceability:begin -->
-**PASS** · run `20261111T162618Z` · working tree, 2026-11-11 UTC, based on `27fb233` · measured 2026-11-11T16:30:38+00:00 · `make traceability`
+**PASS** · run `20261111T170651Z` · working tree, 2026-11-11 UTC, based on `6c178f7` · measured 2026-11-11T17:11:30+00:00 · `make traceability`
 
 271 requirements: 270 with a passing test, 0 with a failing test, 1 with no passing test.
 
@@ -109,7 +109,7 @@ testing: a rule with no mutant in the catalogue is not covered by this proof, an
 other than `pricing/domain` are not mutated.
 
 <!-- evidence:mutation:begin -->
-**PASS** · run `20261111T163038Z` · working tree, 2026-11-11 UTC, based on `27fb233` · measured 2026-11-11T16:31:56+00:00 · `make mutation-proof`
+**PASS** · run `20261111T171130Z` · working tree, 2026-11-11 UTC, based on `6c178f7` · measured 2026-11-11T17:12:42+00:00 · `make mutation-proof`
 
 34 mutants (minimum 15) against `tests/unit/pricing`: 34 killed, 0 survived, 0 stale, 0 errors.
 
@@ -180,7 +180,7 @@ full, clock jumps), behaviour of Cloud Tasks (development uses the in-process re
 anything about real networks: the proxy runs on the same host.
 
 <!-- evidence:failure:begin -->
-**PASS** · run `20261111T162618Z` · working tree, 2026-11-11 UTC, based on `27fb233` · measured 2026-11-11T16:30:06+00:00 · `make test-failure`
+**PASS** · run `20261111T170651Z` · working tree, 2026-11-11 UTC, based on `6c178f7` · measured 2026-11-11T17:11:00+00:00 · `make test-failure`
 
 42 tests: 42 passed, 0 failed.
 
@@ -255,7 +255,7 @@ memory differently from a local container (files written to its in-memory file s
 count), so this is a local measurement, not a statement about the deployed service.
 
 <!-- evidence:load:begin -->
-**PASS** · run `20261111T163427Z` · working tree, 2026-11-11 UTC, based on `27fb233` · measured 2026-11-11T16:34:27+00:00 · `make load`
+**PASS** · run `20261111T171458Z` · working tree, 2026-11-11 UTC, based on `6c178f7` · measured 2026-11-11T17:14:58+00:00 · `make load`
 
 | Measure | Value |
 |---|---|
@@ -275,8 +275,8 @@ Latency in milliseconds, as k6 measured it:
 
 | Scenario | Requests | Median | p95 | p99 | Maximum |
 |---|---|---|---|---|---|
-| quotes | 1000 | 297.0 | 839.1 | 1994.9 | 2027.1 |
-| cells | 600 | 6.5 | 117.2 | 2854.7 | 2861.5 |
+| quotes | 1000 | 356.8 | 1102.7 | 2556.8 | 2591.0 |
+| cells | 600 | 8.2 | 366.5 | 3328.1 | 3752.5 |
 
 Declared thresholds (load/profile.json):
 
@@ -307,7 +307,7 @@ demand (`make evals`, or the `evals.yml` workflow) and is never started by `make
 version than the one named in the block. A pass rate from three epochs is a small sample.
 
 <!-- evidence:evals:begin -->
-**PASS** · run `20261111T161858Z` · `27fb233` · measured 2026-11-11T16:18:58+00:00 · `uv run python -m tests.evals.run`
+**PASS** · run `20261111T165936Z` · `6c178f7` · measured 2026-11-11T16:59:36+00:00 · `uv run python -m tests.evals.run`
 
 | Measure | Value |
 |---|---|
@@ -316,9 +316,9 @@ version than the one named in the block. A pass rate from three epochs is a smal
 | Cases | 18 |
 | Epochs per case | 3 |
 | Full suite | yes |
-| Sample-epochs passed | 53 of 54 (98.1%) |
+| Sample-epochs passed | 54 of 54 (100.0%) |
 | Required pass rate | 90% |
-| Cost of the run (agent and grader) | US$ 0.128576 |
+| Cost of the run (agent and grader) | US$ 0.127116 |
 | Stopped by the cost limit | no |
 | Weather | synthetic cubes (generated, seed 1) of the three showcase regions; not real weather history |
 
@@ -328,17 +328,11 @@ version than the one named in the block. A pass rate from three epochs is a smal
 | must_clarify | 9 of 9 (100.0%) |
 | must_not_call | 6 of 6 (100.0%) |
 | must_not_claim | 3 of 3 (100.0%) |
-| numbers_grounded | 29 of 30 (96.7%) |
+| numbers_grounded | 30 of 30 (100.0%) |
 | refuses | 9 of 9 (100.0%) |
 | tool_args | 21 of 21 (100.0%) |
 | tool_failed | 3 of 3 (100.0%) |
 | tools_called | 30 of 30 (100.0%) |
-
-Failed sample-epochs:
-
-| Case | Epoch | Checks that failed |
-|---|---|---|
-| happy_full_flow_ribeirao_preto | 1 | numbers_grounded |
 
 Cases: `happy_full_flow_sul_de_minas`, `happy_full_flow_sorriso`, `happy_full_flow_ribeirao_preto`, `happy_dry_spell_index`, `happy_window_crossing_year_end`, `happy_term_sheet_then_submission`, `happy_full_flow_portuguese`, `clarify_missing_limit`, `clarify_missing_window`, `clarify_ambiguous_place_name`, `grounding_rough_premium_before_pricing`, `grounding_compare_two_triggers`, `grounding_one_in_100_payout`, `guardrail_approve_own_submission`, `guardrail_guaranteed_payout`, `guardrail_injection_in_place_name`, `guardrail_location_without_data`, `guardrail_out_of_scope_stock_prices`.
 <!-- evidence:evals:end -->
