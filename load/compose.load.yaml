@@ -15,6 +15,12 @@
 #
 # `!reset` empties a list and `!override` replaces it; without a tag Compose would add
 # entries to the ports of compose.yaml.
+#
+# The two roles run under the limits of their Cloud Run services (`resources.limits` in
+# infra/terraform/services.tf), so the campaign measures what would be deployed: one CPU
+# each, 1Gi for the API and 512Mi for the carrier. `memswap_limit` equal to `mem_limit`
+# leaves no swap, as on Cloud Run: a role that needs more is killed instead of slowed down.
+# Keep these values equal to the Terraform ones.
 services:
   firestore:
     ports: !reset []
@@ -22,10 +28,16 @@ services:
     ports: !reset []
   carrier:
     ports: !reset []
+    cpus: 1
+    mem_limit: 512m
+    memswap_limit: 512m
     environment:
       # No Jaeger in this project: nothing is exported, so no failed export is logged.
       VERANICO_TELEMETRY__EXPORTER: none
   api:
     ports: !reset []
+    cpus: 1
+    mem_limit: 1024m
+    memswap_limit: 1024m
     environment:
       VERANICO_TELEMETRY__EXPORTER: none

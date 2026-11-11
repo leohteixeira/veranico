@@ -142,7 +142,9 @@ Not run yet: there is no stored result of `make test-failure`.
 image of the `Dockerfile` for the API and the carrier role, and both emulators, all empty)
 and removes it afterwards. k6 runs from its pinned container image on the network of that
 stack against `http://api:8080`; the target is not configurable and the script refuses any
-other host.
+other host. The two roles run under the limits of their Cloud Run services
+(`infra/terraform/services.tf`, repeated in `load/compose.load.yaml`): one CPU each, 1 GiB
+of memory for the API and 512 MiB for the carrier, without swap.
 
 **Declared profile** (`load/profile.json`, written before the first measured run and never
 changed after one):
@@ -181,6 +183,15 @@ asserts that the oracle reports each one and passes only the clean directory.
 emulator, and the cubes are synthetic. The per-key rate limit is raised for the run, so
 the campaign measures idempotency under contention and the two latencies on this machine,
 not the rate limiter and not production latency. The limits are repeated inside the block.
+
+**Memory under the limits.** Read from the containers after run `20261111T122907Z` (it is
+not part of the stored result): neither role was killed for memory and neither restarted.
+The API process peaked at 958 MiB of resident memory against its 1,024 MiB limit, with the
+three synthetic cubes decoded; the container reached the limit 353 times and each time the
+kernel freed file cache instead of killing a process. The carrier peaked at 269 MiB against
+512 MiB. So 1 GiB holds for this campaign with about 6% to spare. Cloud Run accounts
+memory differently from a local container (files written to its in-memory file system
+count), so this is a local measurement, not a statement about the deployed service.
 
 <!-- evidence:load:begin -->
 Not run yet: there is no stored result of `make load`.
@@ -232,7 +243,7 @@ it names:
 
 | Found by | Defect | State |
 |---|---|---|
-| Load campaign, run `20261111T114945Z` | under simultaneous quote pricing the per-cell route had a 95th percentile of 1,545 ms against the declared 1,000 ms (median 14.6 ms). Idempotency held in the same run: 200 keys, 200 quotes, no duplicate | **open**: being fixed in the service; the threshold and the profile are unchanged, and section 6 shows the newest run |
+| Load campaign, run `20261111T114945Z` | under simultaneous quote pricing the per-cell route had a 95th percentile of 1,545 ms against the declared 1,000 ms (median 14.6 ms). Idempotency held in the same run: 200 keys, 200 quotes, no duplicate | fixed in the service, with the threshold and the profile unchanged: identical uncached cell requests share one computation (`3e97100`; alone not enough, run `20261111T120347Z` still measured 1,899 ms), and the showcase cubes stay decoded and are read without queueing (`cdf6cfb`). Runs `20261111T122148Z` (151 ms) and `20261111T122907Z` (203 ms, under the production CPU and memory limits) pass; section 6 shows the newest run |
 | Assistant failure tests (client disconnect) | a client disconnect did not close the content iterator of the stream, so the model call was left open; and a cancelled turn could record an incomplete token total | fixed in `c015f34`, with the tests that found them |
 | Kernel invariant test, in the full suite | the mock carrier's wire errors (`invalid_signature`, `stale_timestamp`, `carrier_unavailable`) subclassed the product's error family, although they are not product error codes | fixed in `21ad632`: the carrier route maps them to problem documents itself |
 | Integration and race tests on the Firestore emulator | concurrent writers on one document are refused by the emulator after about two seconds ("Transaction lock timeout", `ABORTED`) | `quoting` keeps the decision, the audit entry and the outbox event in one transaction, retries it, and answers exhausted contention as `conflict` (409) (`1eed6df`; proven by the race tests of `f44e62e`); the carrier's receipt store treats the same answer as a lost race (`2ddcb1a`) |
