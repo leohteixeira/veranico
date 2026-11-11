@@ -12,6 +12,7 @@ from tests.unit.quoting.memory import (
 )
 from veranico.modules.pricing.contracts import SimulationOptions
 from veranico.modules.quoting.application.approvals import ApprovalService, OutboxEnqueuer
+from veranico.modules.quoting.application.facade import QuotingService
 from veranico.modules.quoting.application.quotes import QuoteService
 from veranico.modules.quoting.contracts import (
     ApprovalView,
@@ -29,6 +30,8 @@ from veranico.shared.kernel.ids import EventId, QuoteId, SubmissionId, Workspace
 from veranico.shared.kernel.principal import Principal
 
 NOW = datetime(2026, 11, 11, 12, 0, tzinfo=UTC)
+SWEEP_AGE_SECONDS = 60
+RETRY_WINDOW_SECONDS = 3_600
 BROWSER = Principal(workspace_id=WorkspaceId("ws-1"), kind="browser")
 API_KEY = Principal(workspace_id=WorkspaceId("ws-1"), kind="api_key", key_id="key-1")
 STRANGER = Principal(workspace_id=WorkspaceId("ws-2"), kind="browser")
@@ -97,6 +100,19 @@ class World:
             sweep=self.approvals_sweep,
             new_submission=self._next_submission,
             new_event=self._next_event,
+        )
+        # The whole facade over the same stores, with the real sweep behind `list_approvals`.
+        self.service = QuotingService(
+            quotes=self.quotes,
+            idempotency=MemoryIdempotencyStore(),
+            outbox=self.outbox,
+            climate=climate,
+            pricing=pricing,
+            carriers=self.catalog,
+            dispatcher=self.dispatcher,
+            clock=self.clock,
+            sweep_age_seconds=SWEEP_AGE_SECONDS,
+            retry_window_seconds=RETRY_WINDOW_SECONDS,
         )
 
     # Predictable identifiers, so a test can tell a second generated id from the stored one.
