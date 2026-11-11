@@ -19,6 +19,12 @@ out, both start again at the same instant and repeat that until both run out of 
 nobody wins, although only one of them had to lose. A later attempt therefore waits a
 random time before its first read (full jitter, growing with the attempt), which lets one
 contender read and commit while the other still holds no lock.
+
+A cancellation stays a cancellation. On any exception the library rolls the transaction
+back; when the task is cancelled before `begin` has answered there is nothing to roll back,
+and the rollback raises a `ValueError` that replaces the `CancelledError`. A caller that
+survives ordinary errors (the outbox relay) would then go on running although it was asked
+to stop, so the original cancellation is raised again instead.
 """
 
 import asyncio
@@ -53,7 +59,9 @@ async def run_in_transaction[T](
         return await async_transactional(attempt)(client.transaction())
     except Aborted as error:
         raise ConflictError("too much contention on the document") from error
-    except ValueError as error:
-        if isinstance(error.__cause__, Aborted):
+    except Exception as error:
+        if isinstance(error, ValueError) and isinstance(error.__cause__, Aborted):
             raise ConflictError("too much contention on the document") from error
+        if isinstance(error.__context__, asyncio.CancelledError):
+            raise error.__context__ from None
         raise

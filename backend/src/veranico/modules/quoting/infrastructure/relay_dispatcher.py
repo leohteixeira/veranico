@@ -33,6 +33,8 @@ from veranico.shared.kernel.ids import EventId
 
 _logger = logging.getLogger(__name__)
 
+STOP_TIMEOUT_SECONDS = 5.0
+
 
 class RelayDispatcher:
     def __init__(
@@ -71,11 +73,20 @@ class RelayDispatcher:
             self._task = asyncio.create_task(self._run(), name="quoting-outbox-relay")
 
     async def stop(self) -> None:
+        """Cancel the loop and wait for it, for a bounded time.
+
+        `asyncio.wait` neither raises the loop's `CancelledError` nor swallows a
+        cancellation of the caller, and a loop that does not end (a library that turned the
+        cancellation into an ordinary error) cannot hold the application's shutdown: the
+        records stay in the outbox for the next process.
+        """
         task, self._task = self._task, None
-        if task is not None:
-            task.cancel()
-            with contextlib.suppress(asyncio.CancelledError):
-                await task
+        if task is None:
+            return
+        task.cancel()
+        done, _ = await asyncio.wait({task}, timeout=STOP_TIMEOUT_SECONDS)
+        if not done:
+            _logger.warning("outbox relay did not stop in time")
 
     async def run_once(self) -> int:
         """Call the deliver endpoint for every open record that is due; return the calls."""
