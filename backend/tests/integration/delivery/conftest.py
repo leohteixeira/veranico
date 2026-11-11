@@ -6,15 +6,24 @@
 `observed` builds the API role through the composition root on the shared emulators, with
 the scripted model client, and captures what leaves it: every finished span (the SDK's
 in-memory exporter) and every log line, rendered by the JSON formatter of the running
-service. Each run writes under fresh identifiers and clears nothing.
+service. `observe` is the same thing for a test that brings its own model script or its
+own HTTP transport.
+
+Every application built here keeps its documents in a Firestore project of its own, named
+at random. The emulator separates projects, so the visitor allowance and the spend ledger
+start empty on every run and nothing these tests write is seen by another suite. Nothing
+is cleared.
 """
 
+import contextlib
 import dataclasses
 import logging
 import os
 import socket
+import uuid
 from collections.abc import AsyncIterator
 from pathlib import Path
+from typing import Any
 
 import httpx
 import pytest
@@ -72,18 +81,45 @@ def _require_listening(name: str, address: str) -> None:
         )
 
 
-@pytest.fixture
-async def observed(tmp_path: Path) -> AsyncIterator[Observed]:
+@contextlib.asynccontextmanager
+async def observe(
+    tmp_path: Path,
+    *,
+    model_client: object | None = None,
+    http: httpx.AsyncClient | None = None,
+    climate: dict[str, Any] | None = None,
+) -> AsyncIterator[Observed]:
+    """The real API role, observed.
+
+    Without `http` the application has no network: every outgoing call is answered 503 at
+    once, and `climate` makes one attempt instead of four so a refused call costs no wait.
+    """
     _require_listening("Firestore", FIRESTORE_HOST)
     _require_listening("Cloud Storage", STORAGE_HOST)
     settings = settings_for_tests(
         "api",
         firestore_emulator_host=FIRESTORE_HOST,
         storage_emulator_host=STORAGE_HOST,
+        firestore_project=f"veranico-delivery-{uuid.uuid4().hex[:12]}",
         data_root=tmp_path / "data",
-        climate={"store_root": tmp_path / "weather"},
+        climate={"store_root": tmp_path / "weather", "attempts": 1, **(climate or {})},
     )
-    container = build_container(settings)
+    async with contextlib.AsyncExitStack() as stack:
+        if http is None:
+            http = await stack.enter_async_context(
+                httpx.AsyncClient(transport=httpx.MockTransport(_no_network))
+            )
+        container = build_container(settings, model_client=model_client, http=http)
+        async with _observing(settings, container) as application:
+            yield application
+
+
+def _no_network(request: httpx.Request) -> httpx.Response:
+    return httpx.Response(503)
+
+
+@contextlib.asynccontextmanager
+async def _observing(settings: Settings, container: Container) -> AsyncIterator[Observed]:
     app = create_app(container=container)
     exporter = InMemorySpanExporter()
     telemetry.configure(settings, "api", exporter=exporter)
@@ -105,3 +141,9 @@ async def observed(tmp_path: Path) -> AsyncIterator[Observed]:
     finally:
         root.removeHandler(logs)
         telemetry.shutdown()
+
+
+@pytest.fixture
+async def observed(tmp_path: Path) -> AsyncIterator[Observed]:
+    async with observe(tmp_path) as application:
+        yield application

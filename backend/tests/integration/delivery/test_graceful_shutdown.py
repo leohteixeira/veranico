@@ -8,16 +8,23 @@ The signal itself is covered where it is installed (`tests/api/test_lifecycle.py
 container side by `infra/smoke/container_smoke.sh` (SIGTERM ends the process before the
 grace period). Here the event is set directly, which is all the signal handler does.
 
-The stream side is open until the assistant module (plan 06) lands: the test below is
-expected to fail today and turns into a failure the day `POST /chat` streams, which is when
-it is finished with a scripted model step that holds the turn open while the event is set.
+The stream test uses a scripted model step that sets the event while its answer is being
+streamed, so the turn is open and half-way through a model call when shutdown starts.
 """
 
+import asyncio
 import json
+from pathlib import Path
 
 import pytest
 
-from tests.integration.delivery.conftest import Observed
+from tests.integration.delivery.conftest import Observed, observe
+from veranico.modules.assistant.application.ports import ModelRequest
+from veranico.modules.assistant.infrastructure.scripted_model import (
+    Played,
+    ScriptedModelClient,
+    say,
+)
 
 pytestmark = pytest.mark.integration
 
@@ -48,20 +55,29 @@ async def test_readiness_turns_503_once_the_shutdown_event_is_set(observed: Obse
 
 # The identifier is only here: readiness alone does not prove the requirement.
 @pytest.mark.req("R-17-6")
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "open: POST /chat does not stream yet (plan 06). When it does, this marker fails "
-        "and is finished with a scripted step that holds the turn open during shutdown."
-    ),
-)
-async def test_an_open_chat_stream_ends_with_shutting_down_then_done(observed: Observed) -> None:
-    observed.container.shutdown.set()
+async def test_an_open_chat_stream_ends_with_shutting_down_then_done(tmp_path: Path) -> None:
+    shutdown: list[asyncio.Event] = []
 
-    response = await observed.client.post("/api/v1/chat", json=CHAT)
+    def answer_while_shutdown_starts(request: ModelRequest) -> Played:
+        shutdown[0].set()  # SIGTERM arrives during this model call
+        return say("First sentence. Second sentence. Third sentence.")
+
+    model = ScriptedModelClient([answer_while_shutdown_starts])
+    async with observe(tmp_path, model_client=model) as observed:
+        shutdown.append(observed.container.shutdown)
+
+        response = await observed.client.post("/api/v1/chat", json=CHAT)
+        ready = await observed.client.get("/readyz")
 
     assert response.status_code == 200
     events = sse_events(response.text)
-    assert [name for name, _ in events][-2:] == ["error", "done"]
+    names = [name for name, _ in events]
+    assert names[0] == "started"
+    assert names[-2:] == ["error", "done"]
     assert events[-2][1]["code"] == "shutting_down"
     assert events[-1][1]["stop_reason"] == "error"
+    # The model call was cut short: one sentence was streamed, the other two never were.
+    streamed = "".join(str(data["text"]) for name, data in events if name == "text_delta")
+    assert streamed == "First sentence. "
+    assert len(model.requests) == 1  # and no further model call was made
+    assert ready.status_code == 503
