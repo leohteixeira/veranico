@@ -123,11 +123,12 @@ class DeliverySettings(BaseModel, frozen=True):
 class AssistantSettings(BaseModel, frozen=True):
     model_client: Literal["anthropic", "scripted"] = "anthropic"
     tool_call_limit: int = Field(default=10, gt=0)
-    # The four values below are provisional until the assistant plan proposes final ones.
+    # Set by the assistant plan for Claude Haiku 5.5: the estimate of three characters per
+    # token errs toward compacting early, and the threshold stays under the 100K price step.
     max_output_tokens: int = Field(default=4_096, gt=0)
     model_timeout_seconds: float = Field(default=60.0, gt=0)
     compaction_threshold_tokens: int = Field(default=60_000, gt=0)
-    chars_per_token: int = Field(default=4, gt=0)
+    chars_per_token: int = Field(default=3, gt=0)
 
 
 class TelemetrySettings(BaseModel, frozen=True):
