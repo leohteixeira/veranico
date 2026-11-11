@@ -28,7 +28,7 @@ This is a portfolio project built to be read by evaluators. This file extends `/
 8. **Report evidence honestly.** A gate that needs a missing account (Copernicus CDS, Google Cloud) is reported as open, never as passed. Every measured result in `docs/verification.md` names its commit.
 9. **Small explicit code over frameworks.** The agent loop is hand-written on the Anthropic Messages API so failure handling is visible. Add a dependency, abstraction, retry or state only for a failure or requirement you can name.
 10. **Tests use fakes built from contracts**, not mocks (`backend/tests/fakes/`). Integration tests run against the Firestore and Cloud Storage emulators. Every source of randomness is seeded.
-11. **No secrets** in code, fixtures, logs, spans or commits. Never log raw IP addresses, message text or tool payloads. Agents do not read, search or modify `.env` or `.env.*` files. The variables are documented in `env.example` (no leading dot, so the ignore rule does not hide it from agents); it holds names and safe defaults only.
+11. **No secrets** in code, fixtures, logs, spans or commits. Never log raw IP addresses, message text or tool payloads. Agents do not read, search or modify `.env` or `.env.*` files. The variables are documented in `env.example` (no leading dot, so the ignore rule does not hide it from agents); it holds names and safe defaults only. The owner keeps real keys in a Git-ignored `.env`; the `Makefile` loads it when it exists, so recipes get the keys without any agent opening the file.
 12. **Licences are part of the design.** Every data and tile source shows its required attribution in the interface and the README. The code is MIT; the demo is non-commercial because of the Sentinel-2 cloudless licence.
 13. **Text for people crosses boundaries as a code plus parameters.** Only presentation layers (HTTP problem mapper, term sheet, frontend) hold translated prose, in English and Brazilian Portuguese.
 
@@ -111,7 +111,7 @@ The design direction is recorded and binding: Atlas (real relief and satellite b
 |---|---|---|
 | Anthropic Console | `ANTHROPIC_API_KEY` for the agent and the evaluation suite | available |
 | Copernicus Climate Data Store | `CDS_API_KEY` for the offline cube build; never reaches the running service | missing |
-| Google Cloud project with billing | deployment | missing |
+| Google Cloud project linked to a billing account | deployment | account available (upgraded 2026-11-10); the deploy itself is run by the owner |
 
 Everything else (Open-Meteo, EOX tiles, emulators, Inspect, libraries) needs no account.
 

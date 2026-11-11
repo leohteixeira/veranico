@@ -491,7 +491,7 @@ Each milestone ends in a working state and has an executable gate, `make verify-
 | Anthropic Console | `ANTHROPIC_API_KEY` for the agent and the evaluation suite | available |
 | DNS for `leohteixeira.com` | optional custom domain | available |
 | Copernicus Climate Data Store | ERA5-Land NetCDF for the regional cubes | missing: human gate for the real cubes in M2 |
-| Google Cloud project linked to a billing account (the free trial's account is enough) | everything in section 17 | missing: human gate for the deploy in M5. Where the demo lives after a trial ends is an open decision of the owner |
+| Google Cloud project linked to a billing account | everything in section 17 | account upgraded to paid by the owner on 2026-11-10; the first deploy remains a human gate in M5 |
 
 Work that depends on a missing account is built and verified against fixtures and emulators, and the gate is reported as open, never as passed.
 
