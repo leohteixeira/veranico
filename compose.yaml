@@ -190,7 +190,6 @@ services:
       - VITE_BASEMAP_RELIEF
       - VITE_BASEMAP_SATELLITE
       - VITE_EXAMPLE_COVERS
-      - VITE_API_MOCK
     ports:
       - "${WEB_PORT:-3500}:3500"
     healthcheck:
