@@ -22,7 +22,7 @@ from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 
 from tests.fakes.settings import settings_for_tests
-from veranico.bootstrap import build_container
+from veranico.bootstrap import Container, build_container
 from veranico.main import create_app
 from veranico.shared.infrastructure import telemetry
 from veranico.shared.infrastructure.settings import Settings
@@ -48,6 +48,7 @@ class _Lines(logging.Handler):
 class Observed:
     client: httpx.AsyncClient
     settings: Settings
+    container: Container
     _exporter: InMemorySpanExporter
     _logs: _Lines
 
@@ -82,7 +83,8 @@ async def observed(tmp_path: Path) -> AsyncIterator[Observed]:
         data_root=tmp_path / "data",
         climate={"store_root": tmp_path / "weather"},
     )
-    app = create_app(container=build_container(settings))
+    container = build_container(settings)
+    app = create_app(container=container)
     exporter = InMemorySpanExporter()
     telemetry.configure(settings, "api", exporter=exporter)
 
@@ -97,7 +99,9 @@ async def observed(tmp_path: Path) -> AsyncIterator[Observed]:
                 app=app, raise_app_exceptions=False, client=(CLIENT_ADDRESS, 4711)
             )
             async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as c:
-                yield Observed(client=c, settings=settings, _exporter=exporter, _logs=logs)
+                yield Observed(
+                    client=c, settings=settings, container=container, _exporter=exporter, _logs=logs
+                )
     finally:
         root.removeHandler(logs)
         telemetry.shutdown()

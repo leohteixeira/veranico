@@ -334,7 +334,9 @@ def _route_template(scope: Scope) -> str | None:
 
 # Attributes every `logging.LogRecord` has; anything else on a record came from `extra=`.
 _RECORD_ATTRIBUTES: Final = frozenset(
-    vars(logging.LogRecord("", 0, "", 0, "", None, None)).keys() | {"message", "asctime"}
+    vars(logging.LogRecord("", 0, "", 0, "", None, None)).keys()
+    # `color_message` is the server's copy of a message with terminal colour codes.
+    | {"message", "asctime", "color_message"}
 )
 
 
