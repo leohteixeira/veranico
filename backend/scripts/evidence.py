@@ -343,25 +343,46 @@ def _held(outcome: object) -> str:
     return "yes" if outcome.get("ok") is True else "no"
 
 
+def _ratio(passed: object, total: object) -> str:
+    """`53 of 54 (98.1%)`, from the two counts of the summary, never from a stored rate."""
+    if not isinstance(passed, int) or not isinstance(total, int) or total <= 0:
+        return "not in the summary"
+    return f"{passed} of {total} ({100 * passed / total:.1f}%)"
+
+
 def _render_evals(summary: dict[str, Any]) -> list[str]:
-    rows = [
-        [label, summary[key]]
-        for key, label in (
-            ("model", "Model"),
-            ("prompt_version", "Prompt version"),
-            ("cases", "Cases"),
-            ("epochs", "Epochs per case"),
-            ("pass_rate", "Overall pass rate"),
-            ("threshold", "Required pass rate"),
-            ("cost_usd_micros", "Cost (micro-dollars)"),
-        )
-        if key in summary
+    """The summary written by `tests/evals/run.py` (plan 06)."""
+    cases = summary.get("cases")
+    cost = summary.get("cost") or {}
+    rows: list[list[object]] = [
+        ["Model", summary.get("model", "not in the summary")],
+        ["Prompt version", summary.get("prompt_version", "not in the summary")],
+        ["Cases", len(cases) if isinstance(cases, list) else cases],
+        ["Epochs per case", summary.get("epochs")],
+        ["Full suite", "yes" if summary.get("full_suite") else "no"],
+        ["Sample-epochs passed", _ratio(summary.get("passed"), summary.get("sample_epochs"))],
+        ["Required pass rate", f"{summary.get('threshold_percent')}%"],
+        ["Cost of the run (agent and grader)", f"US$ {cost.get('cost_usd', 'not measured')}"],
+        ["Stopped by the cost limit", "yes" if cost.get("stopped_by_cost_limit") else "no"],
+        ["Weather", summary.get("weather", "not in the summary")],
     ]
     lines = _table(["Measure", "Value"], rows)
-    scorers = summary.get("scorers") or {}
-    if scorers:
+    per_check = summary.get("per_check") or {}
+    if per_check:
         lines += [""]
-        lines += _table(["Check", "Pass rate"], [[name, rate] for name, rate in scorers.items()])
+        lines += _table(
+            ["Check", "Passed"],
+            [[name, _ratio(c.get("passed"), c.get("total"))] for name, c in per_check.items()],
+        )
+    failed = summary.get("failed") or []
+    if failed:
+        lines += ["", "Failed sample-epochs:", ""]
+        lines += _table(
+            ["Case", "Epoch", "Checks that failed"],
+            [[f["case"], f["epoch"], ", ".join(f.get("checks") or [])] for f in failed],
+        )
+    if isinstance(cases, list):
+        lines += ["", "Cases: " + ", ".join(f"`{case}`" for case in cases) + "."]
     return lines
 
 

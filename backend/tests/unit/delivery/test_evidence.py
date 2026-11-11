@@ -238,20 +238,34 @@ def test_a_dirty_tree_prints_as_working_tree_with_the_date_and_the_base_commit()
 
 
 def test_the_evaluation_block_renders_what_the_summary_holds(root: Path) -> None:
+    # The shape `tests/evals/run.py` writes.
     summary = {
         "model": "model-under-test",
-        "prompt_version": "v1",
-        "cases": 18,
+        "prompt_version": "v3",
+        "cases": ["happy_a", "clarify_b"],
         "epochs": 3,
-        "pass_rate": "0.944",
-        "scorers": {"tools_called": "1.000", "numbers_grounded": "0.944"},
+        "full_suite": True,
+        "sample_epochs": 6,
+        "passed": 5,
+        "threshold_percent": 90,
+        "per_check": {"numbers_grounded": {"passed": 2, "total": 3}},
+        "failed": [{"case": "happy_a", "epoch": 1, "checks": ["numbers_grounded"]}],
+        "weather": "synthetic cubes",
+        "cost": {"cost_usd": "0.012345", "stopped_by_cost_limit": False},
     }
     store(root, result("evals", "20261111T120000Z", summary))
 
     text = block_of(evidence.render(DOCUMENT, root), "evals")
 
-    assert "| Overall pass rate | 0.944 |" in text
-    assert "| numbers_grounded | 0.944 |" in text
+    assert "| Prompt version | v3 |" in text
+    assert "| Cases | 2 |" in text
+    assert "| Sample-epochs passed | 5 of 6 (83.3%) |" in text
+    assert "| Required pass rate | 90% |" in text
+    assert "| Cost of the run (agent and grader) | US$ 0.012345 |" in text
+    assert "| Weather | synthetic cubes |" in text
+    assert "| numbers_grounded | 2 of 3 (66.7%) |" in text
+    assert "| happy_a | 1 | numbers_grounded |" in text
+    assert "Cases: `happy_a`, `clarify_b`." in text
 
 
 def test_a_mutation_run_is_converted_and_rendered_with_one_row_per_mutant(

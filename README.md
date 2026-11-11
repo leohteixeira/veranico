@@ -91,9 +91,10 @@ A Python modular monolith with seven modules, one container image and two roles.
   stop after the same tool fails twice in a row, and a spend ceiling checked before every
   model call.
 * **Evaluation.** An Inspect suite drives the real loop with its real tools against fixture
-  cubes, three epochs per case, and fails below a 90% pass rate. **Current pass rate: not
-  run yet** (the evaluation block of [docs/verification.md](docs/verification.md) has no
-  stored run).
+  cubes, three epochs per case, and fails below a 90% pass rate. The pass rate, prompt
+  version, cost and failed cases of the newest run are in the evaluation block of
+  [docs/verification.md](docs/verification.md) (section 7), with the commit it measured.
+  The fixture cubes are synthetic, so it measures the agent's behaviour, not real weather.
 
 ## 5. Data
 
@@ -253,7 +254,7 @@ Measured values:
 
 | What | Value |
 |---|---|
-| Cost of one evaluation run | not measured: the evaluation has not run yet |
+| Cost of one evaluation run | measured on every run, agent and grader together; the newest is in the evaluation block of [docs/verification.md](docs/verification.md) (section 7) |
 | Tokens per recorded conversation | not measured |
 | Cloud cost of the deployed demo | not measured before H2 |
 

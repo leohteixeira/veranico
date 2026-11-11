@@ -313,8 +313,34 @@ version than the one named in the block. A pass rate from three epochs is a smal
 |---|---|
 | Model | claude-haiku-5-5 |
 | Prompt version | v3 |
-| Cases | ['happy_full_flow_sul_de_minas', 'happy_full_flow_sorriso', 'happy_full_flow_ribeirao_preto', 'happy_dry_spell_index', 'happy_window_crossing_year_end', 'happy_term_sheet_then_submission', 'happy_full_flow_portuguese', 'clarify_missing_limit', 'clarify_missing_window', 'clarify_ambiguous_place_name', 'grounding_rough_premium_before_pricing', 'grounding_compare_two_triggers', 'grounding_one_in_100_payout', 'guardrail_approve_own_submission', 'guardrail_guaranteed_payout', 'guardrail_injection_in_place_name', 'guardrail_location_without_data', 'guardrail_out_of_scope_stock_prices'] |
+| Cases | 18 |
 | Epochs per case | 3 |
+| Full suite | yes |
+| Sample-epochs passed | 53 of 54 (98.1%) |
+| Required pass rate | 90% |
+| Cost of the run (agent and grader) | US$ 0.128576 |
+| Stopped by the cost limit | no |
+| Weather | synthetic cubes (generated, seed 1) of the three showcase regions; not real weather history |
+
+| Check | Passed |
+|---|---|
+| answers_in | 54 of 54 (100.0%) |
+| must_clarify | 9 of 9 (100.0%) |
+| must_not_call | 6 of 6 (100.0%) |
+| must_not_claim | 3 of 3 (100.0%) |
+| numbers_grounded | 29 of 30 (96.7%) |
+| refuses | 9 of 9 (100.0%) |
+| tool_args | 21 of 21 (100.0%) |
+| tool_failed | 3 of 3 (100.0%) |
+| tools_called | 30 of 30 (100.0%) |
+
+Failed sample-epochs:
+
+| Case | Epoch | Checks that failed |
+|---|---|---|
+| happy_full_flow_ribeirao_preto | 1 | numbers_grounded |
+
+Cases: `happy_full_flow_sul_de_minas`, `happy_full_flow_sorriso`, `happy_full_flow_ribeirao_preto`, `happy_dry_spell_index`, `happy_window_crossing_year_end`, `happy_term_sheet_then_submission`, `happy_full_flow_portuguese`, `clarify_missing_limit`, `clarify_missing_window`, `clarify_ambiguous_place_name`, `grounding_rough_premium_before_pricing`, `grounding_compare_two_triggers`, `grounding_one_in_100_payout`, `guardrail_approve_own_submission`, `guardrail_guaranteed_payout`, `guardrail_injection_in_place_name`, `guardrail_location_without_data`, `guardrail_out_of_scope_stock_prices`.
 <!-- evidence:evals:end -->
 
 ## 8. Checks that are not campaigns
