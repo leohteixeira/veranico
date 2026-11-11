@@ -162,6 +162,42 @@ run "bucket_is_private" {
   }
 }
 
+# The names are written out here, not read from the configuration: removing a collection
+# from `local.ttl_collections` must fail this run. They are the names the stores use
+# (`audit` and `messages` are subcollections, so they need a policy of their own: deleting
+# a parent document does not delete its subcollections).
+run "every_expiring_collection_has_a_ttl_policy" {
+  command = plan
+
+  assert {
+    condition = toset(keys(google_firestore_field.ttl)) == toset([
+      "access_workspaces",
+      "access_api_keys",
+      "access_allowances",
+      "quoting_quotes",
+      "audit",
+      "quoting_idempotency",
+      "quoting_outbox",
+      "carriers_receipts",
+      "assistant_conversations",
+      "messages",
+    ])
+    error_message = "The TTL policies must cover exactly the collections whose documents carry expires_at."
+  }
+  assert {
+    condition     = alltrue([for name, field in google_firestore_field.ttl : field.collection == name && field.field == "expires_at"])
+    error_message = "Every TTL policy must be on the field expires_at of its own collection."
+  }
+  assert {
+    condition     = alltrue([for field in google_firestore_field.ttl : length(field.ttl_config) == 1])
+    error_message = "Every expiring collection must have the TTL configuration block."
+  }
+  assert {
+    condition     = alltrue([for field in google_firestore_field.ttl : length(field.index_config) == 0])
+    error_message = "A TTL policy must not carry index_config: an empty block switches off the single-field indexes of expires_at."
+  }
+}
+
 run "registry_keeps_the_last_three_images" {
   command = plan
 

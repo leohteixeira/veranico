@@ -25,6 +25,7 @@ GUARDRAIL_RUNS = (
     "every_regional_resource_is_in_us_central1",
     "another_region_is_rejected",
     "bucket_is_private",
+    "every_expiring_collection_has_a_ttl_policy",
     "registry_keeps_the_last_three_images",
     "federation_is_restricted_to_one_repository",
     "federation_also_requires_the_repository_id_when_given",
