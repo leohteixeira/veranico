@@ -8,11 +8,29 @@ import pytest
 from veranico.modules.pricing.domain.rounding import (
     cents_difference,
     to_cents,
+    to_fraction,
     to_rate,
     to_tenth,
 )
 
 RATE_PATTERN = re.compile(r"^-?\d+\.\d{6}$")  # the kernel's `Rate`
+
+
+@pytest.mark.req("R-5.8-1")
+@pytest.mark.parametrize(
+    ("value", "fraction"),
+    [(2 / 3, 0.666667), (-1 / 3, -0.333333), (0.25, 0.25), (1.0, 1.0), (-0.0000001, 0.0)],
+)
+def test_to_fraction_rounds_to_six_decimal_places(value: float, fraction: float) -> None:
+    result = to_fraction(value)
+
+    assert result == fraction
+    assert math.copysign(1.0, result) == math.copysign(1.0, fraction)  # never negative zero
+
+
+def test_to_fraction_rejects_a_value_that_is_not_finite() -> None:
+    with pytest.raises(ValueError, match="finite"):
+        to_fraction(math.inf)
 
 
 @pytest.mark.req("R-5.7-1")

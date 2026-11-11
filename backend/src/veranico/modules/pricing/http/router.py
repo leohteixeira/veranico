@@ -1,8 +1,7 @@
 """Routes of `pricing`: per-cell metrics and the seasonal series of a point.
 
 Public reference data, no workspace cookie. Path, method, operation id, parameters and
-schemas are frozen by the OpenAPI contract. `GET /regions/{id}/cells` is still the stub of
-the foundation milestone (plan 02 Task 13 replaces it).
+schemas are frozen by the OpenAPI contract.
 """
 
 from typing import Annotated, Literal
@@ -11,9 +10,13 @@ from fastapi import APIRouter, Path
 
 from veranico.modules.climate.contracts import ClimateFacade
 from veranico.modules.pricing.application.service import check_index
-from veranico.modules.pricing.contracts import CellGrid, PricingFacade, SeasonSeries
+from veranico.modules.pricing.contracts import (
+    CellGrid,
+    CellMetricRequest,
+    PricingFacade,
+    SeasonSeries,
+)
 from veranico.modules.pricing.http.schemas import IndexQuery
-from veranico.shared.kernel.errors import NotImplementedYetError
 from veranico.shared.kernel.money import Money
 
 
@@ -28,7 +31,9 @@ def build_router(facade: PricingFacade, climate: ClimateFacade) -> APIRouter:
         index: IndexQuery,
         season: int | None = None,
     ) -> CellGrid:
-        raise NotImplementedYetError
+        return await facade.cell_metrics(
+            CellMetricRequest(region_id=region_id, metric=metric, index=index, season=season)
+        )
 
     @router.get("/weather/seasons", operation_id="get_season_series")
     async def get_season_series(

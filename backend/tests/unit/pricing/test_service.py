@@ -12,7 +12,6 @@ from tests.fakes.settings import settings_for_tests
 from veranico.modules.climate.contracts import DailySeries, DatasetRef, GridPoint
 from veranico.modules.pricing.application.service import MAX_SIMULATION_N
 from veranico.modules.pricing.contracts import (
-    CellMetricRequest,
     CoverDefinition,
     PricedCover,
     PricingFacade,
@@ -563,13 +562,3 @@ async def test_top_n_of_one_and_of_ten_are_accepted() -> None:
 
     assert len(await pricing.extreme_seasons(dataset_id, "rainfall_below", window, 1)) == 1
     assert len(await pricing.extreme_seasons(dataset_id, "rainfall_below", window, 10)) == 10
-
-
-async def test_cell_metrics_is_not_implemented_before_task_13() -> None:
-    pricing, _, _ = facade_over(builders.daily_series(seed=0))
-    request = CellMetricRequest(
-        region_id="sorriso", metric="trigger_frequency", index=RAINFALL.index
-    )
-
-    with pytest.raises(NotImplementedError):
-        await pricing.cell_metrics(request)

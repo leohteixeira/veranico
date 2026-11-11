@@ -18,10 +18,17 @@ Texts are codes with parameters (contracts conventions). The eight codes of `pri
 | `assumption.data_source`       | `source` (str)                                      |
 """
 
+import math
 from collections.abc import Sequence
 
+import numpy as np
+import numpy.typing as npt
+
+from veranico.modules.climate.contracts import Region
 from veranico.modules.pricing.contracts import (
     BacktestResult,
+    CellGrid,
+    CellMetricRequest,
     CoverDefinition,
     ExtremeSeason,
     IndexDefinition,
@@ -39,6 +46,7 @@ from veranico.modules.pricing.domain.premium import PremiumFigures
 from veranico.modules.pricing.domain.rounding import (
     cents_difference,
     to_cents,
+    to_fraction,
     to_rate,
     to_tenth,
 )
@@ -50,6 +58,32 @@ from veranico.shared.kernel.money import Money
 
 def money(cents: float) -> Money:
     return Money(amount_cents=to_cents(cents))
+
+
+def cell_grid(
+    request: CellMetricRequest,
+    region: Region,
+    grid: npt.NDArray[np.float64],
+    breaks: Sequence[float],
+    seasons: Sequence[int],
+    cells_paying: int | None,
+    suggested_season: int | None,
+) -> CellGrid:
+    """`grid` is [row, col] with row 0 in the north; it leaves row-major, NaN as `None`."""
+    return CellGrid(
+        region_id=region.region_id,
+        metric=request.metric,
+        nx=region.nx,
+        ny=region.ny,
+        north=region.north,
+        west=region.west,
+        step_deg=region.step_deg,
+        values=[None if math.isnan(value) else to_fraction(value) for value in grid.ravel()],
+        breaks=[to_fraction(edge) for edge in breaks],
+        seasons=list(seasons),
+        cells_paying=cells_paying,
+        suggested_season=suggested_season,
+    )
 
 
 def season_results(

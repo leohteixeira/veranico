@@ -29,6 +29,12 @@ def to_tenth(x: float) -> float:
     return round(x, 1) + 0.0
 
 
+def to_fraction(x: float) -> float:
+    """A per-cell fraction (frequency, anomaly, legend break) with six decimal places."""
+    _require_finite(x)
+    return round(x, RATE_DECIMALS) + 0.0
+
+
 def cents_difference(minuend_cents: int, subtrahend_cents: int) -> int:
     """Difference of two figures already rounded, so the three numbers shown reconcile."""
     return minuend_cents - subtrahend_cents

@@ -1,12 +1,16 @@
 """Use cases of `pricing`: the implementation of `PricingFacade`.
 
 Each use case reads the daily series through `ClimateFacade`, calls the pure domain and
-maps the float figures to the contract models (`mapping.py`). Loads, simulation defaults
-and the minimum number of seasons come from the `pricing` settings group.
+maps the float figures to the contract models (`mapping.py`). Loads, simulation defaults,
+the minimum number of seasons and the per-cell cache bound come from the `pricing` settings
+group. Per-cell grids are cached in process per request (SPEC 5.8).
 """
 
-from veranico.modules.climate.contracts import ClimateFacade, DailySeries
+import asyncio
+
+from veranico.modules.climate.contracts import ClimateFacade, DailySeries, RegionCube
 from veranico.modules.pricing.application import mapping
+from veranico.modules.pricing.application.cell_cache import CellCache
 from veranico.modules.pricing.contracts import (
     BacktestResult,
     CellGrid,
@@ -21,7 +25,7 @@ from veranico.modules.pricing.contracts import (
     Window,
 )
 from veranico.modules.pricing.domain import backtest as backtest_rules
-from veranico.modules.pricing.domain import extremes, payout, premium, simulation
+from veranico.modules.pricing.domain import cells, extremes, payout, premium, simulation
 from veranico.modules.pricing.domain.backtest import BacktestFigures
 from veranico.modules.pricing.domain.index import SeasonIndex, index_series
 from veranico.modules.pricing.domain.seasons import parse_window
@@ -47,6 +51,7 @@ class PricingService:
     def __init__(self, *, climate: ClimateFacade, settings: PricingSettings) -> None:
         self._climate = climate
         self._settings = settings
+        self.cell_cache = CellCache(settings.cell_cache_entries)
 
     async def backtest(self, dataset_id: DatasetId, cover: CoverDefinition) -> BacktestResult:
         _check_cover(cover)
@@ -112,7 +117,49 @@ class PricingService:
         )
 
     async def cell_metrics(self, request: CellMetricRequest) -> CellGrid:
-        raise NotImplementedError  # plan 02 Task 13
+        check_index(request.index)
+        if request.metric == "season_anomaly" and request.season is None:
+            raise InvalidArgumentsError("season_anomaly needs a season")
+        if request.metric == "trigger_frequency" and request.season is not None:
+            # The season does not change this metric: one cache entry for all of them.
+            request = request.model_copy(update={"season": None})
+        cached = self.cell_cache.get(request)
+        if cached is not None:
+            return cached
+        cube = await self._climate.region_cube(request.region_id)
+        # Up to a second of NumPy work: off the event loop, so open streams keep flowing.
+        grid = await asyncio.to_thread(self._cell_grid, cube, request)
+        self.cell_cache.put(request, grid)
+        return grid
+
+    def _cell_grid(self, cube: RegionCube, request: CellMetricRequest) -> CellGrid:
+        index = request.index
+        index_values = cells.cell_index(
+            cube.dates,
+            cube.precipitation_mm,
+            index.index_type,
+            parse_window(index.window.start, index.window.end),
+        )
+        seasons, values = index_values.seasons, index_values.values
+        backtest_rules.require_history(len(seasons), self._settings.min_seasons)
+        paying_cells = None
+        if request.metric == "season_anomaly":
+            if request.season not in seasons:
+                raise InvalidArgumentsError("the season is not one of the usable seasons")
+            position = seasons.index(request.season)
+            grid = cells.season_anomaly(values, position)
+            paying_cells = cells.cells_paying(values, position, index.index_type, index.trigger)
+        else:
+            grid = cells.trigger_frequency(values, index.index_type, index.trigger)
+        return mapping.cell_grid(
+            request,
+            cube.region,
+            grid,
+            cells.class_breaks(request.metric, grid),
+            seasons,
+            paying_cells,
+            cells.suggested_season(seasons, values),
+        )
 
     def _season_index(
         self, series: DailySeries, index_type: IndexType, window: Window
