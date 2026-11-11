@@ -1,7 +1,7 @@
 """Wiring of `assistant`. Only `bootstrap.py` imports this file."""
 
 import asyncio
-from collections.abc import AsyncGenerator, AsyncIterator, Sequence
+from collections.abc import AsyncIterator, Sequence
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import cast
@@ -11,12 +11,7 @@ from google.cloud.firestore import AsyncClient
 
 from veranico.modules.access.contracts import AccessFacade, VisitorRef
 from veranico.modules.assistant.application.chat_service import ChatService
-from veranico.modules.assistant.application.ports import (
-    ModelClient,
-    ModelEvent,
-    ModelRequest,
-    ModelUnavailable,
-)
+from veranico.modules.assistant.application.ports import ModelClient
 from veranico.modules.assistant.application.prompt import load_system_prompt
 from veranico.modules.assistant.application.replay import Replays
 from veranico.modules.assistant.application.tools.registry import ToolRegistry
@@ -28,6 +23,7 @@ from veranico.modules.assistant.contracts import (
     ConversationView,
 )
 from veranico.modules.assistant.http.router import build_router
+from veranico.modules.assistant.infrastructure.anthropic_model import AnthropicModelClient
 from veranico.modules.assistant.infrastructure.firestore_conversations import (
     FirestoreConversationStore,
 )
@@ -86,20 +82,16 @@ class _Facade:
         return self._replays.stream(locale)
 
 
-class _NoModelYet:
-    """Stands in for the Anthropic adapter until it exists: every call fails, nothing is spent."""
-
-    async def stream(self, request: ModelRequest) -> AsyncGenerator[ModelEvent]:
-        raise ModelUnavailable("the Anthropic model client is not built yet")
-        yield  # pragma: no cover - makes this function an async generator
-
-
 def _model_client(deps: AssistantDeps) -> ModelClient:
+    """The injected client, or the one the selector setting names.
+
+    Building the Anthropic client opens no connection and makes no request.
+    """
     if deps.model_client is not None:
         return cast("ModelClient", deps.model_client)
     if deps.settings.assistant.model_client == "scripted":
         return ScriptedModelClient.happy_path()
-    return _NoModelYet()
+    return AnthropicModelClient.from_settings(deps.settings)
 
 
 def build(deps: AssistantDeps) -> AssistantModule:
