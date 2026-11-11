@@ -6,9 +6,7 @@ import pytest
 
 from tests.fakes.quoting import FakeQuotingFacade
 from tests.unit.documents import fixtures
-from tests.unit.documents.doubles import browser
-from veranico.modules.documents.application.facade import DocumentsService
-from veranico.modules.documents.application.term_sheets import TermSheets
+from tests.unit.documents.doubles import browser, documents_facade
 from veranico.modules.documents.contracts import DocumentsFacade
 from veranico.modules.documents.infrastructure.pdf_renderer import ReportlabTermSheetRenderer
 from veranico.modules.quoting.contracts import QuoteView
@@ -28,10 +26,8 @@ class Scene:
         self.quoting = FakeQuotingFacade()
         self.quoting.seed_quote(self.quote)
         self.blobs = blobs
-        self.facade: DocumentsFacade = DocumentsService(
-            term_sheets=TermSheets(
-                quoting=self.quoting, blobs=blobs, renderer=ReportlabTermSheetRenderer()
-            )
+        self.facade: DocumentsFacade = documents_facade(
+            quoting=self.quoting, blobs=blobs, renderer=ReportlabTermSheetRenderer()
         )
 
     def rendered_locales(self) -> list[str | int | float]:

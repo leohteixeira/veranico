@@ -1,11 +1,45 @@
-"""Test doubles of the `documents` unit tests: a counting renderer and a failing audit."""
+"""Test doubles of the `documents` tests: a counting renderer, a failing audit, the wiring."""
 
+from dataclasses import replace
+
+from tests.fakes.builders import daily_series
+from tests.fakes.climate import FakeClimateFacade
 from tests.fakes.quoting import FakeQuotingFacade
+from veranico.modules.climate.contracts import ClimateFacade
 from veranico.modules.documents.application.content import TermSheetContent, TextFigure
-from veranico.modules.quoting.contracts import Actor
+from veranico.modules.documents.application.evidence import Evidence
+from veranico.modules.documents.application.facade import DocumentsService
+from veranico.modules.documents.application.ports import TermSheetRenderer
+from veranico.modules.documents.application.term_sheets import TermSheets
+from veranico.modules.documents.contracts import DocumentsFacade
+from veranico.modules.quoting.contracts import Actor, QuoteView, QuotingFacade
+from veranico.shared.infrastructure.blobs import BlobStore
 from veranico.shared.kernel.coded import Coded
 from veranico.shared.kernel.ids import Locale, QuoteId, WorkspaceId
 from veranico.shared.kernel.principal import Principal
+
+
+def documents_facade(
+    *,
+    quoting: QuotingFacade,
+    blobs: BlobStore,
+    renderer: TermSheetRenderer,
+    climate: ClimateFacade | None = None,
+) -> DocumentsFacade:
+    """The facade as `module.py` wires it, over the given collaborators."""
+    return DocumentsService(
+        term_sheets=TermSheets(quoting=quoting, blobs=blobs, renderer=renderer),
+        evidence=Evidence(quoting=quoting, climate=climate or FakeClimateFacade(), blobs=blobs),
+    )
+
+
+def climate_with_dataset_of(quote: QuoteView) -> FakeClimateFacade:
+    """A climate fake that knows the dataset of the quote (the fake refuses unknown ones)."""
+    climate = FakeClimateFacade()
+    series = daily_series(first_year=2020, last_year=2021)
+    dataset = series.dataset.model_copy(update={"dataset_id": quote.dataset_id})
+    climate.add_series(replace(series, dataset=dataset))
+    return climate
 
 
 def browser(workspace_id: str) -> Principal:

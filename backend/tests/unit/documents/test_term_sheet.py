@@ -6,10 +6,8 @@ import pytest
 
 from tests.fakes.quoting import FakeQuotingFacade
 from tests.unit.documents import fixtures
-from tests.unit.documents.doubles import CountingRenderer, api_key, browser
+from tests.unit.documents.doubles import CountingRenderer, api_key, browser, documents_facade
 from veranico.modules.documents.application.content import build_content
-from veranico.modules.documents.application.facade import DocumentsService
-from veranico.modules.documents.application.term_sheets import TermSheets
 from veranico.modules.documents.contracts import DocumentsFacade
 from veranico.modules.documents.infrastructure.pdf_renderer import ReportlabTermSheetRenderer
 from veranico.shared.infrastructure.blobs import LocalBlobStore
@@ -43,7 +41,7 @@ def renderer() -> CountingRenderer:
 def facade(
     quoting: FakeQuotingFacade, blobs: LocalBlobStore, renderer: CountingRenderer
 ) -> DocumentsFacade:
-    return DocumentsService(term_sheets=TermSheets(quoting=quoting, blobs=blobs, renderer=renderer))
+    return documents_facade(quoting=quoting, blobs=blobs, renderer=renderer)
 
 
 def rendered_entries(quoting: FakeQuotingFacade) -> list[tuple[str, Coded]]:
@@ -149,9 +147,7 @@ async def test_a_quote_of_another_workspace_is_not_found_and_nothing_is_touched(
 async def test_with_the_real_renderer_the_download_is_the_term_sheet_of_the_quote(
     quoting: FakeQuotingFacade, blobs: LocalBlobStore
 ) -> None:
-    real = DocumentsService(
-        term_sheets=TermSheets(quoting=quoting, blobs=blobs, renderer=ReportlabTermSheetRenderer())
-    )
+    real = documents_facade(quoting=quoting, blobs=blobs, renderer=ReportlabTermSheetRenderer())
 
     data = await real.term_sheet(browser("ws-dry"), QUOTE_ID, "pt-BR")
 

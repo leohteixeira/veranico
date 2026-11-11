@@ -7,9 +7,13 @@ import pytest
 
 from tests.fakes.quoting import FakeQuotingFacade
 from tests.unit.documents import fixtures
-from tests.unit.documents.doubles import AuditFailsQuoting, CountingRenderer, api_key, browser
-from veranico.modules.documents.application.facade import DocumentsService
-from veranico.modules.documents.application.term_sheets import TermSheets
+from tests.unit.documents.doubles import (
+    AuditFailsQuoting,
+    CountingRenderer,
+    api_key,
+    browser,
+    documents_facade,
+)
 from veranico.modules.documents.contracts import DocumentRef, DocumentsFacade
 from veranico.modules.quoting.contracts import Actor, QuoteView
 from veranico.shared.infrastructure.blobs import LocalBlobStore
@@ -28,8 +32,8 @@ class Scene:
         self.quoting.seed_quote(self.quote)
         self.blobs = LocalBlobStore(root)
         self.renderer = CountingRenderer()
-        self.facade: DocumentsFacade = DocumentsService(
-            term_sheets=TermSheets(quoting=self.quoting, blobs=self.blobs, renderer=self.renderer)
+        self.facade: DocumentsFacade = documents_facade(
+            quoting=self.quoting, blobs=self.blobs, renderer=self.renderer
         )
 
     def rendered_entries(self) -> list[tuple[str, Coded]]:
