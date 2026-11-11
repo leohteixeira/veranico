@@ -55,6 +55,7 @@ _SMOKE = "make test-integration TESTS=tests/integration/test_emulators_smoke.py"
 _COMPOSE_CONFIG = (
     "docker compose -p veranico config -q && docker compose -p veranico --profile failure config -q"
 )
+_EMULATORS_UP = "docker compose -p veranico up -d --wait firestore storage"
 _GITLEAKS = (
     "gitleaks dir . --config .gitleaks.toml --redact --no-banner"
     " && gitleaks git . --config .gitleaks.toml --redact --no-banner"
@@ -134,7 +135,19 @@ GATES: dict[str, Gate] = {
             ),
         ),
     ),
-    "m3": Gate(plans="plans 03, 04, 05, 06"),
+    "m3": Gate(
+        plans="plans 03, 04, 05, 06",
+        steps=(
+            # The module steps below need the emulators; they are left running afterwards.
+            Step("emulators up", _EMULATORS_UP, REPO),
+            Step(
+                "documents unit, integration and API tests",
+                "uv run pytest tests/unit/documents tests/integration/documents"
+                ' tests/api/documents -m "not live" -q',
+                BACKEND,
+            ),
+        ),
+    ),
     "m4": Gate(plans="plan 08"),
     "m5": Gate(plans="plan 09"),
     "m6": Gate(plans="plans 09, 10"),
