@@ -1,0 +1,76 @@
+# The agent evaluation of SPEC 16.6: the Inspect suite against fixture cubes, 3 epochs per
+# case, failing below a 90% pass rate. It is the only workflow that calls the model API.
+#
+# It runs on demand, on release tags, and on pull requests that change the assistant module
+# (the system prompt lives inside it) or the suite itself.
+#
+# The key. `pull_request_target` is never used, so code from a fork never runs with the
+# secret: GitHub does not pass secrets to `pull_request` runs from forks. Such a run has no
+# key, and the evaluation job is then SKIPPED with a notice. It is not reported as passed.
+name: Evals
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*.*.*"
+  pull_request:
+    paths:
+      - "backend/src/veranico/modules/assistant/**"
+      - "backend/tests/evals/**"
+
+permissions:
+  contents: read
+
+# One run at a time, never cancelled half-way: every run costs money.
+concurrency:
+  group: evals
+  cancel-in-progress: false
+
+jobs:
+  key:
+    name: Is the model key available to this run?
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      available: ${{ steps.check.outputs.available }}
+    steps:
+      # No checkout: this job runs no code of the repository.
+      - id: check
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -n "$ANTHROPIC_API_KEY" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Evals skipped::This run has no access to ANTHROPIC_API_KEY (a pull request from a fork, or the secret is not set). The evaluation did not run and is not reported as passed."
+          fi
+
+  evals:
+    name: Inspect suite (3 epochs, fails below 90%)
+    needs: key
+    if: needs.key.outputs.available == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: 0.12.12
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+      - name: Run the suite
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: make evals
+      - name: Keep the Inspect logs
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: inspect-logs-${{ github.run_id }}
+          path: backend/tests/evals/logs/
+          if-no-files-found: warn
+          retention-days: 30
