@@ -118,8 +118,8 @@ CATALOGUE: tuple[Mutant, ...] = (
     Mutant(
         name="dry_spell_total_dry_days",
         file="index.py",
-        find="longest = np.maximum(longest, run)",
-        replace="longest = longest + dry_today",
+        find="run = dry_so_far - at_last_wet_day",
+        replace="run = dry_so_far",
         rule="5.2 the longest run, not the number of dry days",
     ),
     Mutant(
@@ -245,5 +245,27 @@ CATALOGUE: tuple[Mutant, ...] = (
         find="key=lambda item: (item[1] if lowest_is_worst else -item[1], item[0]),",
         replace="key=lambda item: (-item[1] if lowest_is_worst else item[1], item[0]),",
         rule="9.4 worst seasons first",
+    ),
+    # --- per-cell metrics (SPEC 5.8, 12.2) -----------------------------------------------
+    Mutant(
+        name="anomaly_against_mean",
+        file="cells.py",
+        find="median = np.nanmedian(np.where(has_seasons, values, 0.0), axis=0)",
+        replace="median = np.nanmean(np.where(has_seasons, values, 0.0), axis=0)",
+        rule="5.8 anomaly against the cell's own median",
+    ),
+    Mutant(
+        name="cells_paying_inverted",
+        file="cells.py",
+        find="np.count_nonzero(paying(index_type, values[season_position], trigger))",
+        replace="np.count_nonzero(~paying(index_type, values[season_position], trigger))",
+        rule="5.8 number of cells that would have paid",
+    ),
+    Mutant(
+        name="suggested_season_most_uneven",
+        file="cells.py",
+        find="key=lambda position: (difference[position], -classified[position]",
+        replace="key=lambda position: (-difference[position], -classified[position]",
+        rule="12.2 season most evenly split between dry and wet cells",
     ),
 )

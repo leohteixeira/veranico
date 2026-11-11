@@ -53,11 +53,13 @@ def window_index(
 
 
 def longest_dry_run(window_mm: npt.NDArray[np.float64]) -> npt.NDArray[np.int64]:
-    """Longest run of consecutive dry days along axis 0: a count that resets on a wet day."""
+    """Longest run of consecutive dry days along axis 0: a count that resets on a wet day.
+
+    Vectorised over days and cells: the running count of a day is the number of dry days so
+    far minus that number as it stood on the last wet day.
+    """
     dry = window_mm < DRY_DAY_MM
-    run = np.zeros(dry.shape[1:], dtype=np.int64)
-    longest = np.zeros(dry.shape[1:], dtype=np.int64)
-    for dry_today in dry:
-        run = np.where(dry_today, run + 1, 0)
-        longest = np.maximum(longest, run)
-    return longest
+    dry_so_far = np.cumsum(dry, axis=0, dtype=np.int64)
+    at_last_wet_day = np.maximum.accumulate(np.where(dry, 0, dry_so_far), axis=0)
+    run = dry_so_far - at_last_wet_day
+    return np.asarray(run.max(axis=0), dtype=np.int64)

@@ -16,6 +16,25 @@ N = 100_000
 SEED = 42
 
 
+@pytest.mark.req("R-5-1")
+@pytest.mark.req("R-5.5-3")
+def test_generator_is_created_once_from_the_seed_given(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Deterministic proof that the seed is used: no reliance on two random runs differing."""
+    real_default_rng = np.random.default_rng
+    seeds_used: list[tuple[object, ...]] = []
+
+    def recording_default_rng(*args: object) -> np.random.Generator:
+        seeds_used.append(args)
+        return real_default_rng(*args)  # type: ignore[arg-type]  # forwarded unchanged
+
+    monkeypatch.setattr(np.random, "default_rng", recording_default_rng)
+
+    simulate("dry_spell_above", np.array([30.0, 5.0]), 10.0, 25.0, LIMIT_CENTS, 100, 1234)
+    simulate("rainfall_below", np.array([80.0, 150.0, 120.0]), 100.0, 40.0, LIMIT_CENTS, 100, 77)
+
+    assert seeds_used == [(1234,), (77,)]
+
+
 def dry_spell(history: list[float], *, n: int = N, seed: int = SEED) -> SimulationFigures:
     """dry_spell_above, trigger 10 days, exit 25 days."""
     return simulate("dry_spell_above", np.array(history), 10.0, 25.0, LIMIT_CENTS, n, seed)
