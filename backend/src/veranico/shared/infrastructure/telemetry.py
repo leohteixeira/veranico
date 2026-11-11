@@ -67,6 +67,8 @@ ATTR_AGENT_CONVERSATION_ID: Final = "agent.conversation_id"
 ATTR_AGENT_PROMPT_VERSION: Final = "agent.prompt_version"
 ATTR_AGENT_STOP_REASON: Final = "agent.stop_reason"
 ATTR_AGENT_TOOL_CALLS: Final = "agent.tool_calls"
+# How many figures in the reply no tool result supports: a count, never the figures.
+ATTR_AGENT_UNGROUNDED_FIGURES: Final = "agent.ungrounded_figures"
 # llm.call
 ATTR_LLM_MODEL: Final = "llm.model"
 ATTR_LLM_INPUT_TOKENS: Final = "llm.input_tokens"
