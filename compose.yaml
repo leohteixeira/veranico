@@ -179,14 +179,13 @@ services:
     depends_on:
       api:
         condition: service_healthy
-    command: ["pnpm", "exec", "vite", "--config", "vite.compose.config.ts"]
-    configs:
-      - source: vite-compose
-        target: /web/vite.compose.config.ts
+    command: ["pnpm", "exec", "vite"]
     volumes:
       - ./frontend/src:/web/src:ro
       - ./frontend/index.html:/web/index.html:ro
     environment:
+      # In this container the API is the service `api` on its container port.
+      - VERANICO_API_PROXY_TARGET=http://api:8080
       # Optional interface settings (env.example, "Frontend"); none is a secret.
       - VITE_BASEMAP_RELIEF
       - VITE_BASEMAP_SATELLITE
@@ -227,19 +226,6 @@ services:
       timeout: 2s
       retries: 30
       start_period: 1s
-
-configs:
-  vite-compose:
-    # frontend/vite.config.ts proxies `/api` to 127.0.0.1:8500, which is the host's view. In
-    # the `web` container the API is the service `api` on its container port; everything
-    # else of the configuration is kept.
-    content: |
-      import { mergeConfig } from "vite";
-      import base from "./vite.config";
-
-      export default mergeConfig(base, {
-        server: { proxy: { "/api": { target: "http://api:8080" } } },
-      });
 
 volumes:
   # The local weather store of the API role: the seeded cubes and the cached points.
