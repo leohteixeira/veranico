@@ -46,3 +46,14 @@ def payout_fraction(
         raw = (values - trigger) / (exit - trigger)
     floored = np.maximum(raw, 0.0)
     return np.minimum(floored, 1.0)
+
+
+def payout_amounts(
+    index_type: IndexType,
+    index_values: npt.ArrayLike,
+    trigger: float,
+    exit: float,
+    limit_cents: float,
+) -> npt.NDArray[np.float64]:
+    """Payout in float centavos for each index value: the limit times the fraction."""
+    return limit_cents * payout_fraction(index_type, index_values, trigger, exit)

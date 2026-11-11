@@ -29,6 +29,11 @@ def to_tenth(x: float) -> float:
     return round(x, 1) + 0.0
 
 
+def cents_difference(minuend_cents: int, subtrahend_cents: int) -> int:
+    """Difference of two figures already rounded, so the three numbers shown reconcile."""
+    return minuend_cents - subtrahend_cents
+
+
 def _require_finite(x: float) -> None:
     if not math.isfinite(x):
         raise ValueError("a figure that leaves pricing must be finite")
