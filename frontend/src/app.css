@@ -1,0 +1,116 @@
+/* The shell. The map is the stage; the top row, the conversation, the tabs and the season
+   timeline float on it. Below 1100 pixels the same pieces stack in document order: top row, map,
+   timeline, tabs, conversation. The breakpoint is also `STACKED_QUERY` in App.tsx. */
+
+.app {
+  --gutter: 14px;
+  --cards-top: 70px;
+  --chat-w: 384px;
+  --tabs-w: 344px;
+
+  position: relative;
+  height: 100dvh;
+  min-height: 560px;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+/* A tab with tables and charts needs the room; Risk leaves it to the map. */
+.app[data-wide] {
+  --tabs-w: 500px;
+}
+
+/* Its own stacking context, so Leaflet's panes stay under the cards. */
+.app__map {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.app__top,
+.app__chat,
+.app__tabs,
+.app__timeline {
+  position: absolute;
+  z-index: 1;
+}
+
+.app__top {
+  top: var(--gutter);
+  left: var(--gutter);
+  right: var(--gutter);
+}
+
+.app__chat {
+  top: var(--cards-top);
+  bottom: var(--gutter);
+  left: var(--gutter);
+  width: var(--chat-w);
+}
+
+.app__tabs {
+  top: var(--cards-top);
+  right: var(--gutter);
+  width: var(--tabs-w);
+  max-height: calc(100% - var(--cards-top) - var(--gutter));
+  transition: width 200ms var(--ease-out);
+}
+
+.app__timeline {
+  left: calc(var(--chat-w) + 2 * var(--gutter));
+  right: calc(var(--tabs-w) + 2 * var(--gutter));
+  bottom: var(--gutter);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app__tabs {
+    transition: none;
+  }
+}
+
+@media (max-width: 1240px) {
+  .app {
+    --chat-w: 350px;
+    --tabs-w: 316px;
+  }
+
+  .app[data-wide] {
+    --tabs-w: 440px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .app {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    height: auto;
+    min-height: 100dvh;
+    padding: 12px;
+    overflow: visible;
+  }
+
+  .app__top,
+  .app__chat,
+  .app__tabs,
+  .app__timeline {
+    position: static;
+    width: auto;
+    max-height: none;
+  }
+
+  .app__map {
+    position: relative;
+    inset: auto;
+    flex: none;
+    height: min(82vw, 500px);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    overflow: hidden;
+  }
+
+  .app__chat {
+    height: 600px;
+    max-height: 86dvh;
+  }
+}

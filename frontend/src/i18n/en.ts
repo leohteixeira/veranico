@@ -66,6 +66,12 @@ export const en = {
 
   // Regions
   "region.label": "Region",
+  "region.option": "{name} · {crop}",
+  "region.outside": "Outside the showcase regions",
+  "render.label": "Risk layer",
+  "render.surface": "Surface",
+  "render.cells": "Cells",
+  "top.label": "View settings",
   "crop.coffee": "Coffee",
   "crop.soybean": "Soybean",
   "crop.sugarcane": "Sugarcane",
@@ -223,6 +229,7 @@ export const en = {
   "chat.messages": "Messages",
   "chat.you": "You",
   "chat.working": "The agent is working",
+  "chat.no_answer": "The agent ended the turn without an answer.",
   "chat.first.title": "Describe an exposure, or start from one of these",
   "chat.first.body":
     "The agent asks for anything essential that is missing, then backtests and prices the cover with the tools listed in each step.",

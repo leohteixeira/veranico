@@ -59,7 +59,19 @@ export function MessageList({ session, onOpen, empty }: MessageListProps) {
       last.role === "user" ||
       (last.text === "" && !last.tools.some((row) => row.status === "running")));
 
+  // A turn can end with no text and no tool call (a refusal with no text): there is nothing to
+  // put in a bubble, so the list says so in one line instead.
+  const isBlank = (message: SessionState["messages"][number]) =>
+    message.role === "assistant" &&
+    message.text.trim() === "" &&
+    message.tools.length === 0 &&
+    message.flagged.length === 0;
   const broken = session.error !== null || session.interrupted;
+  const unanswered =
+    !session.streaming &&
+    !broken &&
+    last !== undefined &&
+    (isBlank(last) || (last.role === "user" && session.stopReason === "end_turn"));
   const completed = broken ? completedTools(session) : [];
   const limit =
     session.stopReason === "tool_limit" || session.stopReason === "budget"
@@ -86,7 +98,7 @@ export function MessageList({ session, onOpen, empty }: MessageListProps) {
             <span className="sr-only">{translate(locale, "chat.you")}</span>
             <p className="msg__text">{message.text}</p>
           </div>
-        ) : (
+        ) : isBlank(message) ? null : (
           <AgentMessage
             key={message.id}
             message={message}
@@ -94,6 +106,11 @@ export function MessageList({ session, onOpen, empty }: MessageListProps) {
             onOpen={onOpen}
           />
         ),
+      )}
+      {unanswered && (
+        <p className="msg__unanswered" data-note="no-answer">
+          {translate(locale, "chat.no_answer")}
+        </p>
       )}
       {working && (
         <p className="msg__working">

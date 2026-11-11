@@ -61,6 +61,12 @@ export const ptBR: Messages = {
 
   // Regions
   "region.label": "Região",
+  "region.option": "{name} · {crop}",
+  "region.outside": "Fora das regiões de demonstração",
+  "render.label": "Camada de risco",
+  "render.surface": "Superfície",
+  "render.cells": "Células",
+  "top.label": "Opções de visualização",
   "crop.coffee": "Café",
   "crop.soybean": "Soja",
   "crop.sugarcane": "Cana-de-açúcar",
@@ -219,6 +225,7 @@ export const ptBR: Messages = {
   "chat.messages": "Mensagens",
   "chat.you": "Você",
   "chat.working": "O agente está trabalhando",
+  "chat.no_answer": "O agente encerrou o turno sem resposta.",
   "chat.first.title": "Descreva uma exposição ou comece por um destes exemplos",
   "chat.first.body":
     "O agente pergunta o que for essencial e estiver faltando; depois faz o backtest e precifica a cobertura com as ferramentas listadas em cada passo.",

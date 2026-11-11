@@ -1,0 +1,89 @@
+/* The top row: wordmark, region, then the view settings. It floats on the map and wraps when
+   the stage is narrow. */
+
+.topbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  min-width: 0;
+}
+
+.topbar__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 14px 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--card);
+  box-shadow: var(--shadow);
+  font-size: 1.0625rem;
+  line-height: 1;
+}
+
+.topbar__brand svg {
+  width: 20px;
+  height: 20px;
+  flex: none;
+}
+
+.topbar__space {
+  flex: 1 1 0;
+}
+
+.topbar__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+/* The pills carry icons and short codes as well as words. */
+.topbar .pill__option {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.region-select {
+  position: relative;
+  min-width: 0;
+}
+
+.region-select select {
+  appearance: none;
+  max-width: 100%;
+  height: 36px;
+  padding: 0 34px 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background-color: var(--card);
+  /* The chevron of the icon set, turned down. */
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--ink-2) 50%),
+    linear-gradient(135deg, var(--ink-2) 50%, transparent 50%);
+  background-position:
+    calc(100% - 19px) 50%,
+    calc(100% - 14px) 50%;
+  background-size:
+    5px 5px,
+    5px 5px;
+  background-repeat: no-repeat;
+  box-shadow: var(--shadow);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.region-select select:disabled {
+  cursor: progress;
+  color: var(--ink-3);
+}
+
+.region-select select:hover:not(:disabled) {
+  border-color: var(--line-strong);
+}

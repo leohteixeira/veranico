@@ -523,4 +523,66 @@ describe("conversation card [R-12.1-3]", () => {
     fireEvent.click(screen.getByRole("button", { name: "Open approvals" }));
     expect(props.onOpen).toHaveBeenLastCalledWith("approvals", null);
   });
+
+  it("turn_without_text_or_tools_shows_a_line_not_an_empty_bubble [R-12.4-2]", () => {
+    const started: AgentEvent = {
+      type: "started",
+      data: { conversation_id: "cv-refused", message_id: "m-0002" },
+    };
+    const done: AgentEvent = {
+      type: "done",
+      data: {
+        conversation_id: "cv-refused",
+        message_id: "m-0002",
+        stop_reason: "end_turn",
+        prompt_version: "fixture-1",
+      },
+    };
+    const request: SessionAction = { type: "user_sent", text: "Something the agent declines." };
+
+    // The turn ended at once: nothing was said and no tool ran.
+    const { rerender } = renderCard({ session: reduce([request, started, done]) });
+    const log = screen.getByRole("log");
+    expect(log.querySelectorAll(".msg--agent")).toHaveLength(0);
+    expect(within(log).getByText("The agent ended the turn without an answer.")).toBeVisible();
+    expect(screen.getByRole("textbox")).not.toHaveAttribute("readonly");
+
+    // The same conversation restored: the stored answer is empty, and is not drawn as a bubble.
+    rerender({
+      session: reduce([
+        {
+          type: "restored",
+          conversation: {
+            conversation_id: "cv-refused",
+            messages: [
+              {
+                message_id: "m-0001",
+                role: "user",
+                created_at: "2026-11-10T14:05:00Z",
+                text: "Something the agent declines.",
+                tools: [],
+                flagged: [],
+              },
+              {
+                message_id: "m-0002",
+                role: "assistant",
+                created_at: "2026-11-10T14:05:02Z",
+                text: "",
+                tools: [],
+                flagged: [],
+              },
+            ],
+          },
+        },
+      ]),
+    });
+    expect(screen.getByRole("log").querySelectorAll(".msg--agent")).toHaveLength(0);
+    expect(screen.getByText("The agent ended the turn without an answer.")).toBeVisible();
+
+    // While the answer is still on its way there is no such line, and none after a real answer.
+    rerender({ session: reduce([request, started]) });
+    expect(screen.queryByText("The agent ended the turn without an answer.")).toBeNull();
+    rerender({ session: liveSession(1) });
+    expect(screen.queryByText("The agent ended the turn without an answer.")).toBeNull();
+  });
 });
