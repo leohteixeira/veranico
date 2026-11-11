@@ -1,0 +1,6 @@
+{"placeholder": true, "prompt_version": "v1", "model": "none", "recorded_on": "2026-11-11", "data_source": "none", "note": "Placeholder until the conversation is recorded with the real model. It states no figure."}
+{"event": "started", "data": {"conversation_id": "replay-en", "message_id": "replay-en-1"}}
+{"event": "user_message", "data": {"text": "I grow soy near Sorriso. What would a drought cover look like?"}}
+{"event": "text_delta", "data": {"text": "This is a placeholder for the recorded conversation. "}}
+{"event": "text_delta", "data": {"text": "The recording of a full quote, from the location to the submission, has not been made yet."}}
+{"event": "done", "data": {"conversation_id": "replay-en", "message_id": "replay-en-1", "stop_reason": "end_turn", "prompt_version": "v1"}}

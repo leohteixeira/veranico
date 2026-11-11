@@ -15,7 +15,6 @@ from typing import Literal, Protocol
 
 from veranico.modules.access.contracts import ModelUsage
 from veranico.modules.assistant.domain.conversation import Entry
-from veranico.shared.kernel.errors import ModelUnavailableError
 from veranico.shared.kernel.ids import ConversationId, Locale, WorkspaceId
 
 
@@ -105,11 +104,15 @@ class ModelUsageSoFar:
 ModelEvent = ModelTextDelta | ModelToolCall | ModelUsageSoFar | ModelCompleted
 
 
-class ModelUnavailable(ModelUnavailableError):  # noqa: N818 - named after its code, as the port says
-    """The model call failed. `usage` is what the provider had reported until then, if anything."""
+class ModelUnavailable(Exception):  # noqa: N818 - named after the code it becomes in the stream
+    """The model call failed. `usage` is what the provider had reported until then, if anything.
+
+    Not a domain error: the kernel owns those. The loop catches it and ends the stream with
+    the kernel's `model_unavailable` code.
+    """
 
     def __init__(self, detail: str | None = None, *, usage: ModelUsage | None = None) -> None:
-        super().__init__(detail)
+        super().__init__(detail or "model_unavailable")
         self.usage = usage
 
 

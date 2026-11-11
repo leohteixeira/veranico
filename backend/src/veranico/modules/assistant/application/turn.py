@@ -79,10 +79,6 @@ StopReason = Literal["end_turn", "tool_limit", "budget", "error"]
 # turn, or after the failure that ended the tool use of the turn.
 TOOL_NOT_EXECUTED: Final = "tool_not_executed"
 
-# On `agent.turn`: how many figures of the answer the grounding check did not find (SPEC 9.5).
-# The figures themselves are message text and stay out of the span.
-ATTR_AGENT_UNGROUNDED_FIGURES: Final = "agent.ungrounded_figures"
-
 # Span name of a call to a tool the registry does not have: the name came from the model.
 _UNKNOWN_TOOL: Final = "unknown"
 
@@ -321,7 +317,8 @@ class Turn:
             raise
         finally:
             span.set_attribute(telemetry.ATTR_AGENT_TOOL_CALLS, self._executed)
-            span.set_attribute(ATTR_AGENT_UNGROUNDED_FIGURES, len(self._flagged))
+            # A count: the figures themselves are message text and stay out of the span.
+            span.set_attribute(telemetry.ATTR_AGENT_UNGROUNDED_FIGURES, len(self._flagged))
             try:
                 if not self._finished:
                     await _settled(self._finish())

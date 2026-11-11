@@ -109,11 +109,7 @@ HEALTH_ROUTES: list[Route] = [
 ]
 
 # Routes that still answer 501. In M0 it holds every product route.
-STILL_STUBBED: set[tuple[str, str]] = {
-    ("POST", f"{V1}/chat"),
-    ("GET", f"{V1}/conversations/{{id}}"),
-    ("GET", f"{V1}/replays/{{locale}}"),
-}
+STILL_STUBBED: set[tuple[str, str]] = set()
 
 INDEX = {"index_type", "window_start", "window_end", "trigger", "exit"}
 # (method, path) -> (required, optional) parameters outside the path, as "<in>:<name>"

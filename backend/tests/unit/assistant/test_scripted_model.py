@@ -135,8 +135,6 @@ async def test_raises_after_n_events_when_scripted() -> None:
 
     assert seen == [ModelTextDelta(text="I am "), ModelTextDelta(text="loading")]
     assert raised.value.usage == usage
-    assert raised.value.code == "model_unavailable"
-    assert raised.value.retryable is True
 
 
 async def test_failure_before_any_event_carries_no_usage() -> None:

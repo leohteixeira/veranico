@@ -32,7 +32,6 @@ from veranico.modules.assistant.application.ports import (
     TextBlock,
 )
 from veranico.modules.assistant.application.prompt import load_system_prompt
-from veranico.modules.assistant.application.turn import ATTR_AGENT_UNGROUNDED_FIGURES
 from veranico.modules.assistant.application.views import STEP_SEPARATOR
 from veranico.modules.assistant.contracts import (
     Started,
@@ -349,7 +348,7 @@ async def test_spans_have_names_and_no_payloads() -> None:
         telemetry.ATTR_AGENT_PROMPT_VERSION: load_system_prompt().version,
         telemetry.ATTR_AGENT_STOP_REASON: "end_turn",
         telemetry.ATTR_AGENT_TOOL_CALLS: 2,
-        ATTR_AGENT_UNGROUNDED_FIGURES: 1,
+        telemetry.ATTR_AGENT_UNGROUNDED_FIGURES: 1,
     }
     first_call = dict(spans[0].attributes or {})
     latency = first_call.pop(telemetry.ATTR_LLM_LATENCY_MS)
