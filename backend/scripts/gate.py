@@ -84,7 +84,28 @@ GATES: dict[str, Gate] = {
             Step("gitleaks", _GITLEAKS, REPO),
         ),
     ),
-    "m1": Gate(plans="plans 01, 02, 07"),
+    "m1": Gate(
+        plans="plans 01, 02, 07",
+        steps=(
+            Step("access unit tests", "uv run pytest tests/unit/access -q", BACKEND),
+            Step(
+                "access integration and API tests on the emulators",
+                'make test-integration TESTS="tests/integration/access tests/api/access"',
+                REPO,
+            ),
+            Step(
+                "pricing unit and API tests",
+                "uv run pytest tests/unit/pricing tests/api/pricing -q",
+                BACKEND,
+            ),
+            Step("mutation proof (at least 15 mutants, all killed)", "make mutation-proof", REPO),
+            Step(
+                "price_demo backtests and prices a fixture series",
+                "uv run python scripts/price_demo.py",
+                BACKEND,
+            ),
+        ),
+    ),
     "m2": Gate(plans="plans 01, 02"),
     "m3": Gate(plans="plans 03, 04, 05, 06"),
     "m4": Gate(plans="plan 08"),
