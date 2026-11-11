@@ -49,12 +49,14 @@ def write_cube(
     latitudes: np.ndarray,
     longitudes: np.ndarray,
     precipitation_mm: np.ndarray,
+    *,
+    chunks: tuple[int, int, int] | None = None,
 ) -> None:
     """Write a cube of shape (days, ny, nx) as a new store.
 
     Chunks: the whole time axis by at most 10 by 10 cells, so the series of one cell is one
     chunk object and the whole cube is a handful (the layout ADR 0016 will confirm or
-    replace from measurements).
+    replace from measurements). `chunks` exists for that measurement only.
     """
     days, ny, nx = precipitation_mm.shape
     dataset = xr.Dataset(
@@ -71,7 +73,7 @@ def write_cube(
         consolidated=False,
         zarr_format=ZARR_FORMAT,
         encoding={
-            PRECIPITATION: {"chunks": cube_chunks(days, ny, nx)},
+            PRECIPITATION: {"chunks": chunks or cube_chunks(days, ny, nx)},
             TIME: {"chunks": (days,)},
         },
     )

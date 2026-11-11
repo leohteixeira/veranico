@@ -15,33 +15,49 @@ then answers `synthetic = true`, and every cell reports the source `synthetic`.
 The cube covers the first year of the settings (1950) through the last complete year, and
 goes to the weather store the `VERANICO_CLIMATE__*` variables name.
 
-Exit codes: 0 built, 1 failed, 2 not implemented (`--measure`), 3 no CDS key or no network
-(reported as open by `gate.py`).
+With `--measure` nothing is built: the region's installed cube is written in two chunk
+layouts to a working directory under `.cache/chunking/`, measured, and the copies removed.
+The numbers go to standard output as a Markdown table and to
+`.cache/chunking/<region>.json`; they are the evidence for ADR 0016.
+
+Exit codes: 0 built or measured, 1 failed, 3 no CDS key or no network (reported as open by
+`gate.py`).
 """
 
 import argparse
 import asyncio
 import json
 import os
+import shutil
+import subprocess
 import sys
 from dataclasses import asdict
 from pathlib import Path
+
+import numpy as np
 
 from veranico.modules.climate.application.build_cube import (
     BuildCube,
     BuildReport,
     InstallSyntheticCube,
 )
-from veranico.modules.climate.application.ports import WeatherStore
+from veranico.modules.climate.application.ports import CubeSource, WeatherStore
+from veranico.modules.climate.contracts import RegionCube
 from veranico.modules.climate.domain.coverage import last_complete_year
 from veranico.modules.climate.domain.errors import WeatherDataError
-from veranico.modules.climate.domain.regions import REGIONS, RegionDef, region_by_id
+from veranico.modules.climate.domain.regions import (
+    REGIONS,
+    RegionDef,
+    cell_centre,
+    region_by_id,
+)
 from veranico.modules.climate.infrastructure.cds_download import (
     CdsRefusedError,
     CdsUnreachableError,
     CdsYearlySource,
     cdsapi_retrieve,
 )
+from veranico.modules.climate.infrastructure.chunk_measure import markdown_table, measure
 from veranico.modules.climate.infrastructure.cube_build import convert_to_arrays, file_checksum
 from veranico.modules.climate.infrastructure.synthetic import (
     GENERATOR,
@@ -49,11 +65,13 @@ from veranico.modules.climate.infrastructure.synthetic import (
     generator_parameters,
 )
 from veranico.modules.climate.module import StoreSettings, store_from_environment
-from veranico.shared.kernel.clock import SystemClock
+from veranico.shared.kernel.clock import Clock, SystemClock
+from veranico.shared.kernel.errors import DatasetNotFoundError
 
-EXIT_OK, EXIT_FAILED, EXIT_NOT_IMPLEMENTED, EXIT_OPEN = 0, 1, 2, 3
+EXIT_OK, EXIT_FAILED, EXIT_OPEN = 0, 1, 3
 CDS_KEY_VARIABLE = "CDS_API_KEY"
 CDS_CACHE = Path(".cache/cds")
+MEASUREMENTS = Path(".cache/chunking")
 DEFAULT_SEED = 1
 
 
@@ -78,6 +96,61 @@ async def build_real(
     return await build(region, first_year, last_year)
 
 
+def measure_installed(store: WeatherStore, region: RegionDef, clock: Clock) -> int:
+    """Measure the two chunk layouts on the region's installed cube (for ADR 0016)."""
+
+    async def installed() -> tuple[RegionCube, CubeSource | None]:
+        return await store.read_cube(region.region_id), await store.cube_source(region.region_id)
+
+    try:
+        cube, source = asyncio.run(installed())
+    except DatasetNotFoundError:
+        print(
+            f"build_cube: failed, no cube is installed for {region.region_id}: build it first",
+            file=sys.stderr,
+        )
+        return EXIT_FAILED
+    MEASUREMENTS.mkdir(parents=True, exist_ok=True)
+    work_dir = MEASUREMENTS / f"work-{region.region_id}-{os.getpid()}"
+    work_dir.mkdir()
+    try:
+        report = measure(
+            region.region_id,
+            source or "unknown",
+            cube.dates,
+            np.array([cell_centre(region, row, 0)[0] for row in range(region.ny)]),
+            np.array([cell_centre(region, 0, col)[1] for col in range(region.nx)]),
+            cube.precipitation_mm,
+            work_dir,
+            commit=_commit(),
+            measured_at=clock.now(),
+        )
+    finally:
+        shutil.rmtree(work_dir, ignore_errors=True)
+    target = MEASUREMENTS / f"{region.region_id}.json"
+    target.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    print(markdown_table(report))
+    print(f"\nWritten to {target}")
+    return EXIT_OK
+
+
+def _commit() -> str:
+    """The commit the measurement ran on, or `working tree` when files differ from it."""
+
+    def git(*arguments: str) -> str:
+        completed = subprocess.run(
+            ["git", *arguments], capture_output=True, text=True, check=True, timeout=30
+        )
+        return completed.stdout.strip()
+
+    try:
+        commit = git("rev-parse", "--short", "HEAD")
+        dirty = bool(git("status", "--porcelain"))
+    except (OSError, subprocess.SubprocessError):
+        return "unknown commit"
+    return f"working tree on {commit}" if dirty else f"commit {commit}"
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Build the cube of one region.")
     parser.add_argument("--region", required=True)
@@ -91,12 +164,10 @@ def main(argv: list[str] | None = None) -> int:
         known = ", ".join(definition.region_id for definition in REGIONS)
         print(f"build_cube: unknown region '{arguments.region}'; known: {known}", file=sys.stderr)
         return EXIT_FAILED
-    if arguments.measure:
-        print("build_cube: --measure is not implemented in this milestone", file=sys.stderr)
-        return EXIT_NOT_IMPLEMENTED
-
     settings = StoreSettings()
     clock = SystemClock()
+    if arguments.measure:
+        return measure_installed(store_from_environment(settings, clock), region, clock)
     first_year = settings.climate.first_year
     last_year = last_complete_year(clock.now().date())
     key = os.environ.get(CDS_KEY_VARIABLE, "").strip()
