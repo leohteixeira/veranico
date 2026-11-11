@@ -78,7 +78,15 @@ made by the author of the test. The mutation proof (section 4) checks that claim
 pricing rules only.
 
 <!-- evidence:traceability:begin -->
-Not run yet: there is no stored result of `make traceability`.
+**PASS** · run `20261111T162618Z` · working tree, 2026-11-11 UTC, based on `27fb233` · measured 2026-11-11T16:30:38+00:00 · `make traceability`
+
+271 requirements: 270 with a passing test, 0 with a failing test, 1 with no passing test.
+
+Requirements not proven by this run:
+
+| Requirement | Section | Statement | Outcome |
+|---|---|---|---|
+| R-9.6-1 | 9.6 | a reviewed recording of the full flow exists per language as a versioned fixture | no passing test |
 <!-- evidence:traceability:end -->
 
 ## 4. Mutation proof of the pricing rules
@@ -101,7 +109,46 @@ testing: a rule with no mutant in the catalogue is not covered by this proof, an
 other than `pricing/domain` are not mutated.
 
 <!-- evidence:mutation:begin -->
-Not run yet: there is no stored result of `make mutation-proof`.
+**PASS** · run `20261111T163038Z` · working tree, 2026-11-11 UTC, based on `27fb233` · measured 2026-11-11T16:31:56+00:00 · `make mutation-proof`
+
+34 mutants (minimum 15) against `tests/unit/pricing`: 34 killed, 0 survived, 0 stale, 0 errors.
+
+| Mutant | Rule it removes | File | Result | First failing test |
+|---|---|---|---|---|
+| payout_rainfall_direction_flipped | 5.3 rainfall_below pays below the trigger | payout.py | killed | `tests/unit/pricing/test_backtest.py::test_each_usable_season_has_its_index_value_and_payout` |
+| payout_dry_spell_direction_flipped | 5.3 dry_spell_above pays above the trigger | payout.py | killed | `tests/unit/pricing/test_backtest.py::test_dry_spell_cover_aggregates` |
+| payout_upper_clamp_removed | 5.3 capped at the limit | payout.py | killed | `tests/unit/pricing/test_backtest.py::test_maximum_payout_on_a_tie_names_the_earliest_season` |
+| payout_lower_clamp_removed | 5.3 no negative payout | payout.py | killed | `tests/unit/pricing/test_backtest.py::test_each_usable_season_has_its_index_value_and_payout` |
+| payout_step_instead_of_linear | 5.3 linear between trigger and exit | payout.py | killed | `tests/unit/pricing/test_backtest.py::test_each_usable_season_has_its_index_value_and_payout` |
+| payout_amount_ignores_limit | 5.3 payout is the limit times the fraction | payout.py | killed | `tests/unit/pricing/test_backtest.py::test_each_usable_season_has_its_index_value_and_payout` |
+| window_end_exclusive | 5.1 the last day of the window is included | seasons.py | killed | `tests/unit/pricing/test_cell_metrics_service.py::test_trigger_frequency_grid_is_row_major_from_the_north_west` |
+| window_start_exclusive | 5.1 the first day of the window is included | seasons.py | killed | `tests/unit/pricing/test_cell_metrics_service.py::test_trigger_frequency_grid_of_dry_spells` |
+| season_labelled_by_end_year | 5.1 a season is labelled by its start year | seasons.py | killed | `tests/unit/pricing/test_cell_metrics_service.py::test_results_are_deterministic_across_services` |
+| crossing_window_not_wrapped | 5.1 a window may cross the year boundary | seasons.py | killed | `tests/unit/pricing/test_cell_metrics_service.py::test_results_are_deterministic_across_services` |
+| incomplete_season_included | 5.1 seasons with incomplete data are excluded | seasons.py | killed | `tests/unit/pricing/test_cell_metrics_service.py::test_results_are_deterministic_across_services` |
+| missing_day_season_included | 5.1 a missing day excludes its season | seasons.py | killed | `tests/unit/pricing/test_cells.py::test_each_cell_equals_the_single_series_path[rainfall_below-35.0-5.0]` |
+| dry_day_threshold_inclusive | 5.2 a dry day is under 1 mm | index.py | killed | `tests/unit/pricing/test_cell_metrics_service.py::test_trigger_frequency_grid_of_dry_spells` |
+| dry_spell_total_dry_days | 5.2 the longest run, not the number of dry days | index.py | killed | `tests/unit/pricing/test_cell_metrics_service.py::test_trigger_frequency_grid_of_dry_spells` |
+| rainfall_mean_instead_of_total | 5.2 total precipitation in the window | index.py | killed | `tests/unit/pricing/test_cell_metrics_service.py::test_trigger_frequency_grid_is_row_major_from_the_north_west` |
+| trigger_boundary_pays | 5.2, 5.4 paying means strictly beyond the trigger | backtest.py | killed | `tests/unit/pricing/test_backtest.py::test_dry_spell_cover_aggregates` |
+| burn_cost_median | 5.4 burn cost is the average payout | backtest.py | killed | `tests/unit/pricing/test_backtest.py::test_aggregates_of_payouts_0_0_15m_30m` |
+| frequency_counts_excluded_seasons | 5.4 frequency over the usable seasons only | backtest.py | killed | `tests/unit/pricing/test_backtest.py::test_excluded_seasons_enter_no_denominator` |
+| trend_slope_per_year | 5.4 slope per decade | backtest.py | killed | `tests/unit/pricing/test_backtest.py::test_index_rising_ten_per_year_has_a_slope_of_100_per_decade_and_is_significant` |
+| trend_significance_at_ten_percent | 5.4 significant at 5% | backtest.py | killed | `tests/unit/pricing/test_backtest.py::test_p_value_between_five_and_ten_percent_is_not_significant` |
+| rounding_half_up | 5.7 half to even | rounding.py | killed | `tests/unit/pricing/test_rounding.py::test_to_cents_rounds_half_to_even[0.5-0]` |
+| rounding_truncates | 5.7 rounded, not truncated | rounding.py | killed | `tests/unit/pricing/test_rounding.py::test_to_cents_rounds_half_to_even[1.5-2]` |
+| rate_five_decimals | 5.7 six decimal places | rounding.py | killed | `tests/unit/pricing/test_cell_metrics_service.py::test_trigger_frequency_grid_is_row_major_from_the_north_west` |
+| gap_sign_flipped | 5.5 gap is simulated minus historical | rounding.py | killed | `tests/unit/pricing/test_rounding.py::test_cents_difference_is_the_first_figure_minus_the_second[1250000-1000000-250000]` |
+| premium_risk_load_dropped | 5.6 risk load on the standard deviation | premium.py | killed | `tests/unit/pricing/test_premium.py::test_premium_is_expected_loss_plus_risk_load_plus_expense_load` |
+| premium_expense_load_on_std_dev | 5.6 expense load on the expected loss | premium.py | killed | `tests/unit/pricing/test_premium.py::test_premium_is_expected_loss_plus_risk_load_plus_expense_load` |
+| rate_on_line_uses_expected_loss | 5.6 rate on line is premium over limit | premium.py | killed | `tests/unit/pricing/test_premium.py::test_rate_on_line_is_the_premium_over_the_limit` |
+| simulation_seed_ignored | 5.5 deterministic for a fixed seed | simulation.py | killed | `tests/unit/pricing/test_service.py::test_loads_overridden_in_settings_change_the_premium` |
+| one_in_100_uses_90th_percentile | 5.5 1-in-100 payout | simulation.py | killed | `tests/unit/pricing/test_simulation.py::test_tails_are_the_90th_and_99th_percentiles_of_simulated_payouts` |
+| return_period_n_over_rank | contracts 4: return period (n + 1) / rank | extremes.py | killed | `tests/unit/pricing/test_extremes.py::test_return_period_is_seasons_plus_one_over_the_rank` |
+| extremes_best_first | 9.4 worst seasons first | extremes.py | killed | `tests/unit/pricing/test_extremes.py::test_rainfall_below_ranks_the_lowest_totals_first` |
+| anomaly_against_mean | 5.8 anomaly against the cell's own median | cells.py | killed | `tests/unit/pricing/test_cell_metrics_service.py::test_season_anomaly_grid_carries_none_breaks_and_the_paying_cells` |
+| cells_paying_inverted | 5.8 number of cells that would have paid | cells.py | killed | `tests/unit/pricing/test_cell_metrics_service.py::test_season_anomaly_grid_carries_none_breaks_and_the_paying_cells` |
+| suggested_season_most_uneven | 12.2 season most evenly split between dry and wet cells | cells.py | killed | `tests/unit/pricing/test_cell_metrics_service.py::test_trigger_frequency_grid_is_row_major_from_the_north_west` |
 <!-- evidence:mutation:end -->
 
 ## 5. Failure campaign
@@ -133,7 +180,21 @@ full, clock jumps), behaviour of Cloud Tasks (development uses the in-process re
 anything about real networks: the proxy runs on the same host.
 
 <!-- evidence:failure:begin -->
-Not run yet: there is no stored result of `make test-failure`.
+**PASS** · run `20261111T162618Z` · working tree, 2026-11-11 UTC, based on `27fb233` · measured 2026-11-11T16:30:06+00:00 · `make test-failure`
+
+42 tests: 42 passed, 0 failed.
+
+| Scenario | Statement | Tests | Passed | Failed |
+|---|---|---|---|---|
+| R-16.3-1 | Failure test: Open-Meteo returning 429, 5xx and timing out. | 11 | 11 | 0 |
+| R-16.3-2 | Failure test: a crash between the approval commit and the enqueue, recovered by the sweep. | 3 | 3 | 0 |
+| R-16.3-3 | Failure test: the carrier answering 503 then succeeding. | 1 | 1 | 0 |
+| R-16.3-4 | Failure test: a duplicate delivery, for which the carrier returns the original receipt. | 2 | 2 | 0 |
+| R-16.3-5 | Failure test: two concurrent decisions on one approval. | 1 | 1 | 0 |
+| R-16.3-6 | Failure test: two concurrent `POST /quotes` with the same key. | 2 | 2 | 0 |
+| R-16.3-7 | Failure test: the model API failing mid-turn. | 2 | 2 | 0 |
+| R-16.3-8 | Failure test: the SSE client disconnecting. | 2 | 2 | 0 |
+| R-16.3-9 | Failure test: network faults on the webhook path injected with a fault proxy. | 5 | 5 | 0 |
 <!-- evidence:failure:end -->
 
 ## 6. Load with an oracle
@@ -194,7 +255,45 @@ memory differently from a local container (files written to its in-memory file s
 count), so this is a local measurement, not a statement about the deployed service.
 
 <!-- evidence:load:begin -->
-Not run yet: there is no stored result of `make load`.
+**PASS** · run `20261111T163427Z` · working tree, 2026-11-11 UTC, based on `27fb233` · measured 2026-11-11T16:34:27+00:00 · `make load`
+
+| Measure | Value |
+|---|---|
+| Requests scheduled | 1600 |
+| Evidence lines | 1600 |
+| Distinct idempotency keys | 200 |
+| `POST /quotes` sends | 1000 |
+| … acknowledged | 1000 |
+| … refused as back-pressure (429) | 0 |
+| Keys acknowledged | 200 |
+| Quotes stored | 200 |
+| Idempotency records | 200 |
+| Cells requests answered | 600 of 600 |
+| Per-key rate limit of the run, per minute | 600000 |
+
+Latency in milliseconds, as k6 measured it:
+
+| Scenario | Requests | Median | p95 | p99 | Maximum |
+|---|---|---|---|---|---|
+| quotes | 1000 | 297.0 | 839.1 | 1994.9 | 2027.1 |
+| cells | 600 | 6.5 | 117.2 | 2854.7 | 2861.5 |
+
+Declared thresholds (load/profile.json):
+
+| Metric | Threshold | Held |
+|---|---|---|
+| `http_req_duration{scenario:quotes}` | `p(95)<2000` | yes |
+| `http_req_duration{scenario:cells}` | `p(95)<1000` | yes |
+| `unexpected_status` | `count==0` | yes |
+| `checks` | `rate==1` | yes |
+
+Oracle findings: 0.
+
+What this run is not:
+
+- The load generator and the service ran on one host and shared its processors.
+- State was kept in the Firestore emulator, not in Firestore.
+- The figures show behaviour under contention on this host; they are not a capacity estimate.
 <!-- evidence:load:end -->
 
 ## 7. Agent evaluation
@@ -208,7 +307,14 @@ demand (`make evals`, or the `evals.yml` workflow) and is never started by `make
 version than the one named in the block. A pass rate from three epochs is a small sample.
 
 <!-- evidence:evals:begin -->
-Not run yet: there is no stored result of `make evals`.
+**PASS** · run `20261111T161858Z` · `27fb233` · measured 2026-11-11T16:18:58+00:00 · `uv run python -m tests.evals.run`
+
+| Measure | Value |
+|---|---|
+| Model | claude-haiku-5-5 |
+| Prompt version | v3 |
+| Cases | ['happy_full_flow_sul_de_minas', 'happy_full_flow_sorriso', 'happy_full_flow_ribeirao_preto', 'happy_dry_spell_index', 'happy_window_crossing_year_end', 'happy_term_sheet_then_submission', 'happy_full_flow_portuguese', 'clarify_missing_limit', 'clarify_missing_window', 'clarify_ambiguous_place_name', 'grounding_rough_premium_before_pricing', 'grounding_compare_two_triggers', 'grounding_one_in_100_payout', 'guardrail_approve_own_submission', 'guardrail_guaranteed_payout', 'guardrail_injection_in_place_name', 'guardrail_location_without_data', 'guardrail_out_of_scope_stock_prices'] |
+| Epochs per case | 3 |
 <!-- evidence:evals:end -->
 
 ## 8. Checks that are not campaigns
@@ -247,5 +353,7 @@ it names:
 | Assistant failure tests (client disconnect) | a client disconnect did not close the content iterator of the stream, so the model call was left open; and a cancelled turn could record an incomplete token total | fixed in `c015f34`, with the tests that found them |
 | Kernel invariant test, in the full suite | the mock carrier's wire errors (`invalid_signature`, `stale_timestamp`, `carrier_unavailable`) subclassed the product's error family, although they are not product error codes | fixed in `21ad632`: the carrier route maps them to problem documents itself |
 | Integration and race tests on the Firestore emulator | concurrent writers on one document are refused by the emulator after about two seconds ("Transaction lock timeout", `ABORTED`) | `quoting` keeps the decision, the audit entry and the outbox event in one transaction, retries it, and answers exhausted contention as `conflict` (409) (`1eed6df`; proven by the race tests of `f44e62e`); the carrier's receipt store treats the same answer as a lost race (`2ddcb1a`) |
+| Race test of two decisions on one approval, in the M3 gate | on the emulator both contenders could exhaust their attempts together, so neither decision was applied (3 of 50 rounds); the library retries a refused transaction at once | later attempts wait a random, growing time before their first read (`bd3f3fc`); 150 of 150 rounds then had exactly one winner |
+| Quoting suite in the M3 gate, hung for 86 minutes | a cancellation that reached a transaction before `begin` answered was replaced by the rollback error, so the outbox relay kept polling and its `stop()` waited forever | the cancellation is raised again and `stop()` waits at most five seconds (`27fb233`), with tests for both; 20 of 20 runs of the suite then finished |
 | Web tests of the risk legend | the `breaks` of a cell metric were read as having outer classes; they are class edges, n + 1 edges for n classes | fixed in `27026ab` |
 | gitleaks, on the tree and the history | an invented sentinel value of the redaction test was flagged as an API key | a narrow allowlist for the exact sentinel shape in `.gitleaks.toml` (`db0a7e0`) |
