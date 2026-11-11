@@ -1,0 +1,183 @@
+import type { components } from "./api/schema";
+
+type CoverDefinition = components["schemas"]["CoverDefinition"];
+type GridPoint = components["schemas"]["GridPoint"];
+
+/**
+ * Build-time configuration. Agents and CI never read `.env` files, so every default lives here;
+ * each entry can be replaced by one `VITE_` variable holding JSON (names in `env.example`).
+ * There is no synthetic-data flag: that label comes from the API (`Region.synthetic`).
+ */
+
+export type BasemapId = "relief" | "satellite";
+
+export interface BasemapConfig {
+  /** Leaflet tile URL template (`{z}`, `{x}`, `{y}`). */
+  urlTemplate: string;
+  /** The attribution text the provider requires, shown next to the map. */
+  attribution: string;
+  /** The licence of the layer, shown with the attribution. */
+  licenceNote: string;
+  maxZoom: number;
+}
+
+/** The cover a showcase region opens with, before any conversation. */
+export interface ExampleCover {
+  /** The insured point of the example. */
+  point: GridPoint;
+  /** A place name, shown as data. */
+  label: string;
+  cover: CoverDefinition;
+}
+
+export interface AppConfig {
+  basemaps: Record<BasemapId, BasemapConfig>;
+  /** Keyed by `Region.region_id`. */
+  exampleCovers: Record<string, ExampleCover>;
+}
+
+export const ENV_BASEMAP_RELIEF = "VITE_BASEMAP_RELIEF";
+export const ENV_BASEMAP_SATELLITE = "VITE_BASEMAP_SATELLITE";
+export const ENV_EXAMPLE_COVERS = "VITE_EXAMPLE_COVERS";
+
+// The URL templates, attribution texts and licence notes are written in Task 5 of the web plan,
+// after they are verified in EOX's documentation. They are never stated from memory.
+const DEFAULT_BASEMAPS: Record<BasemapId, BasemapConfig> = {
+  relief: { urlTemplate: "", attribution: "", licenceNote: "", maxZoom: 0 },
+  satellite: { urlTemplate: "", attribution: "", licenceNote: "", maxZoom: 0 },
+};
+
+// The three example covers of the approved preview (`design-reference/vr/engine.js`). The API has
+// no default cover per region, so the first view takes it from here.
+const DEFAULT_EXAMPLE_COVERS: Record<string, ExampleCover> = {
+  "sul-de-minas": {
+    point: { lat: -21.41, lon: -45.48 },
+    label: "Três Pontas, MG",
+    cover: {
+      index: {
+        index_type: "rainfall_below",
+        window: { start: "09-01", end: "10-31" },
+        trigger: 150,
+        exit: 75,
+      },
+      limit: { amount_cents: 30_000_000, currency: "BRL" },
+    },
+  },
+  sorriso: {
+    point: { lat: -12.6, lon: -55.66 },
+    label: "Sorriso, MT",
+    cover: {
+      index: {
+        index_type: "rainfall_below",
+        window: { start: "10-01", end: "11-30" },
+        trigger: 280,
+        exit: 160,
+      },
+      limit: { amount_cents: 50_000_000, currency: "BRL" },
+    },
+  },
+  "ribeirao-preto": {
+    point: { lat: -21.1, lon: -48.03 },
+    label: "Sertãozinho, SP",
+    cover: {
+      index: {
+        index_type: "rainfall_below",
+        window: { start: "11-15", end: "02-15" },
+        trigger: 520,
+        exit: 330,
+      },
+      limit: { amount_cents: 40_000_000, currency: "BRL" },
+    },
+  },
+};
+
+type Json = Record<string, unknown>;
+
+function isObject(value: unknown): value is Json {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+const MONTH_DAY = /^\d{2}-\d{2}$/;
+
+function isBasemap(value: unknown): value is BasemapConfig {
+  return (
+    isObject(value) &&
+    typeof value.urlTemplate === "string" &&
+    value.urlTemplate !== "" &&
+    typeof value.attribution === "string" &&
+    value.attribution !== "" &&
+    typeof value.licenceNote === "string" &&
+    isFiniteNumber(value.maxZoom)
+  );
+}
+
+function isCover(value: unknown): value is CoverDefinition {
+  if (!isObject(value) || !isObject(value.index) || !isObject(value.limit)) return false;
+  const { index, limit } = value;
+  return (
+    (index.index_type === "rainfall_below" || index.index_type === "dry_spell_above") &&
+    isObject(index.window) &&
+    typeof index.window.start === "string" &&
+    MONTH_DAY.test(index.window.start) &&
+    typeof index.window.end === "string" &&
+    MONTH_DAY.test(index.window.end) &&
+    isFiniteNumber(index.trigger) &&
+    isFiniteNumber(index.exit) &&
+    Number.isInteger(limit.amount_cents) &&
+    limit.currency === "BRL"
+  );
+}
+
+function isExampleCover(value: unknown): value is ExampleCover {
+  return (
+    isObject(value) &&
+    isObject(value.point) &&
+    isFiniteNumber(value.point.lat) &&
+    isFiniteNumber(value.point.lon) &&
+    typeof value.label === "string" &&
+    isCover(value.cover)
+  );
+}
+
+function isExampleCovers(value: unknown): value is Record<string, ExampleCover> {
+  return isObject(value) && Object.values(value).every(isExampleCover);
+}
+
+/** Reads one JSON override. A malformed value stops the application instead of being ignored. */
+function override<T>(
+  env: Readonly<Record<string, unknown>>,
+  name: string,
+  isValid: (value: unknown) => value is T,
+): T | undefined {
+  const raw = env[name];
+  if (typeof raw !== "string" || raw.trim() === "") return undefined;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new Error(`${name} is not valid JSON`);
+  }
+  if (!isValid(parsed)) {
+    throw new Error(`${name} does not have the expected shape (see src/config.ts)`);
+  }
+  return parsed;
+}
+
+export function loadConfig(env: Readonly<Record<string, unknown>>): AppConfig {
+  return {
+    basemaps: {
+      relief: override(env, ENV_BASEMAP_RELIEF, isBasemap) ?? DEFAULT_BASEMAPS.relief,
+      satellite: override(env, ENV_BASEMAP_SATELLITE, isBasemap) ?? DEFAULT_BASEMAPS.satellite,
+    },
+    exampleCovers: {
+      ...DEFAULT_EXAMPLE_COVERS,
+      ...override(env, ENV_EXAMPLE_COVERS, isExampleCovers),
+    },
+  };
+}
+
+export const config: AppConfig = loadConfig(import.meta.env);
