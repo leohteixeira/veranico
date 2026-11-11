@@ -4,8 +4,49 @@ Each keeps public dictionaries, so a test can read what was stored and act as th
 operator (for example by setting `revoked_at` on a key), and counts its reads.
 """
 
-from veranico.modules.access.application.ports import ApiKeyRecord, Workspace
+from datetime import datetime
+
+from veranico.modules.access.application.ports import ApiKeyRecord, CeilingReason, Workspace
+from veranico.modules.access.domain.allowance import Limits, Usage, consume
 from veranico.shared.kernel.ids import WorkspaceId
+
+
+class MemoryAllowanceStore:
+    def __init__(self) -> None:
+        self.usages: dict[tuple[str, str], Usage] = {}
+        self.expires_at: dict[tuple[str, str], datetime] = {}
+        self.writes = 0
+
+    async def usage(self, ip_hash: str, day: str) -> Usage:
+        return self.usages.get((ip_hash, day), Usage())
+
+    async def consume(
+        self,
+        ip_hash: str,
+        day: str,
+        *,
+        limits: Limits,
+        new_conversation: bool,
+        expires_at: datetime,
+    ) -> tuple[Usage, bool]:
+        usage = self.usages.get((ip_hash, day), Usage())
+        updated = consume(limits, usage, new_conversation)
+        if updated is None:
+            return usage, False
+        self.usages[(ip_hash, day)] = updated
+        self.expires_at[(ip_hash, day)] = expires_at
+        self.writes += 1
+        return updated, True
+
+
+class StubSpendCeilings:
+    """Spend ceilings a test sets by hand."""
+
+    def __init__(self) -> None:
+        self.reason: CeilingReason | None = None
+
+    async def reached(self) -> CeilingReason | None:
+        return self.reason
 
 
 class MemoryWorkspaceStore:

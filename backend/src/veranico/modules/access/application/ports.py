@@ -2,8 +2,9 @@
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Protocol
+from typing import Literal, Protocol
 
+from veranico.modules.access.domain.allowance import Limits, Usage
 from veranico.shared.kernel.ids import WorkspaceId
 
 
@@ -32,3 +33,34 @@ class WorkspaceStore(Protocol):
 class ApiKeyStore(Protocol):
     async def create(self, record: ApiKeyRecord) -> None: ...
     async def get(self, key_id: str) -> ApiKeyRecord | None: ...
+
+
+class AllowanceStore(Protocol):
+    """Usage of one visitor on one UTC day (`day` is `YYYYMMDD`)."""
+
+    async def usage(self, ip_hash: str, day: str) -> Usage: ...
+
+    async def consume(
+        self,
+        ip_hash: str,
+        day: str,
+        *,
+        limits: Limits,
+        new_conversation: bool,
+        expires_at: datetime,
+    ) -> tuple[Usage, bool]:
+        """Count one message when the limits allow it, atomically.
+
+        Returns the usage afterwards and whether the message was counted. Two concurrent
+        calls never both take the last slot.
+        """
+        ...
+
+
+CeilingReason = Literal["day_ceiling", "month_ceiling"]
+
+
+class SpendCeilings(Protocol):
+    async def reached(self) -> CeilingReason | None:
+        """The ceiling that refuses a model call now, or `None` when spending is allowed."""
+        ...
