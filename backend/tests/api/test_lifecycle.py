@@ -175,6 +175,7 @@ async def test_model_client_defaults_to_none() -> None:
     assert seen == [None]
 
 
+@pytest.mark.req("R-3.1-11")
 async def test_carrier_catalog_forwarder_asks_the_carriers_facade_each_time() -> None:
     container = api_container()
     captured: list[object] = []

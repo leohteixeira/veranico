@@ -57,6 +57,10 @@ dev = [
 target-version = "py312"
 line-length = 100
 src = ["src", "tests", "scripts"]
+# Copied unchanged from the python-modular-monolith skill, so it keeps that skill's style.
+# Nothing else is excluded: `tests/architecture/_violations/` holds deliberately wrong
+# code for the scanners, and it is still linted and formatted like any other file.
+extend-exclude = ["scripts/validate_boundaries.py"]
 
 [tool.ruff.lint]
 select = [
@@ -83,6 +87,8 @@ known-first-party = ["veranico", "tests"]
 python_version = "3.12"
 strict = true
 files = ["src", "tests/fakes", "scripts"]
+# The same copied file: it is not written for strict typing and is not edited here.
+exclude = ['^scripts/validate_boundaries\.py$']
 plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
