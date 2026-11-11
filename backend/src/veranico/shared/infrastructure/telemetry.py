@@ -113,7 +113,7 @@ def setup_telemetry(settings: Settings, app: FastAPI) -> None:
 
 
 def configure(settings: Settings, role: Role, *, exporter: SpanExporter | None = None) -> None:
-    """Install the tracer provider and the JSON log handler of this process.
+    """Install the tracer provider of this process. Logging is `configure_logging`.
 
     The exporter comes from the settings (`none`, `otlp`, `cloud_trace`). A test passes
     `exporter` instead, usually the SDK's in-memory exporter; it is then fed synchronously,
@@ -125,7 +125,7 @@ def configure(settings: Settings, role: Role, *, exporter: SpanExporter | None =
     set only once: tracers are handed out by `tracer()`.
     """
     global _provider
-    shutdown()
+    _stop_tracing()
     provider = TracerProvider(
         resource=Resource.create(
             {
@@ -142,7 +142,6 @@ def configure(settings: Settings, role: Role, *, exporter: SpanExporter | None =
         if selected is not None:
             provider.add_span_processor(BatchSpanProcessor(selected))
     _provider = provider
-    _configure_logging(role)
 
 
 def exporter_for(settings: Settings) -> SpanExporter | None:
@@ -170,7 +169,12 @@ def tracer(name: str = "veranico") -> trace.Tracer:
 
 
 def shutdown() -> None:
-    """Flush and stop the exporter. Called once at exit."""
+    """Flush and stop the exporter and undo the logging configuration. Called once at exit."""
+    _stop_tracing()
+    _restore_logging()
+
+
+def _stop_tracing() -> None:
     global _provider
     provider, _provider = _provider, None
     if provider is not None:
@@ -264,6 +268,10 @@ class _RequestSpan:
         self._tracer = tracer()
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] == "lifespan":
+            # A server is starting the application: this is a real process, not a test
+            # that only built the application object.
+            configure_logging(self._role)
         if scope["type"] != "http":
             await self._app(scope, receive, send)
             return
@@ -396,10 +404,27 @@ class _StdoutHandler(logging.StreamHandler[TextIO]):
         """Ignored: the stream is always the current `sys.stdout`."""
 
 
-def _configure_logging(role: Role) -> None:
+# The loggers `configure_logging` changes, and what each looked like before it ran.
+_LOGGERS_CHANGED: Final = ("", "uvicorn", "uvicorn.error", "uvicorn.access", "httpx")
+_logging_before: dict[str, tuple[list[logging.Handler], int, bool]] | None = None
+
+
+def configure_logging(role: Role) -> None:
+    """Send the logs of this process to standard output as JSON lines.
+
+    The request middleware calls it when the server starts the application (the ASGI
+    lifespan), not when the application object is built: logging is process-wide, and a
+    test that only builds an application must not find the root logger changed.
+    `shutdown` puts back the handlers, levels and propagation this function replaced.
+    """
+    global _logging_before
+    _restore_logging()
+    _logging_before = {
+        name: (list(logger.handlers), logger.level, logger.propagate)
+        for name in _LOGGERS_CHANGED
+        for logger in [logging.getLogger(name)]
+    }
     root = logging.getLogger()
-    for handler in [h for h in root.handlers if isinstance(h, _StdoutHandler)]:
-        root.removeHandler(handler)
     handler = _StdoutHandler()
     handler.setFormatter(JsonLogFormatter(role))
     root.addHandler(handler)
@@ -417,3 +442,13 @@ def _configure_logging(role: Role) -> None:
     # The HTTP client logs every request at INFO with its full URL, and a URL of the
     # geocoding service carries the place name a visitor typed.
     logging.getLogger("httpx").setLevel(logging.WARNING)
+
+
+def _restore_logging() -> None:
+    global _logging_before
+    before, _logging_before = _logging_before, None
+    for name, (handlers, level, propagate) in (before or {}).items():
+        logger = logging.getLogger(name)
+        logger.handlers[:] = handlers
+        logger.setLevel(level)
+        logger.propagate = propagate

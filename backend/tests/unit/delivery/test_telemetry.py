@@ -23,19 +23,27 @@ SENTINEL = "sentinel-7f3a9c"
 
 @pytest.fixture(autouse=True)
 def _restore_process_state() -> Iterator[None]:
-    """Telemetry and logging are process-wide: leave both as they were found."""
-    root = logging.getLogger()
-    handlers, level = list(root.handlers), root.level
+    """Telemetry and logging are process-wide: every test must leave both as it found them."""
+    before = _logging_state()
     yield
     telemetry.shutdown()
-    root.handlers[:] = handlers
-    root.setLevel(level)
+    assert _logging_state() == before
+
+
+def _logging_state() -> dict[str, tuple[list[logging.Handler], int, bool]]:
+    return {
+        name: (list(logger.handlers), logger.level, logger.propagate)
+        for name in ("", "uvicorn", "uvicorn.error", "uvicorn.access", "httpx")
+        for logger in [logging.getLogger(name)]
+    }
 
 
 @pytest.fixture
 def spans() -> InMemorySpanExporter:
+    """Tracing into memory and JSON logs on standard output, as in a running server."""
     exporter = InMemorySpanExporter()
     telemetry.configure(settings_for_tests(), "api", exporter=exporter)
+    telemetry.configure_logging("api")
     return exporter
 
 
@@ -239,7 +247,8 @@ async def _get(app: FastAPI, url: str, **headers: str) -> httpx.Response:
         return await client.get(url, headers=headers)
 
 
-@pytest.mark.req("R-15-1")
+# R-15-1 (the whole span tree) is not marked in this file: the root span alone does not
+# prove it. Its marker is on the chat turn test of tests/integration/delivery.
 async def test_http_request_span_carries_method_route_template_status_and_role() -> None:
     app = _app()
     exporter = InMemorySpanExporter()
@@ -260,7 +269,6 @@ async def test_http_request_span_carries_method_route_template_status_and_role()
     assert response.json() == {"trace_id": format(span.context.trace_id, "032x")}
 
 
-@pytest.mark.req("R-15-1")
 @pytest.mark.parametrize(
     ("url", "template"),
     [
@@ -315,7 +323,6 @@ async def test_http_request_span_holds_no_address_header_query_or_raw_path() -> 
         assert forbidden not in exported
 
 
-@pytest.mark.req("R-15-1")
 async def test_a_request_that_matches_no_route_records_no_route_attribute() -> None:
     app = _app()
     exporter = InMemorySpanExporter()
@@ -437,10 +444,10 @@ def test_the_servers_access_log_is_silenced_and_its_other_messages_are_json(
 ) -> None:
     access = logging.getLogger("uvicorn.access")
     server = logging.getLogger("uvicorn.error")
-    saved = (access.handlers[:], access.propagate, server.propagate)
-    access.addHandler(logging.StreamHandler())
+    plain = logging.StreamHandler()
+    access.addHandler(plain)  # what the server installs before the application is built
     try:
-        telemetry.configure(settings_for_tests(), "api")
+        telemetry.configure_logging("api")
 
         access.info('203.0.113.77:4711 - "GET /api/v1/quotes HTTP/1.1" 200')
         server.info("Started server process")
@@ -450,5 +457,42 @@ def test_the_servers_access_log_is_silenced_and_its_other_messages_are_json(
         assert [json.loads(line)["message"] for line in captured.out.splitlines()] == [
             "Started server process"
         ]
+        telemetry.shutdown()
+        assert access.handlers == [plain]
     finally:
-        access.handlers[:], access.propagate, server.propagate = saved
+        access.removeHandler(plain)
+
+
+def test_building_an_application_leaves_the_loggers_of_the_process_alone() -> None:
+    before = _logging_state()
+
+    _app()
+    telemetry.configure(settings_for_tests(), "api", exporter=InMemorySpanExporter())
+
+    assert _logging_state() == before
+
+
+async def test_logging_is_configured_when_a_server_starts_the_app_and_undone_at_shutdown(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    before = _logging_state()
+    app = _app()
+    messages: list[dict[str, Any]] = [{"type": "lifespan.startup"}, {"type": "lifespan.shutdown"}]
+    logger = logging.getLogger("veranico.test")
+
+    async def receive() -> dict[str, Any]:
+        return messages.pop(0)
+
+    async def send(message: dict[str, Any]) -> None:
+        if message["type"] == "lifespan.startup.complete":
+            logger.info("serving")
+
+    # What a server does first: run the lifespan through the whole middleware stack.
+    await app({"type": "lifespan", "asgi": {"version": "3.0"}, "state": {}}, receive, send)
+
+    assert [line["message"] for line in _log_lines(capsys)] == ["serving"]
+    assert _logging_state() != before
+    telemetry.shutdown()
+    assert _logging_state() == before
+    logger.info("after shutdown")
+    assert capsys.readouterr().out == ""
