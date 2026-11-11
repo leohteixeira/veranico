@@ -7,9 +7,11 @@ long, not a password.
 
 import hashlib
 import hmac
+import re
 import secrets
 
 _PREFIX = "vrk"
+_KEY_ID = re.compile(r"[0-9a-f]{1,64}")
 
 
 def mint() -> tuple[str, str]:
@@ -24,7 +26,10 @@ def format_bearer(key_id: str, secret: str) -> str:
 def parse_bearer(bearer: str) -> tuple[str, str] | None:
     """Return `(key_id, secret)`, or `None` for anything that is not a bearer of this form."""
     parts = bearer.split("_", 2)  # the secret may itself contain underscores
-    if len(parts) != 3 or parts[0] != _PREFIX or not parts[1] or not parts[2]:
+    if len(parts) != 3 or parts[0] != _PREFIX or not parts[2]:
+        return None
+    # The key id names a stored document, so only the form `mint` writes is looked up.
+    if _KEY_ID.fullmatch(parts[1]) is None:
         return None
     return parts[1], parts[2]
 

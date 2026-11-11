@@ -48,6 +48,10 @@ def test_stored_hash_matches_only_that_secret() -> None:
         "vrk_abc123",  # no secret
         "vrk_abc123_",  # empty secret
         "vrk__secret",  # empty key id
+        "vrk_a/b_secret",  # a key id that is not hexadecimal
+        "vrk_.._secret",
+        "vrk_ABC123_secret",
+        "vrk_" + "a" * 65 + "_secret",  # longer than any key id
         "vrk",
         "vrk_",
     ],
