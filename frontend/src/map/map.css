@@ -45,6 +45,124 @@
   gap: 4px 12px;
 }
 
+/* The risk canvas: the size of the stage, repositioned by the layer as the map moves. */
+
+.map-stage .risk-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.map-stage .leaflet-container {
+  cursor: crosshair;
+}
+
+.map-stage .leaflet-container.leaflet-drag-target,
+.map-stage .leaflet-dragging .leaflet-container {
+  cursor: grabbing;
+}
+
+/* What qualifies the picture: set in the free corner above the timeline, never over a card. */
+
+.map-notes {
+  position: absolute;
+  z-index: 650;
+  left: calc(var(--map-inset-left, 0px) + 16px);
+  bottom: calc(var(--map-inset-bottom, 0px) + 14px);
+  max-width: min(
+    44ch,
+    calc(100% - var(--map-inset-left, 0px) - var(--map-inset-right, 0px) - 32px)
+  );
+  display: grid;
+  gap: 2px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--ink-2);
+  pointer-events: none;
+}
+
+.map-notes:empty {
+  display: none;
+}
+
+.map-notes p {
+  margin: 0;
+}
+
+/* The warning hue is too light for text on a card: it marks the line, the ink says it. */
+.map-notes__synthetic {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.map-notes__synthetic::before {
+  content: "";
+  display: inline-block;
+  width: 0.55em;
+  height: 0.55em;
+  margin-right: 0.5em;
+  border-radius: 50%;
+  background: var(--warn);
+}
+
+/* Leaflet's tooltips, redrawn from the tokens. */
+
+.map-stage .leaflet-tooltip {
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.map-stage .leaflet-tooltip::before {
+  display: none;
+}
+
+.map-stage .leaflet-tooltip.map-tip {
+  display: grid;
+  gap: 1px;
+  padding: 7px 10px;
+}
+
+.map-tip__title {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.map-tip__line {
+  font-variant-numeric: tabular-nums;
+}
+
+.map-stage .leaflet-tooltip.map-leg-label {
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.map-stage .leaflet-tooltip.map-farm-label {
+  padding: 2px 8px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--map-marker, var(--ink));
+  color: var(--map-marker-ink, var(--card));
+  font-weight: 700;
+  box-shadow: none;
+}
+
 /* The attribution line: small, but real text at a readable contrast. */
 
 .attribution {

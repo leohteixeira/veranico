@@ -8,7 +8,7 @@ import { Button } from "../components/common/Button";
 import { Icon } from "../components/common/Icon";
 import { Note } from "../components/common/Note";
 import { config, type BasemapConfig, type BasemapId } from "../config";
-import type { Theme } from "../design/theme";
+import { MAP_PAINT, type Theme } from "../design/theme";
 import { useI18n } from "../i18n";
 import { NO_INSETS, fitPadding, regionBounds, veil, type Insets } from "./basemaps";
 import "./map.css";
@@ -107,6 +107,9 @@ export function MapStage({
     "--map-inset-top": `${insets.top}px`,
     "--map-inset-left": `${insets.left}px`,
     "--map-inset-right": `${insets.right}px`,
+    "--map-inset-bottom": `${insets.bottom}px`,
+    "--map-marker": MAP_PAINT[theme].marker,
+    "--map-marker-ink": MAP_PAINT[theme].markerInk,
   } as CSSProperties;
 
   return (
