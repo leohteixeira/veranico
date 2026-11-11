@@ -123,8 +123,6 @@ STILL_STUBBED: set[tuple[str, str]] = {
     ("POST", f"{V1}/chat"),
     ("GET", f"{V1}/conversations/{{id}}"),
     ("GET", f"{V1}/replays/{{locale}}"),
-    ("POST", f"{V1}/workspace/api-keys"),
-    ("GET", f"{V1}/allowance"),
     ("GET", f"{V1}/regions"),
     ("GET", f"{V1}/regions/{{id}}/cells"),
     ("POST", f"{V1}/internal/outbox/{{event_id}}/deliver"),
