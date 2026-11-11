@@ -4,8 +4,10 @@
 # The owner keeps real keys in a Git-ignored `.env`. It is loaded here when it exists, so a
 # recipe receives the keys without anyone opening the file. `env.example` documents the names.
 #
-# * One `NAME=value` per line, no quotes. The value is passed verbatim (JSON, `$` and all);
-#   an unquoted `#` starts a comment.
+# * One `NAME=value` per line. The value is passed verbatim (JSON, `$` and all); an unquoted
+#   `#` starts a comment.
+# * Quotes are not needed. A value of one word wrapped in one pair of quotes (`NAME="value"`,
+#   the habit of other dotenv readers) loses that pair; a value with spaces keeps its quotes.
 # * A name left empty in the file is unset for the recipes, so it never replaces a default or
 #   a generated development secret. This holds even when the calling shell exported a value.
 # * A non-empty value in the file wins over the calling shell.
@@ -16,6 +18,7 @@ ENV_FILE ?= .env
 _env_before := $(foreach v,$(.VARIABLES),$(if $(filter file,$(origin $v)),$v))
 -include $(ENV_FILE)
 _env_names := $(filter-out $(_env_before) _env_before,$(foreach v,$(.VARIABLES),$(if $(filter file,$(origin $v)),$v)))
+$(foreach v,$(_env_names),$(if $(filter 1,$(words $(value $v))),$(eval $v := $$(patsubst '%',%,$$(patsubst "%",%,$$(value $v))))))
 $(foreach v,$(_env_names),$(if $(strip $(value $v)),$(eval $v := $$(value $v))$(eval export $v),$(eval undefine $v)))
 
 # --- Shared definitions -----------------------------------------------------------------
@@ -210,9 +213,11 @@ mutation-proof:
 	rmdir $(EVIDENCE)/mutation/$(RUN_ID) $(EVIDENCE)/mutation $(EVIDENCE) 2>/dev/null || true; \
 	exit $$status
 
+# Paid: calls the model API and prints the cost of the run. A part of the suite, with a hard
+# stop: `make evals EVALS_ARGS="--cases a,b,c --epochs 1 --max-cost-usd 0.25"`.
 evals:
 	@if [ ! -f backend/tests/evals/run.py ]; then echo "evals: not implemented in this milestone (plan 06)" >&2; exit 2; fi
-	cd backend && uv run python -m tests.evals.run
+	cd backend && uv run python -m tests.evals.run $(EVALS_ARGS)
 
 # The runner starts its own Compose project (`veranico-load`, compose.yaml plus
 # load/compose.load.yaml) and never the development one, so this does not depend on `dev`.

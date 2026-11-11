@@ -59,6 +59,26 @@ def test_values_reach_a_recipe_verbatim(tmp_path: Path) -> None:
     assert seen["DOLLAR"] == "pa$$word$HOME$(shell echo expanded)"
 
 
+def test_one_pair_of_quotes_around_a_one_word_value_is_dropped(tmp_path: Path) -> None:
+    env_file = tmp_path / "values"
+    env_file.write_text(
+        'PLAIN="sk-quoted-value"\n'
+        "JSON_VALUE='single-quoted'\n"
+        'DOLLAR="pa$$word$HOME"\n'
+        'EMPTY=""\n'
+        'OVERRIDDEN="two words"\n',
+        encoding="utf-8",
+    )
+
+    seen = _recipe_environment(tmp_path, env_file)
+
+    assert seen["PLAIN"] == "sk-quoted-value"
+    assert seen["JSON_VALUE"] == "single-quoted"
+    assert seen["DOLLAR"] == "pa$$word$HOME"
+    assert seen["EMPTY"] == "<unset>"
+    assert seen["OVERRIDDEN"] == '"two words"'
+
+
 def test_a_name_left_empty_is_unset_for_the_recipe(tmp_path: Path) -> None:
     """An empty value must not replace a default or a generated development secret."""
     env_file = tmp_path / "values"
