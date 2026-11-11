@@ -532,6 +532,44 @@ def test_an_unknown_region_fails(
     assert "unknown region 'atlantis'" in capsys.readouterr().err
 
 
+@pytest.mark.parametrize(
+    ("error", "code", "line"),
+    [
+        (
+            script.CdsRefusedError("the Climate Data Store refused the request: 401 Unauthorized"),
+            1,
+            "build_cube: failed, the Climate Data Store refused the request: 401 Unauthorized\n",
+        ),
+        (
+            script.CdsUnreachableError("no answer"),
+            3,
+            "build_cube: open, no answer from the Climate Data Store\n",
+        ),
+    ],
+)
+def test_a_refused_or_unreachable_cds_is_one_line_and_no_traceback(
+    script_environment: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    error: Exception,
+    code: int,
+    line: str,
+) -> None:
+    def retrieve(dataset: str, request: Mapping[str, Any], target: Path) -> None:
+        raise error
+
+    monkeypatch.setenv("CDS_API_KEY", "not-a-real-token")
+    monkeypatch.setattr(script, "cdsapi_retrieve", lambda key: retrieve)
+    monkeypatch.setattr(script, "CDS_CACHE", script_environment.parent / "cds-cache")
+
+    assert script.main(["--region", "sorriso"]) == code
+
+    captured = capsys.readouterr()
+    assert captured.err == line
+    assert "not-a-real-token" not in captured.err + captured.out
+    assert not script_environment.exists()  # no cube was installed
+
+
 # The service never loads the CDS client.
 
 _PROBE = """

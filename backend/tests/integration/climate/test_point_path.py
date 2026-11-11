@@ -115,3 +115,18 @@ async def test_regions_are_synthetic_while_no_real_cube_is_installed(tmp_path: P
 
     assert [region.region_id for region in regions] == ["sul-de-minas", "sorriso", "ribeirao-preto"]
     assert all(region.synthetic for region in regions)
+
+
+def test_the_cloud_storage_weather_store_refuses_local_blobs(tmp_path: Path) -> None:
+    # Its manifests are objects of the bucket: with local blobs they would sit on a disk
+    # the next instance does not have.
+    settings = settings_for_tests(climate={"store_backend": "gcs"})
+    deps = ClimateDeps(
+        settings=settings,
+        clock=CLOCK,
+        http=httpx.AsyncClient(transport=httpx.MockTransport(offline)),
+        blobs=LocalBlobStore(tmp_path / "blobs"),
+    )
+
+    with pytest.raises(ValueError, match="needs VERANICO_BLOB_BACKEND=gcs"):
+        build(deps)

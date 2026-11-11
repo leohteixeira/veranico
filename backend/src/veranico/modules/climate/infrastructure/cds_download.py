@@ -65,6 +65,10 @@ class CdsUnreachableError(Exception):
     """No answer was obtained from the Climate Data Store (no network)."""
 
 
+class CdsRefusedError(Exception):
+    """The Climate Data Store answered with an HTTP error (a bad token, a refused request)."""
+
+
 def year_request(region: RegionDef, year: int) -> dict[str, Any]:
     """The request for every day of `year` at the two time steps."""
     return {
@@ -210,6 +214,15 @@ def cdsapi_retrieve(key: str) -> Retrieve:
             clients[0].retrieve(dataset, dict(request), str(target))
         except requests.exceptions.ConnectionError as error:
             raise CdsUnreachableError("no answer from the Climate Data Store") from error
+        except requests.exceptions.HTTPError as error:
+            # Status and reason only: nothing of the request, which carries the token.
+            status = getattr(error.response, "status_code", "no status")
+            reason = getattr(error.response, "reason", "")
+            hint = " (is CDS_API_KEY valid, and the dataset licence accepted?)"
+            raise CdsRefusedError(
+                f"the Climate Data Store refused the request: {status} {reason}".rstrip()
+                + (hint if status in (401, 403) else "")
+            ) from None
 
     return retrieve
 

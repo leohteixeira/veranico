@@ -10,8 +10,9 @@ point makes no network call.
 Exit codes: 0 cached, 1 failed, 3 no HTTP response was obtained (the network is
 unavailable; reported as open by `gate.py`).
 
-The script reads only the `VERANICO_CLIMATE__*` variables, so it runs without the secrets
-the application needs to start.
+The script reads only the `VERANICO_CLIMATE__*` variables and, for the Cloud Storage store,
+the bucket, the project and the emulator address, so it runs without the secrets the
+application needs to start.
 """
 
 import argparse
@@ -19,25 +20,13 @@ import asyncio
 import sys
 
 import httpx
-from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from veranico.modules.climate.contracts import ClimateFacade
-from veranico.modules.climate.module import assemble, weather_store
-from veranico.shared.infrastructure.settings import ClimateSettings
+from veranico.modules.climate.module import StoreSettings, assemble, store_from_environment
 from veranico.shared.kernel.clock import SystemClock
 from veranico.shared.kernel.errors import DomainError, WeatherSourceUnavailableError
 
 EXIT_OK, EXIT_FAILED, EXIT_OPEN = 0, 1, 3
-
-
-class IngestSettings(BaseSettings):
-    """The climate group of the application settings, read from the same variables."""
-
-    model_config = SettingsConfigDict(
-        env_prefix="VERANICO_", env_nested_delimiter="__", env_ignore_empty=True, extra="ignore"
-    )
-
-    climate: ClimateSettings = ClimateSettings()
 
 
 async def ingest(facade: ClimateFacade, lat: float, lon: float) -> int:
@@ -57,10 +46,11 @@ async def ingest(facade: ClimateFacade, lat: float, lon: float) -> int:
 
 
 async def run(lat: float, lon: float) -> int:
-    settings = IngestSettings().climate
+    settings = StoreSettings()
     clock = SystemClock()
     async with httpx.AsyncClient() as http:
-        facade = assemble(settings, clock, http, weather_store(settings, clock))
+        store = store_from_environment(settings, clock)
+        facade = assemble(settings.climate, clock, http, store)
         return await ingest(facade, lat, lon)
 
 

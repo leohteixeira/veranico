@@ -27,8 +27,6 @@ import sys
 from dataclasses import asdict
 from pathlib import Path
 
-from pydantic_settings import BaseSettings, SettingsConfigDict
-
 from veranico.modules.climate.application.build_cube import (
     BuildCube,
     BuildReport,
@@ -39,6 +37,7 @@ from veranico.modules.climate.domain.coverage import last_complete_year
 from veranico.modules.climate.domain.errors import WeatherDataError
 from veranico.modules.climate.domain.regions import REGIONS, RegionDef, region_by_id
 from veranico.modules.climate.infrastructure.cds_download import (
+    CdsRefusedError,
     CdsUnreachableError,
     CdsYearlySource,
     cdsapi_retrieve,
@@ -49,24 +48,13 @@ from veranico.modules.climate.infrastructure.synthetic import (
     generate_cube,
     generator_parameters,
 )
-from veranico.modules.climate.module import weather_store
-from veranico.shared.infrastructure.settings import ClimateSettings
+from veranico.modules.climate.module import StoreSettings, store_from_environment
 from veranico.shared.kernel.clock import SystemClock
 
 EXIT_OK, EXIT_FAILED, EXIT_NOT_IMPLEMENTED, EXIT_OPEN = 0, 1, 2, 3
 CDS_KEY_VARIABLE = "CDS_API_KEY"
 CDS_CACHE = Path(".cache/cds")
 DEFAULT_SEED = 1
-
-
-class BuildSettings(BaseSettings):
-    """The climate group of the application settings, read from the same variables."""
-
-    model_config = SettingsConfigDict(
-        env_prefix="VERANICO_", env_nested_delimiter="__", env_ignore_empty=True, extra="ignore"
-    )
-
-    climate: ClimateSettings = ClimateSettings()
 
 
 async def build_synthetic(
@@ -107,9 +95,9 @@ def main(argv: list[str] | None = None) -> int:
         print("build_cube: --measure is not implemented in this milestone", file=sys.stderr)
         return EXIT_NOT_IMPLEMENTED
 
-    settings = BuildSettings().climate
+    settings = StoreSettings()
     clock = SystemClock()
-    first_year = settings.first_year
+    first_year = settings.climate.first_year
     last_year = last_complete_year(clock.now().date())
     key = os.environ.get(CDS_KEY_VARIABLE, "").strip()
     if not arguments.synthetic and not key:
@@ -120,7 +108,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         return EXIT_OPEN
 
-    store = weather_store(settings, clock)
+    store = store_from_environment(settings, clock)
     try:
         if arguments.synthetic:
             report = asyncio.run(
@@ -131,6 +119,9 @@ def main(argv: list[str] | None = None) -> int:
     except CdsUnreachableError:
         print("build_cube: open, no answer from the Climate Data Store", file=sys.stderr)
         return EXIT_OPEN
+    except CdsRefusedError as error:
+        print(f"build_cube: failed, {error}", file=sys.stderr)
+        return EXIT_FAILED
     except WeatherDataError as error:
         print(f"build_cube: failed, {error}", file=sys.stderr)
         return EXIT_FAILED

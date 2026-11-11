@@ -17,12 +17,12 @@ from tests.integration.climate.store_contract import (
     point_series,
 )
 from veranico.modules.climate.application.cells import h3_cell_of
-from veranico.modules.climate.infrastructure.local_store import LocalWeatherStore
-from veranico.modules.climate.infrastructure.manifest import CubeManifest, PointManifest
+from veranico.modules.climate.infrastructure.local_store import LocalStorage, LocalWeatherStore
+from veranico.modules.climate.infrastructure.manifest_store import Document, ManifestWeatherStore
 
 
-class _FailingSwitch(LocalWeatherStore):
-    def _switch_manifest(self, path: Path, manifest: PointManifest | CubeManifest) -> str | None:
+class _FailingSwitch(LocalStorage):
+    async def switch(self, path: str, text: str, expected: Document | None) -> bool:
         raise InjectedError
 
 
@@ -32,8 +32,8 @@ def store(tmp_path: Path) -> LocalWeatherStore:
 
 
 @pytest.fixture
-def failing_store(tmp_path: Path) -> LocalWeatherStore:
-    return _FailingSwitch(tmp_path, CLOCK)
+def failing_store(tmp_path: Path) -> ManifestWeatherStore:
+    return ManifestWeatherStore(_FailingSwitch(tmp_path), CLOCK)
 
 
 def _point_directory(root: Path) -> Path:

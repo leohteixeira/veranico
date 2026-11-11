@@ -14,6 +14,10 @@ from pathlib import Path
 
 import numpy as np
 import xarray as xr
+from zarr.abc.store import Store
+
+# Where a store lives: a local directory, or a Zarr store object (Cloud Storage).
+Location = Path | Store
 
 ZARR_FORMAT = 3
 TIME = "time"
@@ -23,7 +27,7 @@ LON = "lon"
 CELL_CHUNK = 10  # cells per chunk along each side of a cube
 
 
-def write_series(target: Path, dates: np.ndarray, precipitation_mm: np.ndarray) -> None:
+def write_series(target: Location, dates: np.ndarray, precipitation_mm: np.ndarray) -> None:
     """Write one daily series as a new one-cell store; the whole series is one chunk."""
     days = len(dates)
     dataset = xr.Dataset(
@@ -40,7 +44,7 @@ def write_series(target: Path, dates: np.ndarray, precipitation_mm: np.ndarray) 
 
 
 def write_cube(
-    target: Path,
+    target: Location,
     dates: np.ndarray,
     latitudes: np.ndarray,
     longitudes: np.ndarray,
@@ -77,7 +81,7 @@ def cube_chunks(days: int, ny: int, nx: int) -> tuple[int, int, int]:
     return (days, min(CELL_CHUNK, ny), min(CELL_CHUNK, nx))
 
 
-def read_cube(source: Path) -> tuple[np.ndarray, np.ndarray]:
+def read_cube(source: Location) -> tuple[np.ndarray, np.ndarray]:
     """Return (dates as datetime64[D], precipitation in mm as float64 (days, ny, nx))."""
     with xr.open_zarr(source, consolidated=False, zarr_format=ZARR_FORMAT, chunks=None) as dataset:
         dates = dataset[TIME].to_numpy().astype("datetime64[D]")
@@ -85,7 +89,7 @@ def read_cube(source: Path) -> tuple[np.ndarray, np.ndarray]:
     return dates, precipitation
 
 
-def read_cell(source: Path, row: int, col: int) -> tuple[np.ndarray, np.ndarray]:
+def read_cell(source: Location, row: int, col: int) -> tuple[np.ndarray, np.ndarray]:
     """The series of one cell of a cube; only the chunk that holds the cell is read."""
     with xr.open_zarr(source, consolidated=False, zarr_format=ZARR_FORMAT, chunks=None) as dataset:
         dates = dataset[TIME].to_numpy().astype("datetime64[D]")
@@ -94,7 +98,7 @@ def read_cell(source: Path, row: int, col: int) -> tuple[np.ndarray, np.ndarray]
     return dates, precipitation
 
 
-def read_series(source: Path) -> tuple[np.ndarray, np.ndarray]:
+def read_series(source: Location) -> tuple[np.ndarray, np.ndarray]:
     """Return (dates as datetime64[D], precipitation in mm as float64) of a one-cell store."""
     with xr.open_zarr(source, consolidated=False, zarr_format=ZARR_FORMAT, chunks=None) as dataset:
         dates = dataset[TIME].to_numpy().astype("datetime64[D]")
