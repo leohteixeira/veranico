@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 import numpy as np
 
 from veranico.modules.climate.application.cells import h3_cell_of
-from veranico.modules.climate.application.ports import PointFetch
+from veranico.modules.climate.application.ports import CubeSource, PointFetch
 from veranico.modules.climate.contracts import DailySeries, DatasetRef, GridPoint
 from veranico.modules.climate.domain.validation import validate_daily
 from veranico.shared.kernel.errors import DatasetNotFoundError
@@ -71,9 +71,13 @@ class InMemoryWeatherStore:
     aliases: dict[str, DatasetId] = field(default_factory=dict)
     requests: dict[DatasetId, dict[str, str]] = field(default_factory=dict)
     writes: int = 0
+    cube_sources: dict[str, CubeSource] = field(default_factory=dict)
 
     async def locate(self, lat: float, lon: float) -> DatasetId | None:
         return self.aliases.get(h3_cell_of(lat, lon))
+
+    async def cube_source(self, region_id: str) -> CubeSource | None:
+        return self.cube_sources.get(region_id)
 
     async def describe(self, dataset_id: DatasetId) -> DatasetRef:
         return (await self.read_series(dataset_id)).dataset

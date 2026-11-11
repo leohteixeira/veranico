@@ -17,6 +17,7 @@ from pathlib import Path
 from pydantic import BaseModel
 
 from veranico.modules.climate.application.cells import h3_cell_of
+from veranico.modules.climate.application.ports import CubeSource
 from veranico.modules.climate.contracts import DailySeries, DatasetRef
 from veranico.modules.climate.domain.validation import validate_daily
 from veranico.modules.climate.infrastructure import zarr_io
@@ -42,6 +43,9 @@ class LocalWeatherStore:
 
     async def locate(self, lat: float, lon: float) -> DatasetId | None:
         return await asyncio.to_thread(self._locate, lat, lon)
+
+    async def cube_source(self, region_id: str) -> CubeSource | None:
+        return None  # no cube can be installed yet: the cube store arrives with plan task 9
 
     async def describe(self, dataset_id: DatasetId) -> DatasetRef:
         manifest = await asyncio.to_thread(self._point_manifest, dataset_id)

@@ -9,6 +9,8 @@ import numpy as np
 from veranico.modules.climate.contracts import DailySeries, DatasetRef, GridPoint
 from veranico.shared.kernel.ids import DatasetId
 
+CubeSource = Literal["era5-land/cds", "synthetic"]
+
 
 @dataclass(frozen=True, slots=True)
 class PointFetch:
@@ -60,6 +62,10 @@ class WeatherStore(Protocol):
 
     async def locate(self, lat: float, lon: float) -> DatasetId | None:
         """The stored dataset a point resolves to, without any network call."""
+        ...
+
+    async def cube_source(self, region_id: str) -> CubeSource | None:
+        """The source of the region's installed cube, or `None` when none is installed."""
         ...
 
     async def describe(self, dataset_id: DatasetId) -> DatasetRef: ...

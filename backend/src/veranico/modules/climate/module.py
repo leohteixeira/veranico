@@ -1,29 +1,29 @@
-"""Wiring of `climate`. Only `bootstrap.py` imports this file.
+"""Wiring of `climate`. Only `bootstrap.py` imports this file (and the data scripts).
 
-Stub of the foundation milestone: plan 01 replaces the body of `build` and keeps its signature.
+`build(deps)` keeps the signature of the foundation milestone. `assemble` is the same
+wiring from the parts the module really needs, for `scripts/ingest.py`, which must run
+without the secrets the full `Settings` require.
 """
 
+import random
 from collections.abc import Sequence
 from dataclasses import dataclass
 
 import httpx
 from fastapi import APIRouter
 
-from veranico.modules.climate.contracts import (
-    ClimateFacade,
-    DailySeries,
-    DatasetRef,
-    EvidenceRequest,
-    Location,
-    LocationCandidates,
-    Region,
-    RegionCube,
-)
+from veranico.modules.climate.application.ensure_history import EnsureHistory
+from veranico.modules.climate.application.facade import Climate
+from veranico.modules.climate.application.ports import WeatherStore
+from veranico.modules.climate.application.resolve_location import ResolveLocation
+from veranico.modules.climate.contracts import ClimateFacade
 from veranico.modules.climate.http.router import build_router
+from veranico.modules.climate.infrastructure.local_store import LocalWeatherStore
+from veranico.modules.climate.infrastructure.open_meteo import OpenMeteoArchive
+from veranico.modules.climate.infrastructure.open_meteo_geocoding import OpenMeteoGeocoder
 from veranico.shared.infrastructure.blobs import BlobStore
-from veranico.shared.infrastructure.settings import Settings
+from veranico.shared.infrastructure.settings import ClimateSettings, Settings
 from veranico.shared.kernel.clock import Clock
-from veranico.shared.kernel.ids import DatasetId
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -40,31 +40,29 @@ class ClimateModule:
     routers: Sequence[APIRouter]
 
 
-class _StubClimateFacade:
-    async def resolve_location(
-        self, query: str | None, lat: float | None, lon: float | None
-    ) -> Location | LocationCandidates:
-        raise NotImplementedError
-
-    async def ensure_history(self, lat: float, lon: float) -> DatasetRef:
-        raise NotImplementedError
-
-    async def describe(self, dataset_id: DatasetId) -> DatasetRef:
-        raise NotImplementedError
-
-    async def daily_series(self, dataset_id: DatasetId) -> DailySeries:
-        raise NotImplementedError
-
-    async def regions(self) -> list[Region]:
-        raise NotImplementedError
-
-    async def region_cube(self, region_id: str) -> RegionCube:
-        raise NotImplementedError
-
-    async def export_evidence(self, request: EvidenceRequest) -> bytes:
-        raise NotImplementedError
-
-
 def build(deps: ClimateDeps) -> ClimateModule:
-    facade = _StubClimateFacade()
+    climate = deps.settings.climate
+    facade = assemble(climate, deps.clock, deps.http, weather_store(climate, deps.clock))
     return ClimateModule(facade=facade, routers=(build_router(facade),))
+
+
+def weather_store(settings: ClimateSettings, clock: Clock) -> WeatherStore:
+    """The store adapter the settings name."""
+    if settings.store_backend == "local":
+        return LocalWeatherStore(settings.store_root, clock)
+    raise NotImplementedError("the Cloud Storage weather store arrives with plan task 11")
+
+
+def assemble(
+    settings: ClimateSettings, clock: Clock, http: httpx.AsyncClient, store: WeatherStore
+) -> ClimateFacade:
+    # Retry jitter exists to spread instances that failed together, so each process seeds
+    # its generator from the operating system. Tests inject seeded generators instead.
+    rng = random.Random()
+    archive = OpenMeteoArchive(http, settings, rng=rng)
+    geocoder = OpenMeteoGeocoder(http, settings, rng=rng)
+    return Climate(
+        store=store,
+        resolve=ResolveLocation(geocoder),
+        ensure=EnsureHistory(store, archive, clock, first_year=settings.first_year),
+    )
