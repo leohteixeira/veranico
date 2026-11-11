@@ -22,7 +22,7 @@ from veranico.modules.climate.contracts import DailySeries, DatasetRef, GridPoin
 from veranico.modules.climate.domain.regions import region_by_id
 from veranico.modules.climate.domain.validation import validate_cube, validate_daily
 from veranico.shared.kernel.errors import DatasetNotFoundError
-from veranico.shared.kernel.ids import DatasetId
+from veranico.shared.kernel.ids import CubeDataset, DatasetId, cube_dataset_id
 
 FAKE_CHECKSUM = "sha256:in-memory"
 
@@ -100,6 +100,13 @@ class InMemoryWeatherStore:
         if dataset_id not in self.series:
             raise DatasetNotFoundError
         return self.series[dataset_id]
+
+    async def describe_cell(self, cell: CubeDataset) -> tuple[DatasetRef, str]:
+        version = await self.cube_version(cell.region_id)
+        if version is None:
+            raise DatasetNotFoundError
+        dataset_id = cube_dataset_id(cell.region_id, cell.row, cell.col)
+        return await self.describe(dataset_id), version
 
     async def provenance(self, dataset_id: DatasetId) -> Provenance:
         await self.read_series(dataset_id)

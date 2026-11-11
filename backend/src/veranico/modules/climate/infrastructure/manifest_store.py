@@ -145,6 +145,10 @@ class ManifestWeatherStore:
             return (await self._point_manifest(parsed.h3_cell)).dataset_ref()
         return _cell_ref(parsed, await self._cube_manifest(parsed.region_id))
 
+    async def describe_cell(self, cell: CubeDataset) -> tuple[DatasetRef, str]:
+        manifest = await self._cube_manifest(cell.region_id)
+        return _cell_ref(cell, manifest), manifest.build
+
     async def provenance(self, dataset_id: DatasetId) -> Provenance:
         parsed = parse_dataset_id(dataset_id)
         manifest: PointManifest | CubeManifest

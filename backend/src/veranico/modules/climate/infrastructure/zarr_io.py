@@ -87,7 +87,8 @@ def read_cube(source: Location) -> tuple[np.ndarray, np.ndarray]:
     """Return (dates as datetime64[D], precipitation in mm as float64 (days, ny, nx))."""
     with xr.open_zarr(source, consolidated=False, zarr_format=ZARR_FORMAT, chunks=None) as dataset:
         dates = dataset[TIME].to_numpy().astype("datetime64[D]")
-        precipitation = dataset[PRECIPITATION].to_numpy().astype(np.float64)
+        # No second copy: the array is stored as float64, and a cube is 89 MB.
+        precipitation = dataset[PRECIPITATION].to_numpy().astype(np.float64, copy=False)
     return dates, precipitation
 
 

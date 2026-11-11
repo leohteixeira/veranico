@@ -85,7 +85,7 @@ def test_defaults_are_the_values_of_the_specification(monkeypatch: pytest.Monkey
     assert settings.access.day_ceiling_usd_micros == 500_000
     assert settings.access.month_ceiling_usd_micros == 10_000_000
     assert (settings.climate.attempts, settings.climate.first_year) == (4, 1950)
-    assert settings.climate.cube_cache_size == 1
+    assert settings.climate.cube_cache_size == 3
     assert (settings.pricing.risk_load, settings.pricing.expense_load) == (0.3, 0.15)
     assert (settings.pricing.simulation_n, settings.pricing.simulation_seed) == (100_000, 42)
     assert settings.pricing.min_seasons == 20

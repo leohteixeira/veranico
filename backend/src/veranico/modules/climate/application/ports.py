@@ -7,7 +7,7 @@ from typing import Literal, Protocol
 import numpy as np
 
 from veranico.modules.climate.contracts import DailySeries, DatasetRef, GridPoint, RegionCube
-from veranico.shared.kernel.ids import DatasetId
+from veranico.shared.kernel.ids import CubeDataset, DatasetId
 
 CubeSource = Literal["era5-land/cds", "synthetic"]
 
@@ -98,6 +98,14 @@ class WeatherStore(Protocol):
         ...
 
     async def describe(self, dataset_id: DatasetId) -> DatasetRef: ...
+
+    async def describe_cell(self, cell: CubeDataset) -> tuple[DatasetRef, str]:
+        """A cube cell as a dataset, with the version of the cube it describes.
+
+        Both come from one read, so a caller holding the decoded cube of that version can
+        answer the cell's series from it and be sure the description matches the data.
+        """
+        ...
 
     async def read_series(self, dataset_id: DatasetId) -> DailySeries: ...
 

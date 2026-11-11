@@ -1,5 +1,6 @@
 """The cube path: yearly files, conversion, the local cube store and the module on top."""
 
+import asyncio
 import json
 from dataclasses import replace
 from datetime import UTC, datetime
@@ -21,14 +22,22 @@ from tests.integration.climate.store_contract import (
     cube_write,
 )
 from veranico.modules.climate.application.ports import CubeWrite
-from veranico.modules.climate.contracts import ClimateFacade, EvidenceRequest, RegionCube
+from veranico.modules.climate.contracts import (
+    ClimateFacade,
+    DailySeries,
+    EvidenceRequest,
+    RegionCube,
+)
 from veranico.modules.climate.domain.errors import WeatherDataError
+from veranico.modules.climate.domain.regions import REGIONS
 from veranico.modules.climate.infrastructure.cube_build import convert_years, file_checksum
 from veranico.modules.climate.infrastructure.local_store import LocalWeatherStore
 from veranico.modules.climate.infrastructure.synthetic import write_synthetic_cds_year
 from veranico.modules.climate.module import assemble
+from veranico.shared.infrastructure.settings import ClimateSettings
 from veranico.shared.kernel.clock import FixedClock
 from veranico.shared.kernel.errors import DatasetNotFoundError
+from veranico.shared.kernel.ids import DatasetId, cube_dataset_id
 
 YEARS = (2020, 2021)
 REQUEST = {"dataset": "reanalysis-era5-land", "variable": "total_precipitation"}
@@ -295,6 +304,152 @@ async def test_at_most_the_configured_number_of_cubes_is_kept(
     await climate.region_cube("sorriso")  # read again when only one cube is kept
 
     assert store.cube_reads == reads
+
+
+# What the load campaign showed (SPEC 16.5): requests rotate over the three regions and
+# arrive ten at a time. The bound of five seconds in these tests is not a speed limit: it
+# turns a request that waits for another one forever into a failure instead of a hang.
+
+
+async def test_the_default_keeps_every_showcase_region_so_a_rotation_decodes_each_cube_once(
+    store: CountingStore,
+) -> None:
+    assert ClimateSettings().cube_cache_size == len(REGIONS)
+    http = httpx.AsyncClient(transport=httpx.MockTransport(offline))
+    climate = assemble(ClimateSettings(first_year=2020), MODULE_CLOCK, http, store)
+    for seed, region in enumerate(REGIONS):
+        await store.write_cube(replace(cube_write(seed=seed), region_id=region.region_id))
+
+    for _ in range(4):
+        for region in REGIONS:
+            await climate.region_cube(region.region_id)
+
+    assert store.cube_reads == len(REGIONS)
+
+
+async def test_concurrent_first_requests_decode_a_cube_once(store: CountingStore) -> None:
+    climate = module_on(store)
+    await store.write_cube(cube_write())
+
+    cubes = await asyncio.gather(*(climate.region_cube(REGION.region_id) for _ in range(10)))
+
+    assert store.cube_reads == 1
+    assert all(cube is cubes[0] for cube in cubes)
+
+
+class GatedStore(CountingStore):
+    """Holds the version read, or the decode, of one region until the test releases it."""
+
+    def __init__(self, root: Path, *, hold_version_of: str = "", hold_decode_of: str = "") -> None:
+        super().__init__(root, CLOCK)
+        self.hold_version_of = hold_version_of
+        self.hold_decode_of = hold_decode_of
+        self.reached = asyncio.Event()
+        self.release = asyncio.Event()
+
+    async def cube_version(self, region_id: str) -> str | None:
+        if region_id == self.hold_version_of:
+            self.reached.set()
+            await self.release.wait()
+        return await super().cube_version(region_id)
+
+    async def read_cube(self, region_id: str) -> RegionCube:
+        if region_id == self.hold_decode_of:
+            self.reached.set()
+            await self.release.wait()
+        return await super().read_cube(region_id)
+
+
+@pytest.mark.parametrize("held", ["hold_version_of", "hold_decode_of"])
+async def test_a_kept_cube_is_served_while_another_region_reads_its_version_or_decodes(
+    tmp_path: Path, held: str
+) -> None:
+    store = GatedStore(tmp_path / "weather", **{held: "sul-de-minas"})
+    climate = module_on(store, cube_cache_size=3)
+    await store.write_cube(cube_write())
+    await store.write_cube(replace(cube_write(seed=4), region_id="sul-de-minas"))
+    kept = await climate.region_cube("sorriso")
+
+    slow = asyncio.create_task(climate.region_cube("sul-de-minas"))
+    await asyncio.wait_for(store.reached.wait(), timeout=5)
+    # The other request is now inside its storage read. The kept cube waits for no one.
+    served = await asyncio.wait_for(climate.region_cube("sorriso"), timeout=5)
+
+    assert served is kept
+    assert not slow.done()
+    store.release.set()
+    assert (await asyncio.wait_for(slow, timeout=5)).region.region_id == "sul-de-minas"
+    assert store.cube_reads == 2
+
+
+class CellCountingStore(CountingStore):
+    """Also counts the reads of a series from the store."""
+
+    series_reads = 0
+
+    async def read_series(self, dataset_id: DatasetId) -> DailySeries:
+        self.series_reads += 1
+        return await super().read_series(dataset_id)
+
+
+async def test_a_cell_of_a_kept_cube_is_served_without_a_store_read_and_is_identical(
+    tmp_path: Path,
+) -> None:
+    store = CellCountingStore(tmp_path / "weather", CLOCK)
+    climate = module_on(store)
+    cube = cube_write()
+    cube.precipitation_mm[[3, 9, 200], INSIDE_ROW, INSIDE_COL] = np.nan
+    await store.write_cube(cube)
+    from_store = await store.read_series(INSIDE_CELL_ID)
+    before_the_cube_is_kept = await climate.daily_series(INSIDE_CELL_ID)
+    assert (store.series_reads, store.cube_reads) == (2, 0)  # a series never decodes a cube
+
+    kept = await climate.region_cube(REGION.region_id)
+    from_cube = await climate.daily_series(INSIDE_CELL_ID)
+
+    assert (store.series_reads, store.cube_reads) == (2, 1)
+    for series in (before_the_cube_is_kept, from_cube):
+        assert series.dataset == from_store.dataset
+        assert series.dates.dtype == from_store.dates.dtype
+        assert series.precipitation_mm.dtype == np.float64
+        assert np.array_equal(series.dates, from_store.dates)
+        # Bit for bit, missing days included.
+        assert series.precipitation_mm.tobytes() == from_store.precipitation_mm.tobytes()
+    # The caller owns its arrays: changing them does not reach the kept cube.
+    assert from_cube.precipitation_mm.flags.writeable
+    assert from_cube.precipitation_mm.flags.c_contiguous
+    from_cube.precipitation_mm[0] = 123.0
+    from_cube.dates[0] = np.datetime64("1900-01-01")
+    assert kept.precipitation_mm[0, INSIDE_ROW, INSIDE_COL] != 123.0
+    assert kept.dates[0] == np.datetime64("2020-01-01")
+
+
+async def test_a_cell_is_read_from_the_store_again_once_the_kept_cube_is_stale(
+    tmp_path: Path,
+) -> None:
+    store = CellCountingStore(tmp_path / "weather", CLOCK)
+    climate = module_on(store)
+    await store.write_cube(cube_write(seed=1))
+    await climate.region_cube(REGION.region_id)
+    newer = cube_write(seed=2, source="era5-land/cds")
+    await store.write_cube(newer)
+
+    series = await climate.daily_series(INSIDE_CELL_ID)
+
+    assert store.series_reads == 1  # the kept cube is of the previous build
+    assert series.dataset.source == "era5-land/cds"
+    assert np.array_equal(
+        series.precipitation_mm, newer.precipitation_mm[:, INSIDE_ROW, INSIDE_COL]
+    )
+
+
+async def test_an_unknown_cell_of_a_kept_cube_is_not_found(store: CountingStore) -> None:
+    climate = module_on(store)
+    await store.write_cube(cube_write())
+    await climate.region_cube(REGION.region_id)
+
+    with pytest.raises(DatasetNotFoundError):
+        await climate.daily_series(cube_dataset_id(REGION.region_id, 20, 0))
 
 
 async def test_region_cube_of_an_unknown_or_uninstalled_region_is_not_found(

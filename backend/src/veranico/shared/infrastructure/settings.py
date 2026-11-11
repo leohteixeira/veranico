@@ -70,7 +70,9 @@ class ClimateSettings(BaseModel, frozen=True):
     attempts: int = Field(default=4, gt=0)
     backoff_base_seconds: float = Field(default=0.5, gt=0)
     first_year: int = 1950
-    cube_cache_size: int = Field(default=1, gt=0)
+    # Decoded cubes kept in memory, about 89 MB each. The default keeps the three showcase
+    # regions: with fewer, requests that alternate between regions decode a cube each time.
+    cube_cache_size: int = Field(default=3, gt=0)
 
 
 class PricingSettings(BaseModel, frozen=True):
