@@ -330,6 +330,7 @@ export function Shell() {
         status={outside || view.index === null ? "ready" : timeline.status}
         onRetry={timeline.retry}
         basemap={config.basemaps[basemap]}
+        synthetic={isSynthetic(region, datasetSource)}
       />
       <TabsCard
         className="app__tabs"

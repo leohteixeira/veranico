@@ -377,8 +377,13 @@ was verified in EOX's own documents on 2026-11-11 (sources in `frontend/src/conf
 - Satellite: "EOxCloudless https://cloudless.eox.at by EOX IT Services GmbH (Contains modified
   Copernicus Sentinel data 2025)", linked to `https://cloudless.eox.at`, with "CC BY-NC-SA 4.0"
   linked to `https://creativecommons.org/licenses/by-nc-sa/4.0/`.
-- Weather: "Weather: Copernicus Climate Change Service. ERA5-Land for the regional cubes; ERA5
-  through Open-Meteo for any other point. CC BY 4.0."
+- Weather, for a region with real weather: "Weather: Copernicus Climate Change Service. ERA5-Land
+  for the regional cubes; ERA5 through Open-Meteo for any other point. CC BY 4.0."
+- Weather, for a synthetic region (`Region.synthetic`, or a dataset source of `synthetic`), in the
+  application and in `/embed/map`: "Weather: the surface of this region is synthetic, generated
+  for the demonstration; it is not weather history. A point outside the showcase regions uses ERA5
+  through Open-Meteo (Copernicus Climate Change Service, CC BY 4.0)." A generated surface is never
+  credited to ERA5-Land.
 - Notices: "Non-commercial demo." and "Pricing is illustrative. It is not actuarial or insurance
   advice."
 - Synthetic label: "Synthetic weather data, not weather history" on the map; "Synthetic weather

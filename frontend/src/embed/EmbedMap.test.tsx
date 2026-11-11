@@ -5,7 +5,7 @@ import { config } from "../config";
 import { ALLOWANCE_CODE_STORAGE_KEY } from "../hooks/storage";
 import { translate } from "../i18n";
 import { createMockState, handle } from "../test/mocks/handlers";
-import { problem } from "../test/fixtures/bodies";
+import { REGIONS, problem } from "../test/fixtures/bodies";
 import { EMBED_READY, EmbedMap, createEmbedClient, embedParams, isEmbedPath } from "./EmbedMap";
 
 /** The three public reference routes of SPEC 11.2, and nothing else. */
@@ -222,9 +222,30 @@ describe("embed route [R-12.5-1] [R-16.7-1]", () => {
     const attribution = screen.getByLabelText("Sources and licences");
     const relief = config.basemaps.relief;
     expect(attribution).toHaveTextContent(relief.attribution);
-    expect(attribution).toHaveTextContent(translate("en", "app.weather_attribution"));
+    // A generated surface is not credited to ERA5-Land.
+    expect(attribution).toHaveTextContent(translate("en", "app.weather_attribution_synthetic"));
+    expect(attribution).not.toHaveTextContent("ERA5-Land");
     expect(attribution).toHaveTextContent(translate("en", "app.non_commercial"));
     expect(attribution).toHaveTextContent(translate("en", "app.disclaimer"));
+  });
+
+  it("embed_credits_the_reanalysis_for_a_region_that_is_not_synthetic [R-12.5-1]", async () => {
+    renderEmbed("?region=sul-de-minas&lang=pt-BR", {
+      intercept: (request) =>
+        new URL(request.url).pathname === "/api/v1/regions"
+          ? new Response(JSON.stringify(REGIONS.map((item) => ({ ...item, synthetic: false }))), {
+              headers: { "content-type": "application/json" },
+            })
+          : null,
+    });
+
+    await screen.findByRole("slider", { name: translate("pt-BR", "timeline.range_label") });
+    const attribution = screen.getByLabelText(translate("pt-BR", "attribution.label"));
+    expect(attribution).toHaveTextContent(translate("pt-BR", "app.weather_attribution"));
+    expect(attribution).not.toHaveTextContent(
+      translate("pt-BR", "app.weather_attribution_synthetic"),
+    );
+    expect(screen.queryByText(translate("pt-BR", "map.synthetic"))).toBeNull();
   });
 
   it("unknown_region_falls_back_to_the_first [R-12.5-1]", async () => {

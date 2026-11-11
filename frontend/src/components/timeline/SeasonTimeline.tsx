@@ -26,6 +26,8 @@ interface SeasonTimelineProps {
   onRetry?: () => void;
   /** The basemap on screen: the card carries its attribution. */
   basemap: BasemapConfig;
+  /** The weather on screen is synthetic: the attribution says so instead of crediting ERA5-Land. */
+  synthetic?: boolean;
   className?: string;
 }
 
@@ -42,6 +44,7 @@ export function SeasonTimeline({
   status = "ready",
   onRetry,
   basemap,
+  synthetic = false,
   className,
 }: SeasonTimelineProps) {
   const { t, locale } = useI18n();
@@ -158,7 +161,7 @@ export function SeasonTimeline({
           )}
         </div>
       )}
-      <Attribution basemap={basemap} className="timeline__attribution" />
+      <Attribution basemap={basemap} synthetic={synthetic} className="timeline__attribution" />
     </Card>
   );
 }

@@ -8,6 +8,8 @@ export const ptBR: Messages = {
   "app.non_commercial": "Demonstração sem fins comerciais.",
   "app.weather_attribution":
     "Clima: Copernicus Climate Change Service. ERA5-Land nos cubos regionais; ERA5 via Open-Meteo em qualquer outro ponto. CC BY 4.0.",
+  "app.weather_attribution_synthetic":
+    "Clima: a superfície desta região é sintética, gerada para a demonstração; não é histórico de clima. Um ponto fora das regiões de demonstração usa o ERA5 via Open-Meteo (Copernicus Climate Change Service, CC BY 4.0).",
   "app.synthetic":
     "Dados climáticos sintéticos: estes números foram gerados para a demonstração e não são histórico de clima.",
 

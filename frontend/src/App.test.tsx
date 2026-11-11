@@ -290,6 +290,34 @@ describe("application shell [R-12.1-1] [R-16.7-1]", () => {
     expect(await screen.findByRole("region", { name: "Map of Sorriso" })).toBeInTheDocument();
   });
 
+  it("a synthetic region is not credited to ERA5-Land in the attribution [R-12.6-2]", async () => {
+    renderApp();
+
+    await screen.findByRole("slider");
+    const attribution = screen.getByLabelText(translate("en", "attribution.label"));
+    expect(attribution).toHaveTextContent(translate("en", "app.weather_attribution_synthetic"));
+    expect(attribution).not.toHaveTextContent("ERA5-Land");
+  });
+
+  it("a region with real weather keeps the reanalysis credit [R-12.6-2]", async () => {
+    renderApp({
+      locale: "pt-BR",
+      intercept: (request) =>
+        new URL(request.url).pathname === "/api/v1/regions"
+          ? new Response(JSON.stringify(REGIONS.map((item) => ({ ...item, synthetic: false }))), {
+              headers: { "content-type": "application/json" },
+            })
+          : null,
+    });
+
+    await screen.findByRole("slider");
+    const attribution = screen.getByLabelText(translate("pt-BR", "attribution.label"));
+    expect(attribution).toHaveTextContent(translate("pt-BR", "app.weather_attribution"));
+    expect(attribution).not.toHaveTextContent(
+      translate("pt-BR", "app.weather_attribution_synthetic"),
+    );
+  });
+
   it("language_switch_rerenders_every_text_and_number [R-12.1-2]", async () => {
     window.localStorage.setItem(CONVERSATION_STORAGE_KEY, CONVERSATION_ID);
     renderApp({ turns: 4 });

@@ -193,6 +193,44 @@ describe("attribution [R-12.2-1] [R-4.4-6] [R-12.6-2] [R-1-1]", () => {
     expect(screen.queryByText(/Terrain Light/)).toBeNull();
   });
 
+  it.each(["en", "pt-BR"] as const)(
+    "a synthetic region does not credit ERA5-Land for its surface (%s) [R-12.6-2]",
+    (locale) => {
+      const { rerender } = render(
+        <I18nProvider locale={locale}>
+          <Attribution basemap={BASEMAPS.relief} synthetic />
+        </I18nProvider>,
+      );
+
+      const synthetic = screen.getByText(translate(locale, "app.weather_attribution_synthetic"));
+      expect(synthetic).toBeVisible();
+      // The regional surface is generated: no ERA5-Land credit, and the ERA5 credit stays for
+      // the points it applies to.
+      expect(synthetic).not.toHaveTextContent("ERA5-Land");
+      expect(synthetic).toHaveTextContent("Open-Meteo");
+      expect(synthetic).toHaveTextContent("CC BY 4.0");
+      expect(screen.queryByText(translate(locale, "app.weather_attribution"))).toBeNull();
+
+      rerender(
+        <I18nProvider locale={locale}>
+          <Attribution basemap={BASEMAPS.relief} synthetic={false} />
+        </I18nProvider>,
+      );
+
+      expect(screen.getByText(translate(locale, "app.weather_attribution"))).toBeVisible();
+      expect(screen.queryByText(translate(locale, "app.weather_attribution_synthetic"))).toBeNull();
+    },
+  );
+
+  it("the synthetic weather line says what the surface is, in both languages", () => {
+    expect(translate("en", "app.weather_attribution_synthetic")).toMatch(
+      /synthetic.*not weather history/,
+    );
+    expect(translate("pt-BR", "app.weather_attribution_synthetic")).toMatch(
+      /sintética.*não é histórico de clima/,
+    );
+  });
+
   it("non_commercial_notice_is_shown", () => {
     render(
       <I18nProvider locale="pt-BR">

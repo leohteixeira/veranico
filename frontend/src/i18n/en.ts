@@ -13,6 +13,9 @@ export const en = {
   "app.non_commercial": "Non-commercial demo.",
   "app.weather_attribution":
     "Weather: Copernicus Climate Change Service. ERA5-Land for the regional cubes; ERA5 through Open-Meteo for any other point. CC BY 4.0.",
+  // A synthetic region: ERA5-Land is not credited for a surface that was generated.
+  "app.weather_attribution_synthetic":
+    "Weather: the surface of this region is synthetic, generated for the demonstration; it is not weather history. A point outside the showcase regions uses ERA5 through Open-Meteo (Copernicus Climate Change Service, CC BY 4.0).",
   "app.synthetic":
     "Synthetic weather data: these figures are generated for the demo and are not weather history.",
 
