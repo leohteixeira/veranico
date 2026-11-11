@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { config } from "../config";
 import { ALLOWANCE_CODE_STORAGE_KEY } from "../hooks/storage";
 import { translate } from "../i18n";
-import { createMockState, handle } from "../mocks/handlers";
+import { createMockState, handle } from "../test/mocks/handlers";
 import { problem } from "../test/fixtures/bodies";
 import { EMBED_READY, EmbedMap, createEmbedClient, embedParams, isEmbedPath } from "./EmbedMap";
 

@@ -8,8 +8,8 @@ import type { AgentEvent } from "../../api/sse";
 import { config } from "../../config";
 import { I18nProvider, type Locale } from "../../i18n";
 import { formatMoney } from "../../i18n/format";
-import { createMockState, handle } from "../../mocks/handlers";
-import type { Scenario } from "../../mocks/scenarios";
+import { createMockState, handle } from "../../test/mocks/handlers";
+import type { Scenario } from "../../test/mocks/scenarios";
 import {
   initialSession,
   sessionReducer,

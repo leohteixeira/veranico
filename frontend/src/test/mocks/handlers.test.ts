@@ -1,10 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { createApiClient } from "../api/client";
-import { parseEventText } from "../api/sse";
-import { CONVERSATION_ID, QUOTE_ID, SUBMISSION_ID } from "../test/fixtures/bodies";
-import { chatEvents, happyPath } from "../test/fixtures/streams";
-import { createMockFetch } from "./fetch";
+import { createApiClient } from "../../api/client";
+import { parseEventText } from "../../api/sse";
+import { CONVERSATION_ID, QUOTE_ID, SUBMISSION_ID } from "../fixtures/bodies";
+import { chatEvents, happyPath } from "../fixtures/streams";
 import { MOCK_SENTINEL, createMockState, handle } from "./handlers";
 import { SCENARIOS, scenarioFrom, type Scenario } from "./scenarios";
 
@@ -12,7 +11,7 @@ const BASE_URL = "http://veranico.test";
 
 function mock(scenario: Scenario = "happy") {
   const state = createMockState(scenario);
-  const client = createApiClient({ baseUrl: BASE_URL, fetch: createMockFetch(state) });
+  const client = createApiClient({ baseUrl: BASE_URL, fetch: (request) => handle(request, state) });
   const chat = async (locale: "en" | "pt-BR" = "en") => {
     const { data, response } = await client.POST("/api/v1/chat", {
       body: { conversation_id: null, message: "hello", locale, map_point: null },

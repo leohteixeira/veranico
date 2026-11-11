@@ -8,7 +8,7 @@ import type { components } from "../../api/schema";
 import { DELIVERY_POLL_MS } from "../../hooks/useApprovals";
 import { I18nProvider } from "../../i18n";
 import { formatMoney, formatRate } from "../../i18n/format";
-import { createMockState, handle, type MockState } from "../../mocks/handlers";
+import { createMockState, handle, type MockState } from "../../test/mocks/handlers";
 import {
   API_KEY,
   CARRIER_NAME,

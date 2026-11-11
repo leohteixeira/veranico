@@ -10,5 +10,8 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["src/test/setup.ts"],
     restoreMocks: true,
+    // The JSON results feed `scripts/req-report.mjs` (requirement traceability).
+    reporters: ["default", "json"],
+    outputFile: { json: ".cache/vitest.json" },
   },
 });

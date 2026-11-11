@@ -10,21 +10,10 @@ export function createApiClient(options: ClientOptions = {}): ApiClient {
   return createClient<paths>(options);
 }
 
-type Transport = (request: Request) => Promise<Response>;
-
-let transport: Transport | null = null;
-
-/**
- * Replaces how the application's client reaches the API. Used only by the development mock
- * layer (`VITE_API_MOCK=1`); `null` restores the browser's `fetch`.
- */
-export function setApiTransport(next: Transport | null): void {
-  transport = next;
-}
-
 /** The client of the application: same origin, so the workspace cookie travels. */
 export const api = createApiClient({
-  fetch: (request) => (transport ?? globalThis.fetch)(request),
+  // Looked up at call time, so whatever replaces `fetch` on the page (a test) is the one used.
+  fetch: (request) => globalThis.fetch(request),
 });
 
 const ApiClientContext = createContext<ApiClient>(api);

@@ -12,7 +12,7 @@ import { config } from "./config";
 import { CONVERSATION_STORAGE_KEY } from "./hooks/storage";
 import { I18nProvider, translate, type Locale } from "./i18n";
 import { formatMoney } from "./i18n/format";
-import { createMockState, handle, type MockState } from "./mocks/handlers";
+import { createMockState, handle, type MockState } from "./test/mocks/handlers";
 import { ViewProvider } from "./state/view";
 import { CONVERSATION_ID, INDEX, PREMIUM_CENTS, QUOTE_ID, REGIONS } from "./test/fixtures/bodies";
 import { happyPath } from "./test/fixtures/streams";

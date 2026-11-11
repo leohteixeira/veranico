@@ -9,7 +9,7 @@ import { useCells } from "../../hooks/useCells";
 import { backtestSeasons, useTimelineSeries } from "../../hooks/useTimelineSeries";
 import { I18nProvider, translate } from "../../i18n";
 import { formatMoney } from "../../i18n/format";
-import { createMockState, handle } from "../../mocks/handlers";
+import { createMockState, handle } from "../../test/mocks/handlers";
 import { ViewProvider, initialView, useView, type ViewState } from "../../state/view";
 import {
   FIRST_SEASON,

@@ -6,8 +6,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { ApiClientProvider, createApiClient } from "../api/client";
 import { ApiProblem } from "../api/problems";
 import { serialiseEvent, type AgentEvent } from "../api/sse";
-import { createMockState, handle, type MockState } from "../mocks/handlers";
-import type { Scenario } from "../mocks/scenarios";
+import { createMockState, handle, type MockState } from "../test/mocks/handlers";
+import type { Scenario } from "../test/mocks/scenarios";
 import { CONVERSATION_ID, INDEX, QUOTE_ID, SUBMISSION_ID, problem } from "../test/fixtures/bodies";
 import { happyPath } from "../test/fixtures/streams";
 import {

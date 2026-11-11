@@ -1,10 +1,11 @@
-import { isProblem } from "../api/problems";
-import type { components, paths } from "../api/schema";
-import type { AgentEvent } from "../api/sse";
+import { isProblem } from "../../api/problems";
+import type { components, paths } from "../../api/schema";
+import type { AgentEvent } from "../../api/sse";
 import {
   ALLOWANCE,
   API_KEY,
   CONVERSATION_ID,
+  DECIDED_AT,
   QUOTE_ID,
   REGIONS,
   SUBMISSION_ID,
@@ -17,7 +18,7 @@ import {
   seasonSeries,
   submission,
   type DeliveryStatus,
-} from "../test/fixtures/bodies";
+} from "../fixtures/bodies";
 import {
   conversationView,
   errorEvents,
@@ -25,13 +26,15 @@ import {
   happyPath,
   replayEvents,
   serialise,
-} from "../test/fixtures/streams";
+} from "../fixtures/streams";
 import { DEFAULT_SCENARIO, type Scenario } from "./scenarios";
 
 /**
- * The development mock of the Veranico API: pure handlers over one small state object, typed by
- * the generated `paths`, so a contract change breaks the type check here. It serves SYNTHETIC
- * fixtures and is never part of a production build (the sentinel below is how a test proves it).
+ * The mock of the Veranico API for tests: pure handlers over one small state object, typed by the
+ * generated `paths`, so a contract change breaks the type check here. Unit tests call it as a
+ * `fetch`, and the Playwright flow answers `/api/v1/**` with it in the test process. It serves
+ * SYNTHETIC fixtures and is never part of a build: `scripts/check-dist.mjs` looks for the
+ * sentinel below in the built files.
  */
 export const MOCK_SENTINEL = "veranico-development-mock-layer";
 
@@ -160,6 +163,19 @@ function deliveryStatus(state: MockState): DeliveryStatus {
   return state.deliveryReads === 2 ? "delivering" : "delivered";
 }
 
+/** The audit trail once a human decided: the pending trail, then the decision with its note. */
+function decidedAudit(state: MockState, approved: boolean): Schemas["AuditEntry"][] {
+  return [
+    ...pendingQuote().audit,
+    {
+      at: DECIDED_AT,
+      actor: "human",
+      action: { code: approved ? "audit.approved" : "audit.rejected", params: {} },
+      note: state.decisionNote,
+    },
+  ];
+}
+
 function currentQuote(state: MockState): Schemas["QuoteView"] | null {
   switch (state.stage) {
     case "none":
@@ -174,6 +190,7 @@ function currentQuote(state: MockState): Schemas["QuoteView"] | null {
         ...pendingQuote(),
         status: status === "delivered" ? "submitted" : "approved",
         submission: submission(status, true, state.decisionNote),
+        audit: decidedAudit(state, true),
       };
     }
     case "rejected":
@@ -181,6 +198,7 @@ function currentQuote(state: MockState): Schemas["QuoteView"] | null {
         ...pendingQuote(),
         status: "rejected",
         submission: { ...submission("not_started", true, state.decisionNote) },
+        audit: decidedAudit(state, false),
       };
   }
 }
