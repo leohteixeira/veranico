@@ -17,7 +17,8 @@ rate overall and per check, the tokens and the cost in US dollars: measured toke
 every model call, the grader's included, times the configured prices
 (`AccessFacade.cost_of`). Pass rates of different runs are never added up.
 
-The weather under the cases is generated (synthetic cubes, human gate H1 is open): the suite
+The weather under the cases is generated on purpose (seeded synthetic cubes, even though the
+real cubes exist since human gate H1), so a result never depends on real weather: the suite
 measures how the agent behaves, and its figures are not real weather history.
 
 Output: Inspect logs under `tests/evals/logs/`; the run summary as

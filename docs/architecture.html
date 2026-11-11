@@ -1162,7 +1162,7 @@ footer{border-top:1px solid var(--line-strong);margin-top:72px;padding-top:20px;
           <span><i class="slate"></i>Cloud Storage</span>
           <span><i class="ln"></i>arrow: direction of the data</span>
         </div>
-        <figcaption><strong>Diagram 6 — Weather data paths.</strong> The dashed box runs offline (locally or by a manual workflow). The measured read times for the chunk layout, against a one-field-per-time-step layout, are recorded in a decision record once the real cubes exist.</figcaption>
+        <figcaption><strong>Diagram 6 — Weather data paths.</strong> The dashed box runs offline (locally or by a manual workflow). The read times of the chunk layout, measured on the three real cubes against a one-field-per-time-step layout, are recorded in ADR 0016: about 60 ms for one point's series against 7.3 to 7.9 s.</figcaption>
       </figure>
 
       <ul class="plain">
@@ -1173,7 +1173,7 @@ footer{border-top:1px solid var(--line-strong);margin-top:72px;padding-top:20px;
         <li><strong>Location resolution:</strong> free text goes through a geocoding port (default adapter: the Open-Meteo Geocoding API), restricted to Brazil. An ambiguous name returns candidates instead of a guess.</li>
         <li><strong>Attribution:</strong> Copernicus Climate Change Service (ERA5-Land) and Open-Meteo, CC BY 4.0, shown next to the map, in the term sheet and in the README.</li>
       </ul>
-      <div class="callout warn"><strong>Human gate.</strong> Building the three real cubes needs a Cloud project registered for Google Earth Engine (ADR 0019; the Copernicus CDS account of the first plan could not be created). The pipeline is developed and tested against a small synthetic NetCDF file, and until the real cubes exist the showcase regions run on fixture cubes clearly labelled synthetic in the interface.</div>
+      <div class="callout note"><strong>Human gate H1, closed on 2026-11-11.</strong> The three real cubes were built from Google Earth Engine with a Cloud project registered for it (ADR 0019; the Copernicus CDS account of the first plan could not be created), and the chunking was measured on them (ADR 0016). The pipeline is tested against a small synthetic NetCDF file. The real cubes are not in the repository: a fresh clone, the tests and the evaluation suite serve seeded cubes clearly labelled synthetic in the interface, and the deployed service gets the real ones in Cloud Storage as part of the first deploy.</div>
     </section>
 
     <!-- ============================================================ -->

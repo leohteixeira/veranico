@@ -32,7 +32,7 @@ describe("mock API [R-12-1] [R-16.7-1]", () => {
       "sorriso",
       "ribeirao-preto",
     ]);
-    // Gate H1 is open: every fixture region is labelled synthetic.
+    // The mock fixtures are synthetic data, so every fixture region is labelled synthetic.
     expect(regions.data?.every((region) => region.synthetic)).toBe(true);
 
     const cells = await client.GET("/api/v1/regions/{id}/cells", {

@@ -392,11 +392,18 @@ was verified in EOX's own documents on 2026-11-11 (sources in `frontend/src/conf
 ### Test data
 
 The stream fixtures under `frontend/src/test/fixtures/` (the four turns of the happy path, the
-replay, the flagged and the error streams) are authored, synthetic and internally consistent. They
-stay authored until the real conversation is recorded after human gate H1 (real ERA5-Land cubes);
-the recordings in `backend/src/veranico/modules/assistant/replays/` are placeholders today. The
-screenshots in `frontend/e2e/evidence/` therefore show synthetic figures, labelled as such, and
-will be redone then.
+replay, the flagged and the error streams) are authored, synthetic and internally consistent: they
+mirror the scripted model in the wire format of the stream, and the mock API answers with bodies
+that agree with them (the same quote, cover and figures). The real conversation now exists: since
+human gate H1 closed (2026-11-11), `backend/src/veranico/modules/assistant/replays/` holds one
+recording per language, made on the real ERA5-Land cubes and served by `GET /replays/{locale}`.
+The fixtures have not been regenerated from those recordings yet. That is open work, not a
+choice: SPEC 16.7 asks for the Playwright flow to run "against a recorded agent stream", and the
+plan of the interface replaces the happy-path fixtures with the recordings once they exist. The
+regeneration also has to bring the mock bodies (quote, cells, approvals) and the flow's
+assertions in line with the recorded figures, which is why it is not a file swap. Until it is
+done the Playwright flow plays the authored stream, and the screenshots in
+`frontend/e2e/evidence/` show its synthetic figures, labelled as such.
 
 ## Finish review
 

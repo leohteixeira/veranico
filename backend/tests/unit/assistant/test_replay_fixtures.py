@@ -1,11 +1,11 @@
 """The recorded conversation of each language (SPEC 9.6).
 
-The recordings are made with the real model on the real cubes, which need human gate H1 (the
-Copernicus account), by `uv run python -m tests.evals.record_replay --locale <locale>`. Until
-then `replays/<locale>.jsonl` are placeholders, marked `"placeholder": true` in their metadata
-line, and the test of the recording is skipped: a skipped test proves nothing, so the
-requirement stays open. Once a recording replaces a placeholder the test runs, and it fails
-unless the recording is the full flow of the real model on the real cubes. The checks are the
+The recordings are made with the real model on the real cubes (human gate H1, closed on
+2026-11-11 with cubes from Google Earth Engine) by `make record-replay LOCALE=<locale>`; both
+languages were recorded that day. A placeholder, marked `"placeholder": true` in its metadata
+line, skips the test of the recording: a skipped test proves nothing, so the requirement
+stays open. A real recording is tested, and the test fails unless it is the full flow of the
+real model on the real cubes. The checks are the
 recorder's own (`recording_problems`, `not_real`); `tests/integration/assistant/
 test_record_replay.py` runs them on a recording of the scripted flow.
 """

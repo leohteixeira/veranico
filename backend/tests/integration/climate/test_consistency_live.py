@@ -49,7 +49,7 @@ async def test_the_real_cube_agrees_with_open_meteo(region_id: str) -> None:
     source = await store.cube_source(region_id)
     if source != "era5-land/cds":
         pytest.skip(
-            f"human gate H1 is open: the cube of {region_id} is {source or 'not installed'}"
+            f"no real cube in this store: the cube of {region_id} is {source or 'not installed'}"
         )
     region = region_by_id(region_id)
     assert region is not None

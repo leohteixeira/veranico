@@ -7,7 +7,7 @@
 Without `--synthetic` the cube is real ERA5-Land read from Google Earth Engine (ADR 0018,
 ADR 0019). That needs a Cloud project registered for Earth Engine, named in
 `EARTHENGINE_PROJECT`, and credentials stored once by `earthengine authenticate`; without
-either the script says that human gate H1 is open, names the step to take and exits 3,
+either the script reports the step as open (the setup of human gate H1), names it and exits 3,
 before any download. Yearly files are kept under `.cache/earth-engine/<region>/`, so a
 rerun downloads only the missing years.
 

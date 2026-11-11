@@ -1,8 +1,10 @@
 # Veranico
 
 > **Pricing is illustrative. It is not actuarial or insurance advice.** The demo is
-> non-commercial. Until real weather cubes are built (human gate H1, below), the three
-> showcase regions run on **synthetic** weather data, labelled as such wherever it is shown.
+> non-commercial. The three showcase regions run on real ERA5-Land cubes where those have
+> been built (human gate H1, closed on 2026-11-11, section 8). The cubes are not in the
+> repository: a fresh clone, the tests and the evaluation suite run on **synthetic** weather
+> data, labelled as such wherever it is shown.
 
 ## 1. What it is
 
@@ -94,7 +96,8 @@ A Python modular monolith with seven modules, one container image and two roles.
   cubes, three epochs per case, and fails below a 90% pass rate. The pass rate, prompt
   version, cost and failed cases of the newest run are in the evaluation block of
   [docs/verification.md](docs/verification.md) (section 7), with the commit it measured.
-  The fixture cubes are synthetic, so it measures the agent's behaviour, not real weather.
+  The fixture cubes are synthetic on purpose, so no result depends on real weather: it
+  measures the agent's behaviour, not the weather.
 
 ## 5. Data
 
@@ -103,21 +106,26 @@ A Python modular monolith with seven modules, one container image and two roles.
 | Source | ERA5-Land (Copernicus Climate Change Service), read from Google Earth Engine | ERA5 through the Open-Meteo Historical Weather API |
 | Grid | 0.1°, three boxes of 20 by 20 cells (Sul de Minas, Sorriso, Ribeirão Preto) | the grid point the API answers from, keyed by its H3 resolution 6 cell |
 | Built | offline, once per region; the running service never calls Earth Engine | on first use, cached |
-| State today | **synthetic** cubes generated from a seed (H1 open) | real, fetched on demand |
+| State today | real cubes, 1950 to 2025, built on 2026-11-11 (H1); they are not in the repository, so a fresh clone serves **synthetic** cubes generated from a seed until they are built | real, fetched on demand |
 
 * **Variable and years.** Daily precipitation in millimetres, from 1950 through the last
   complete year.
 * **Pipeline for the regional cubes.** Yearly NetCDF files are downloaded, merged with
   xarray, converted from metres to millimetres, validated and written as one Zarr store per
   region with a `manifest.json` (source, request, years, checksums, build time). Yearly
-  files are cached, so a rerun downloads only the missing years. The two decisions that
-  differ from the first plan are recorded in
+  files are cached, so a rerun downloads only the missing years. The decisions that differ
+  from the first plan are recorded in
   [ADR 0017](specs/adrs/0017-point-path-uses-era5-from-open-meteo.md) and
   [ADR 0018](specs/adrs/0018-cubes-from-hourly-era5-land-two-steps-a-day.md) (both accepted,
-  owner confirmation requested).
-* **Chunking.** The cube keeps the whole time axis in one chunk with small spatial blocks,
-  so one point's series is one read. **Measured read times and sizes: not measured, H1
-  open.** They are recorded in ADR 0016 once the real cubes exist.
+  owner confirmation requested), and in
+  [ADR 0019](specs/adrs/0019-cubes-from-earth-engine-era5-land.md) (the source moved from the
+  Copernicus Climate Data Store to Google Earth Engine, approved by the owner).
+* **Chunking.** The cube keeps the whole time axis in one chunk of 10 by 10 cells, so one
+  point's series is one read. Measured on the three real cubes (27,759 days of 20 by 20
+  cells): one point's series reads in about 60 ms and the whole cube in about 105 ms, from
+  four objects and about 40 MB a region, against 7.3 to 7.9 s for a point with one chunk per
+  day. One machine, local filesystem, warm cache; reads from Cloud Storage were not measured
+  ([ADR 0016](specs/adrs/0016-weather-cube-chunking.md)).
 * **Storage layout.** `climate/cubes/<region>/` and `climate/points/<h3 cell>/` in the
   weather store (a local directory in development, Cloud Storage in production); documents
   under `documents/`.
@@ -148,7 +156,8 @@ Limits: this is not actuarial pricing. There is no cost of capital, no reinsuran
 correlation between covers, no climate projection and no loss adjustment. A short or
 trending history understates or overstates the risk, and the output says so when the trend
 is significant. A gridded reanalysis is not a rain gauge on the farm: that gap is the basis
-risk of section 2. With synthetic cubes the figures only show the engine working.
+risk of section 2. On a synthetic cube the figures only show the engine working; on the
+real cubes they are still indicative, within the limits above.
 
 ## 7. Public API
 
@@ -183,10 +192,12 @@ make dev
 
 This builds the image and starts everything as Compose services: the API, the mock carrier,
 the web server, the emulators of Firestore and Cloud Storage, Jaeger, and a one-shot job
-that generates the three **synthetic** showcase cubes (the command prints that they are
-synthetic). Without `ANTHROPIC_API_KEY` the agent runs on a scripted model that plays the
-happy path. Only the variables named in [compose.yaml](compose.yaml) reach the containers;
-[env.example](env.example) documents every variable.
+that installs the three showcase cubes. A real cube built on this machine
+(`make build-cube REGION=<id>`, written to the Git-ignored `backend/.data/weather`) is copied
+in; a region without one gets a **synthetic** cube generated from a seed. The command prints
+which regions run on which. Without `ANTHROPIC_API_KEY` the agent runs on a scripted model
+that plays the happy path. Only the variables named in [compose.yaml](compose.yaml) reach the
+containers; [env.example](env.example) documents every variable.
 
 | What | Address |
 |---|---|
@@ -200,12 +211,12 @@ Other commands: `make test`, `make test-integration`, `make test-failure`, `make
 `make mutation-proof`, `make load`, `make evidence`. To use the live model, put
 `ANTHROPIC_API_KEY` in a Git-ignored `.env`; the Makefile reads it.
 
-### Open human gates
+### Human gates
 
 | Gate | State | Closed by |
 |---|---|---|
-| H1: real weather cubes | open | a Cloud project registered for Earth Engine (noncommercial) with the Earth Engine API enabled; `cd backend && uv run --group cube earthengine authenticate` once; `EARTHENGINE_PROJECT=<project-id>` in `.env`; then `make build-cube REGION=sul-de-minas`, `REGION=sorriso`, `REGION=ribeirao-preto`; the same with `MEASURE=1` for the chunking numbers; the live consistency test; then ADR 0016, the tolerances, the example covers, the replays and `make evidence` |
-| H2: first deploy | open | the sequence below |
+| H1: real weather cubes | closed on 2026-11-11 | the owner built the three ERA5-Land cubes from Google Earth Engine (1950-01-01 to 2025-12-31, 27,759 days, 20 by 20 cells at 0.1°; [ADR 0019](specs/adrs/0019-cubes-from-earth-engine-era5-land.md)); the chunking was measured on them ([ADR 0016](specs/adrs/0016-weather-cube-chunking.md)); the live consistency test passes in the three regions within the final limits of `climate/domain/consistency.py`; the example covers were re-tuned on them; the replays were recorded on them, so `tests/unit/assistant/test_replay_fixtures.py` runs and passes. To rebuild them on another machine: a Cloud project registered for Earth Engine (noncommercial) with the Earth Engine API enabled; `cd backend && uv run --group cube earthengine authenticate` once; `EARTHENGINE_PROJECT=<project-id>` in `.env`; `make build-cube REGION=sul-de-minas`, then `REGION=sorriso` and `REGION=ribeirao-preto`; `make build-cube REGION=<id> MEASURE=1` for the chunking numbers; `cd backend && uv run pytest tests/integration/climate/test_consistency_live.py -m live -q -s`. Re-recording the replays is paid: `make record-replay LOCALE=en` and `LOCALE=pt-BR` |
+| H2: first deploy | open | the sequence below, including the real cubes in Cloud Storage (step 7) |
 | H3: the author's part | open | section 12 of this file, the interface finish review decision, the portfolio page |
 
 ### Deploy (human gate H2, run by the owner)
@@ -233,8 +244,20 @@ validated and tested without credentials. The sequence:
    [deploy.yml](.github/workflows/deploy.yml). It authenticates through Workload Identity
    Federation (there is no key file), builds and pushes the image, applies Terraform with
    the new tag and requests `/healthz`.
-7. Check: `curl -fsS <API URL>/healthz`; the happy path once in the browser; the uptime
-   check and the budget in the console; one trace in Cloud Trace.
+7. Put the real cubes in the data bucket, `<project>-veranico`, which the apply of step 6
+   creates. The API reads them from there (`VERANICO_CLIMATE__STORE_BACKEND=gcs`) and never
+   calls Earth Engine; until they are written the three regions answer `synthetic: true`.
+   No command copies `backend/.data/weather` to the bucket. The route that exists is the
+   cube build pointed at the bucket: it writes to the store the `VERANICO_CLIMATE__*`
+   variables name and reuses the yearly files cached in `backend/.cache/earth-engine/`, so
+   nothing is downloaded again, though it still checks the Earth Engine login of H1 first.
+   After `gcloud auth application-default login`, with `STORAGE_EMULATOR_HOST` unset, once
+   per region (`sul-de-minas`, `sorriso`, `ribeirao-preto`):
+   `make build-cube REGION=<id> VERANICO_CLIMATE__STORE_BACKEND=gcs VERANICO_STORAGE_BUCKET=<project>-veranico VERANICO_FIRESTORE_PROJECT=<project>`.
+   This path is tested against the Cloud Storage emulator, not yet against a real bucket.
+8. Check: `curl -fsS <API URL>/healthz`; `GET <API URL>/api/v1/regions` answers
+   `"synthetic": false` for the three regions; the happy path once in the browser; the
+   uptime check and the budget in the console; one trace in Cloud Trace.
 
 ## 9. Cost
 
@@ -255,7 +278,7 @@ Measured values:
 | What | Value |
 |---|---|
 | Cost of one evaluation run | measured on every run, agent and grader together; the newest is in the evaluation block of [docs/verification.md](docs/verification.md) (section 7) |
-| Tokens per recorded conversation | not measured |
+| Cost of recording the replays | US$ 0.0080 (English) and US$ 0.0074 (Brazilian Portuguese), `claude-haiku-5-5` with prompt v3, recorded on the real cubes on 2026-11-11 (`cost_usd` in the first line of each `backend/src/veranico/modules/assistant/replays/<locale>.jsonl`); token counts are not stored |
 | Cloud cost of the deployed demo | not measured before H2 |
 
 When the allowance or a ceiling is exhausted, the chat answers with a problem document and
@@ -283,16 +306,17 @@ interface shows.
 CC BY-NC-SA 4.0, which does not allow commercial use, so the demo is declared non-commercial
 here and in the interface ([ADR 0011](specs/adrs/0011-basemaps-and-licences.md)).
 
-The weather line depends on the region. While human gate H1 is open all three showcase
-regions run on synthetic cubes, so the interface shows the first line; the ERA5-Land line is
-shown for a region whose cube was built from the real data. Synthetic cubes are generated
-data and are also labelled "Synthetic weather data" in the interface.
+The weather line depends on the region. A region whose cube was built from the real data
+(human gate H1, closed on 2026-11-11) shows the ERA5-Land line; a region with a synthetic
+cube, as in a fresh clone or before the real cubes reach Cloud Storage, shows the first line.
+Synthetic cubes are generated data and are also labelled "Synthetic weather data" in the
+interface.
 
 ## 11. Decisions and verification
 
 * **Decisions.** Every material decision has a record of under a page:
-  [specs/adrs/README.md](specs/adrs/README.md) lists them (0001 to 0018; 0016, the cube
-  chunking, is reserved until the real cubes exist). What was left out on purpose is in
+  [specs/adrs/README.md](specs/adrs/README.md) lists them (0001 to 0019; 0016, the cube
+  chunking, was measured on the real cubes). What was left out on purpose is in
   [docs/NEXT_STEPS.md](docs/NEXT_STEPS.md).
 * **Verification.** [docs/verification.md](docs/verification.md) records what was checked,
   how to repeat each check and what each one does not prove: the requirement-to-test matrix,

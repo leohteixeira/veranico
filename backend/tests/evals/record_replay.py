@@ -98,7 +98,7 @@ DATA_SOURCES: Final = (REAL_SOURCE, "era5/open-meteo", "synthetic")
 SCRIPTED_MODEL: Final = "scripted"
 SYNTHETIC_NOTE: Final = (
     "Recorded on synthetic cubes: generated data, not weather history. Must not be presented "
-    "as a real conversation; record again on the real cubes after gate H1."
+    "as a real conversation; record again on the real cubes (built without SYNTHETIC=1)."
 )
 _PROMPT_VERSION = re.compile(r"v[1-9][0-9]*")
 # Shapes of the secrets this application handles (the model key, public API keys, private

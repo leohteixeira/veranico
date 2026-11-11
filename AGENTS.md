@@ -110,7 +110,7 @@ The design direction is recorded and binding: Atlas (real relief and satellite b
 | Account | Used for | Status on 2026-11-10 |
 |---|---|---|
 | Anthropic Console | `ANTHROPIC_API_KEY` for the agent and the evaluation suite | available |
-| Google Earth Engine (Cloud project registered for noncommercial use) | `EARTHENGINE_PROJECT` and the credentials of `earthengine authenticate` for the offline cube build; never reach the running service | missing |
+| Google Earth Engine (Cloud project registered for noncommercial use) | `EARTHENGINE_PROJECT` and the credentials of `earthengine authenticate` for the offline cube build; never reach the running service | missing; available from 2026-11-11 (human gate H1 closed, the three real cubes built on the owner's machine) |
 | Google Cloud project linked to a billing account | deployment | account available (upgraded 2026-11-10); the deploy itself is run by the owner |
 
 Everything else (Open-Meteo, EOX tiles, emulators, Inspect, libraries) needs no account.

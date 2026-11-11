@@ -49,7 +49,7 @@ async def test_regions_need_no_cookie_and_are_three_synthetic_grids_of_20_by_20(
     ]
     for region in regions:
         assert (region["nx"], region["ny"], region["step_deg"]) == (20, 20, 0.1)
-        assert region["synthetic"] is True  # no real cube is installed (human gate H1)
+        assert region["synthetic"] is True  # the test store holds no cube, so none is real
         assert set(region) == {
             "region_id",
             "name",

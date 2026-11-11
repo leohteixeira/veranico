@@ -6,6 +6,8 @@ Accepted on 2026-11-11 by the build coordinator while the owner was away. It ame
 
 Source superseded on 2026-11-11 by ADR 0019: the same hourly ERA5-Land is read from Google Earth Engine instead of the Climate Data Store. Decisions 2 and 3 stand.
 
+Human gate H1 closed on 2026-11-11 through Earth Engine, not a Copernicus account: the three real cubes were built with the local-day formula of decision 2, and the consistency test against Open-Meteo passes within its final limits while the same cells shifted by one day fail it (`climate/domain/consistency.py`). The open points about the Climate Data Store request listed below were never tested and no longer apply; the text is kept as written.
+
 ## Context
 
 Section 4.1 of the specification says the backfill job "requests ERA5-Land daily statistics from the Copernicus Climate Data Store". Read on 2026-11-11:

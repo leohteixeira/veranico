@@ -490,7 +490,7 @@ Each milestone ends in a working state and has an executable gate, `make verify-
 |---|---|---|
 | Anthropic Console | `ANTHROPIC_API_KEY` for the agent and the evaluation suite | available |
 | DNS for `leohteixeira.com` | optional custom domain | available |
-| Google Earth Engine (a Cloud project registered for noncommercial use, `earthengine authenticate`) | ERA5-Land for the regional cubes (ADR 0019) | missing: human gate for the real cubes in M2 |
+| Google Earth Engine (a Cloud project registered for noncommercial use, `earthengine authenticate`) | ERA5-Land for the regional cubes (ADR 0019) | missing: human gate for the real cubes in M2. Available from 2026-11-11, when the owner built the three real cubes and human gate H1 closed |
 | Google Cloud project linked to a billing account | everything in section 17 | account upgraded to paid by the owner on 2026-11-10; the first deploy remains a human gate in M5 |
 
 Work that depends on a missing account is built and verified against fixtures and emulators, and the gate is reported as open, never as passed.

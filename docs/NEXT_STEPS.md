@@ -53,4 +53,4 @@ Backend:
 
 ## Not in this list
 
-Open human gates are not omissions and are tracked in the goal contract (`docs/veranico/goal.md` in the workspace repository): the three real cubes and ADR 0016 (chunking) need a Cloud project registered for Google Earth Engine (ADR 0019); the deployment needs a Google Cloud project.
+Open human gates are not omissions and are tracked in the goal contract (`docs/veranico/goal.md` in the workspace repository): the deployment needs the Google Cloud project, and with it the real cubes go to Cloud Storage (README section 8). Human gate H1, the three real cubes and ADR 0016 (chunking), closed on 2026-11-11 with a Cloud project registered for Google Earth Engine (ADR 0019).

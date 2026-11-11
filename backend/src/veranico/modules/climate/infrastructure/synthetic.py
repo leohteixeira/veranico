@@ -1,4 +1,4 @@
-"""Seeded synthetic precipitation: the data of the showcase regions until human gate H1.
+"""Seeded synthetic precipitation: the showcase regions' data wherever no real cube is built.
 
 Nothing here is weather history. A generated cube is marked `Region.synthetic = True`, and
 whoever stores it records the source `synthetic`; the interface labels it from those fields.

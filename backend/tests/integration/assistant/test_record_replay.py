@@ -3,7 +3,7 @@
     docker compose -p veranico up -d --wait firestore storage
     uv run pytest tests/integration/assistant/test_record_replay.py -q
 
-The recorder runs as the owner will run it after gate H1, on the whole application, except
+The recorder runs as the owner ran it at gate H1, on the whole application, except
 that the model client is scripted and the weather is a generated cube of the Sul de Minas
 region. Every recording goes to a temporary path, never to the versioned fixtures.
 """
@@ -76,7 +76,7 @@ def costly(request: ModelRequest) -> Played:
 
 
 # No requirement marker: a scripted recording on synthetic cubes proves the recorder, not
-# R-9.6-1, which stays open until the real recordings replace the placeholders (gate H1).
+# R-9.6-1, which the real recordings prove (`tests/unit/assistant/test_replay_fixtures.py`).
 def test_a_recording_of_the_scripted_flow_passes_the_checks_of_the_fixtures(
     tmp_path: Path, weather_root: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

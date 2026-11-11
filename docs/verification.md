@@ -32,12 +32,18 @@ Commands:
 
 ## 2. Scope and limits that apply to everything below
 
-1. **The weather data of the showcase regions is synthetic.** Human gate H1 (a Cloud project
-   registered for Earth Engine, ADR 0019) is open, so the three regional cubes are generated from a
-   seed (`make build-cube REGION=<id> SYNTHETIC=1 SEED=<n>`) and labelled synthetic
-   wherever they are shown. Every figure in this record that involves a regional cube
-   (prices, cell metrics, load latencies) shows the engine working on generated rain. None
-   of it is evidence about real weather, and nothing here is presented as such.
+1. **The campaigns of this record run on synthetic weather.** Human gate H1 closed on
+   2026-11-11: the owner built the three real ERA5-Land cubes from Google Earth Engine
+   (ADR 0019) on one machine, and the measurements made on them are recorded where they
+   belong: the chunking in ADR 0016, the consistency limits in
+   `backend/src/veranico/modules/climate/domain/consistency.py`, the replays in
+   `backend/src/veranico/modules/assistant/replays/`. The real cubes are not in the
+   repository, so the suites, the failure and load campaigns and the evaluation run on cubes
+   generated from a seed (`make build-cube REGION=<id> SYNTHETIC=1 SEED=<n>`), labelled
+   synthetic wherever they are shown; the evaluation does so on purpose, so that its result
+   does not depend on real weather. Every figure in the blocks below that involves a regional
+   cube (prices, cell metrics, load latencies) shows the engine working on generated rain.
+   None of it is evidence about real weather, and nothing here is presented as such.
 2. **Nothing was deployed.** Human gate H2 (the first deploy to Google Cloud) is open. The
    Terraform configuration is validated and tested without credentials; no resource exists.
    All measurements were made on one development machine with emulators.
@@ -52,15 +58,17 @@ Commands:
 
 | Gate | Needs | State | Closed by |
 |---|---|---|---|
-| H1 | a Cloud project registered for Earth Engine, `earthengine authenticate` and `EARTHENGINE_PROJECT` | **open** | `make build-cube REGION=<id>` for the three regions, then the chunking measurement of ADR 0016 on the real cubes |
+| H1 | a Cloud project registered for Earth Engine, `earthengine authenticate` and `EARTHENGINE_PROJECT` | **closed** on 2026-11-11 | the three cubes built with `make build-cube REGION=<id>` (1950-01-01 to 2025-12-31, 27,759 days); the chunking measured with `MEASURE=1` (ADR 0016, at `efebecb`); the live consistency test (`tests/integration/climate/test_consistency_live.py -m live`) passing in the three regions within the final limits (`0a9cadb`); the replays recorded on the real cubes (`8095c6e`), so R-9.6-1 has a passing test from that commit on. The cubes are on the owner's machine; putting them in Cloud Storage is part of H2 (README section 8) |
 | H2 | first deploy to the Google Cloud project | **open** | the bootstrap `terraform apply`, then the first tag `v*.*.*` (workflow `deploy.yml`), the live `/healthz`, the uptime check and the budget alert |
 | H3 | the owner | **open** | README section 12 written by the author, the interface finish review decision, the portfolio page |
 
 Requirements that can only be proven after a gate closes are open, not passed. Among them:
-the real-data cube build (R-4.1-2 to R-4.1-5 and R-4.1-7 on ERA5-Land data), the deployed
-address (R-17-4) and everything that needs a live Cloud Run service (Cloud Trace export,
-Cloud Tasks delivery, the uptime check and the budget alert firing). The traceability block
-below lists every requirement that has no passing test in its run.
+the deployed address (R-17-4) and everything that needs a live Cloud Run service (Cloud Trace
+export, Cloud Tasks delivery, the uptime check and the budget alert firing). The real-data
+cube build (R-4.1-2 to R-4.1-5 and R-4.1-7 on ERA5-Land data) was done at H1 on the owner's
+machine; the suites prove the same pipeline on a synthetic yearly file. The traceability block
+below lists every requirement that has no passing test in its run; a block measured before
+`8095c6e` still lists R-9.6-1, whose recordings did not exist yet.
 
 ## 3. Requirement traceability
 
