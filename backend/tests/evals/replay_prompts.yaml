@@ -1,0 +1,23 @@
+# The recorder's input only (`tests/evals/record_replay.py`, SPEC 9.6): the user messages of
+# the recorded conversation per locale, in order. Nothing serves this file and the frontend
+# does not mirror it; the recording itself is the only source of the recorded requests.
+#
+# The first message is the first example request of the interface (`exampleRequests` over the
+# first example cover of `frontend/src/config.ts`), written as the interface writes it in that
+# language. Its trigger and exit are tuned to the synthetic cubes: when gate H1 re-tunes the
+# example covers, copy the new text here before recording. The follow-ups ask for the price,
+# the term sheet and the submission.
+en:
+  - >-
+    Farm near Três Pontas, MG. The client worries about too little rain from Sep 1 to Oct 31.
+    Pay when rainfall is below 80.0 mm, in full at 40.0 mm. Limit R$ 300,000.00.
+  - Price it.
+  - Draft the term sheet.
+  - Request submission to Seguradora Jatobá.
+pt-BR:
+  - >-
+    Fazenda perto de Três Pontas, MG. O cliente teme pouca chuva de 1 de set. a 31 de out..
+    Pagar quando a chuva ficar abaixo de 80,0 mm, integral em 40,0 mm. Limite de R$ 300.000,00.
+  - Pode precificar.
+  - Gere o term sheet.
+  - Solicite o envio para a Seguradora Jatobá.
