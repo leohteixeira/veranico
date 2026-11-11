@@ -1,0 +1,67 @@
+class GridPoint(BaseModel, frozen=True):
+    lat: float
+    lon: float
+
+class Location(BaseModel, frozen=True):
+    label: str
+    lat: float
+    lon: float
+    h3_cell: str
+    admin_region: str | None
+    country_code: str
+
+class LocationCandidates(BaseModel, frozen=True):
+    candidates: list[Location]            # two to five, when a name is ambiguous
+
+class DatasetRef(BaseModel, frozen=True):
+    dataset_id: DatasetId
+    kind: Literal["cube", "point"]
+    region_id: str | None
+    grid_point: GridPoint
+    first_year: int
+    last_year: int
+    days: int
+    missing_days: int
+    source: Literal["era5-land/cds", "era5-land/open-meteo", "synthetic"]
+
+class Region(BaseModel, frozen=True):
+    region_id: str                        # "sul-de-minas" | "sorriso" | "ribeirao-preto"
+    name: str
+    crop: str
+    north: float
+    south: float
+    west: float
+    east: float
+    step_deg: float
+    nx: int
+    ny: int
+    synthetic: bool                       # true until the real cube is built (human gate H1)
+
+@dataclass(frozen=True, slots=True)
+class DailySeries:
+    dataset: DatasetRef
+    dates: np.ndarray                     # datetime64[D], strictly increasing, no gaps
+    precipitation_mm: np.ndarray          # float64, same length
+
+@dataclass(frozen=True, slots=True)
+class RegionCube:
+    region: Region
+    dates: np.ndarray                     # datetime64[D]
+    precipitation_mm: np.ndarray          # float64, shape (time, ny, nx); row 0 is the northern edge
+
+class EvidenceRequest(BaseModel, frozen=True):
+    dataset_id: DatasetId
+    window_start: str                     # MM-DD
+    window_end: str
+    first_season: int                     # the seasons the quote was priced on
+    last_season: int
+    attributes: dict[str, str]            # provenance written as NetCDF global attributes
+
+class ClimateFacade(Protocol):
+    async def resolve_location(self, query: str | None, lat: float | None, lon: float | None) -> Location | LocationCandidates: ...
+    async def ensure_history(self, lat: float, lon: float) -> DatasetRef: ...   # may ingest; idempotent
+    async def describe(self, dataset_id: DatasetId) -> DatasetRef: ...
+    async def daily_series(self, dataset_id: DatasetId) -> DailySeries: ...
+    async def regions(self) -> list[Region]: ...
+    async def region_cube(self, region_id: str) -> RegionCube: ...
+    async def export_evidence(self, request: EvidenceRequest) -> bytes: ...     # NetCDF

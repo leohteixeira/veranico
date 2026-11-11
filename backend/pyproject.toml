@@ -119,3 +119,178 @@ id = "shared-below-modules"
 type = "forbidden"
 source_modules = ["veranico.shared"]
 forbidden_modules = ["veranico.modules"]
+
+# The seven modules are named explicitly in the three contracts below: a module missing from
+# a list would be unchecked (tests/architecture checks the lists against the directories).
+[[tool.importlinter.contracts]]
+name = "modules-independent: a module reaches another only through its contracts.py"
+id = "modules-independent"
+type = "independence"
+modules = [
+    "veranico.modules.access",
+    "veranico.modules.climate",
+    "veranico.modules.pricing",
+    "veranico.modules.quoting",
+    "veranico.modules.carriers",
+    "veranico.modules.documents",
+    "veranico.modules.assistant",
+]
+ignore_imports = ["veranico.modules.** -> veranico.modules.*.contracts"]
+
+[[tool.importlinter.contracts]]
+name = "contract-direction-access: access may import no other module (SPEC 3.1)"
+id = "contract-direction-access"
+type = "forbidden"
+source_modules = ["veranico.modules.access"]
+forbidden_modules = [
+    "veranico.modules.climate",
+    "veranico.modules.pricing",
+    "veranico.modules.quoting",
+    "veranico.modules.carriers",
+    "veranico.modules.documents",
+    "veranico.modules.assistant",
+]
+# Direct imports only: an allowed contract may itself build on another module's contract.
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+name = "contract-direction-climate: climate may import access (SPEC 3.1)"
+id = "contract-direction-climate"
+type = "forbidden"
+source_modules = ["veranico.modules.climate"]
+forbidden_modules = [
+    "veranico.modules.pricing",
+    "veranico.modules.quoting",
+    "veranico.modules.carriers",
+    "veranico.modules.documents",
+    "veranico.modules.assistant",
+]
+# Direct imports only: an allowed contract may itself build on another module's contract.
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+name = "contract-direction-pricing: pricing may import climate (SPEC 3.1)"
+id = "contract-direction-pricing"
+type = "forbidden"
+source_modules = ["veranico.modules.pricing"]
+forbidden_modules = [
+    "veranico.modules.access",
+    "veranico.modules.quoting",
+    "veranico.modules.carriers",
+    "veranico.modules.documents",
+    "veranico.modules.assistant",
+]
+# Direct imports only: an allowed contract may itself build on another module's contract.
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+name = "contract-direction-quoting: quoting may import pricing, climate, access (SPEC 3.1)"
+id = "contract-direction-quoting"
+type = "forbidden"
+source_modules = ["veranico.modules.quoting"]
+forbidden_modules = [
+    "veranico.modules.carriers",
+    "veranico.modules.documents",
+    "veranico.modules.assistant",
+]
+# Direct imports only: an allowed contract may itself build on another module's contract.
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+name = "contract-direction-carriers: carriers may import quoting (SPEC 3.1)"
+id = "contract-direction-carriers"
+type = "forbidden"
+source_modules = ["veranico.modules.carriers"]
+forbidden_modules = [
+    "veranico.modules.access",
+    "veranico.modules.climate",
+    "veranico.modules.pricing",
+    "veranico.modules.documents",
+    "veranico.modules.assistant",
+]
+# Direct imports only: an allowed contract may itself build on another module's contract.
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+name = "contract-direction-documents: documents may import quoting, climate, access (SPEC 3.1)"
+id = "contract-direction-documents"
+type = "forbidden"
+source_modules = ["veranico.modules.documents"]
+forbidden_modules = [
+    "veranico.modules.pricing",
+    "veranico.modules.carriers",
+    "veranico.modules.assistant",
+]
+# Direct imports only: an allowed contract may itself build on another module's contract.
+allow_indirect_imports = true
+
+# contract-direction-assistant: `assistant` may import the contracts of every other module (SPEC 3.1),
+# so there is nothing to forbid.
+
+[[tool.importlinter.contracts]]
+name = "module-layers: module > http, infrastructure > application > domain"
+id = "module-layers"
+type = "layers"
+layers = ["module", "http : infrastructure", "application", "domain"]
+containers = [
+    "veranico.modules.access",
+    "veranico.modules.climate",
+    "veranico.modules.pricing",
+    "veranico.modules.quoting",
+    "veranico.modules.carriers",
+    "veranico.modules.documents",
+    "veranico.modules.assistant",
+]
+
+[[tool.importlinter.contracts]]
+name = "contracts-are-leaf: a contracts.py imports no module internals"
+id = "contracts-are-leaf"
+type = "forbidden"
+source_modules = ["veranico.modules.*.contracts"]
+forbidden_modules = [
+    "veranico.modules.*.domain",
+    "veranico.modules.*.application",
+    "veranico.modules.*.infrastructure",
+    "veranico.modules.*.http",
+    "veranico.modules.*.module",
+]
+
+[[tool.importlinter.contracts]]
+name = "domain-pure: a domain uses the standard library, the kernel, NumPy and SciPy only"
+id = "domain-pure"
+type = "forbidden"
+source_modules = ["veranico.modules.*.domain"]
+forbidden_modules = [
+    "veranico.shared.infrastructure",
+    "fastapi",
+    "starlette",
+    "pydantic",
+    "httpx",
+    "anthropic",
+    "google",
+    "xarray",
+    "zarr",
+    "h5netcdf",
+    "h3",
+    "gcsfs",
+    "cdsapi",
+    "reportlab",
+    "opentelemetry",
+]
+# Direct imports only: the shared kernel a domain may use is itself built on Pydantic.
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+name = "wiring-only-in-bootstrap: only bootstrap.py imports a module.py"
+id = "wiring-only-in-bootstrap"
+type = "forbidden"
+# Everything except `veranico.bootstrap` and each module's own `module.py`.
+source_modules = [
+    "veranico.shared",
+    "veranico.modules.*.contracts",
+    "veranico.modules.*.domain",
+    "veranico.modules.*.application",
+    "veranico.modules.*.infrastructure",
+    "veranico.modules.*.http",
+]
+forbidden_modules = ["veranico.modules.*.module"]
