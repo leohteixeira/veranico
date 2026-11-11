@@ -83,7 +83,7 @@ def compacted_seqs(entries: tuple[Entry, ...]) -> list[int]:
 def test_estimate_is_canonical_json_characters_over_the_divisor_rounded_up() -> None:
     entry = UserEntry(seq=1, turn=1, text="olá")
     fixed = len('{"system":"S","tools":[{"name":"t"}]}')
-    chars = fixed + len('{"seq":1,"text":"olá","turn":1}')
+    chars = fixed + len('{"locale":null,"map_point":null,"seq":1,"text":"olá","turn":1}')
 
     assert estimate_tokens("S", [{"name": "t"}], [entry], 4) == -(-chars // 4)
     assert estimate_tokens("S", [{"name": "t"}], [entry], 1) == chars

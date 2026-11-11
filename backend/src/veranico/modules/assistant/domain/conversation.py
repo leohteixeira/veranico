@@ -26,6 +26,10 @@ class UserEntry:
     seq: int
     turn: int
     text: str
+    # What the interface sent with the message. Stored so that the prompt built from the history
+    # is the same on every later call; it is data for the model, never part of what the user typed.
+    locale: str | None = None
+    map_point: tuple[float, float] | None = None  # (lat, lon) the visitor clicked on the map
 
 
 @dataclass(frozen=True, slots=True)
