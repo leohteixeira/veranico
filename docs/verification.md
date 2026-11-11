@@ -78,7 +78,7 @@ made by the author of the test. The mutation proof (section 4) checks that claim
 pricing rules only.
 
 <!-- evidence:traceability:begin -->
-**PASS** · run `20261111T170651Z` · working tree, 2026-11-11 UTC, based on `6c178f7` · measured 2026-11-11T17:11:30+00:00 · `make traceability`
+**PASS** · run `20261111T172845Z` · working tree, 2026-11-11 UTC, based on `19f9774` · measured 2026-11-11T17:33:38+00:00 · `make traceability`
 
 271 requirements: 270 with a passing test, 0 with a failing test, 1 with no passing test.
 
@@ -109,7 +109,7 @@ testing: a rule with no mutant in the catalogue is not covered by this proof, an
 other than `pricing/domain` are not mutated.
 
 <!-- evidence:mutation:begin -->
-**PASS** · run `20261111T171130Z` · working tree, 2026-11-11 UTC, based on `6c178f7` · measured 2026-11-11T17:12:42+00:00 · `make mutation-proof`
+**PASS** · run `20261111T173338Z` · working tree, 2026-11-11 UTC, based on `19f9774` · measured 2026-11-11T17:34:57+00:00 · `make mutation-proof`
 
 34 mutants (minimum 15) against `tests/unit/pricing`: 34 killed, 0 survived, 0 stale, 0 errors.
 
@@ -180,7 +180,7 @@ full, clock jumps), behaviour of Cloud Tasks (development uses the in-process re
 anything about real networks: the proxy runs on the same host.
 
 <!-- evidence:failure:begin -->
-**PASS** · run `20261111T170651Z` · working tree, 2026-11-11 UTC, based on `6c178f7` · measured 2026-11-11T17:11:00+00:00 · `make test-failure`
+**PASS** · run `20261111T172845Z` · working tree, 2026-11-11 UTC, based on `19f9774` · measured 2026-11-11T17:33:06+00:00 · `make test-failure`
 
 42 tests: 42 passed, 0 failed.
 
