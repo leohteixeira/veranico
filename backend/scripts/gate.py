@@ -146,6 +146,13 @@ GATES: dict[str, Gate] = {
                 ' tests/api/documents -m "not live" -q',
                 BACKEND,
             ),
+            Step(
+                "carriers unit, integration and API tests",
+                "uv run pytest tests/unit/carriers tests/integration/carriers"
+                ' tests/api/carriers -m "not live" -q',
+                BACKEND,
+            ),
+            Step("failure campaign with the fault proxy", "make test-failure", REPO),
         ),
     ),
     "m4": Gate(plans="plan 08"),
