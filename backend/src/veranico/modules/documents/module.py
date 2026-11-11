@@ -11,6 +11,7 @@ from fastapi import APIRouter
 from veranico.modules.access.contracts import AccessFacade
 from veranico.modules.climate.contracts import ClimateFacade
 from veranico.modules.documents.contracts import DocumentRef, DocumentsFacade
+from veranico.modules.documents.http.router import build_router
 from veranico.modules.quoting.contracts import Actor, QuotingFacade
 from veranico.shared.infrastructure.blobs import BlobStore
 from veranico.shared.infrastructure.settings import Settings
@@ -49,4 +50,5 @@ class _StubDocumentsFacade:
 
 
 def build(deps: DocumentsDeps) -> DocumentsModule:
-    return DocumentsModule(facade=_StubDocumentsFacade(), routers=())
+    facade = _StubDocumentsFacade()
+    return DocumentsModule(facade=facade, routers=(build_router(facade),))

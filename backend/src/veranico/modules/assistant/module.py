@@ -17,6 +17,7 @@ from veranico.modules.assistant.contracts import (
     ChatRequest,
     ConversationView,
 )
+from veranico.modules.assistant.http.router import build_router
 from veranico.modules.carriers.contracts import CarriersFacade
 from veranico.modules.climate.contracts import ClimateFacade
 from veranico.modules.documents.contracts import DocumentsFacade
@@ -67,4 +68,5 @@ class _StubAssistantFacade:
 
 
 def build(deps: AssistantDeps) -> AssistantModule:
-    return AssistantModule(facade=_StubAssistantFacade(), routers=())
+    facade = _StubAssistantFacade()
+    return AssistantModule(facade=facade, routers=(build_router(facade),))

@@ -76,6 +76,10 @@ def _app() -> FastAPI:
     async def create(body: _Body) -> _Body:
         return body
 
+    @app.get("/not-built")
+    async def not_built() -> None:
+        raise NotImplementedError
+
     return app
 
 
@@ -92,6 +96,14 @@ async def test_handler_maps_a_raised_domain_error() -> None:
     assert response.headers["content-type"] == "application/problem+json"
     assert response.json()["code"] == "dataset_not_found"
     assert response.json()["detail"] == "no such dataset"
+
+
+async def test_a_part_that_has_not_landed_is_not_implemented_and_not_a_server_error() -> None:
+    response = await _call("GET", "/not-built")
+
+    assert response.status_code == 501
+    assert response.headers["content-type"] == "application/problem+json"
+    assert response.json()["code"] == "not_implemented"
 
 
 async def test_request_validation_error_becomes_invalid_arguments() -> None:

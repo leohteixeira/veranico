@@ -11,6 +11,7 @@ from fastapi import APIRouter
 from google.cloud.firestore import AsyncClient
 
 from veranico.modules.carriers.contracts import CarriersFacade, DeliveryOutcome
+from veranico.modules.carriers.http.router import build_carrier_router, build_router
 from veranico.modules.quoting.contracts import CarrierCatalog, QuotingFacade
 from veranico.shared.infrastructure.settings import Settings
 from veranico.shared.kernel.clock import Clock
@@ -42,4 +43,9 @@ class _StubCarriersFacade:
 
 
 def build(deps: CarriersDeps) -> CarriersModule:
-    return CarriersModule(facade=_StubCarriersFacade(), routers=(), carrier_router=APIRouter())
+    facade = _StubCarriersFacade()
+    return CarriersModule(
+        facade=facade,
+        routers=(build_router(facade),),
+        carrier_router=build_carrier_router(),
+    )

@@ -21,7 +21,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Annotated, Any, Protocol
 
-from fastapi import Depends, FastAPI, Request, Response
+from fastapi import Depends, FastAPI, Header, Request, Response
 from fastapi.concurrency import run_in_threadpool
 from fastapi.security import APIKeyCookie, HTTPBearer
 from google.auth.transport import requests as google_requests
@@ -221,11 +221,18 @@ def client_address(request: Request) -> str:
     return request.client.host if request.client is not None else "unknown"
 
 
-def visitor_ref(request: Request) -> object:
+def visitor_ref(
+    request: Request,
+    allowance_code: Annotated[
+        str | None,
+        Header(
+            alias=ALLOWANCE_CODE_HEADER,
+            description="The code the visitor arrived with, when there was one.",
+        ),
+    ] = None,
+) -> object:
     """The `VisitorRef` of the caller. The address and the code go no further than here."""
-    return _context(request).access.visitor(
-        client_address(request), request.headers.get(ALLOWANCE_CODE_HEADER)
-    )
+    return _context(request).access.visitor(client_address(request), allowance_code)
 
 
 async def require_service_identity(

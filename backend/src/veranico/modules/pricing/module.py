@@ -23,6 +23,7 @@ from veranico.modules.pricing.contracts import (
     SimulationOptions,
     Window,
 )
+from veranico.modules.pricing.http.router import build_router
 from veranico.shared.infrastructure.settings import Settings
 from veranico.shared.kernel.ids import DatasetId
 from veranico.shared.kernel.money import Money
@@ -64,4 +65,5 @@ class _StubPricingFacade:
 
 
 def build(deps: PricingDeps) -> PricingModule:
-    return PricingModule(facade=_StubPricingFacade(), routers=())
+    facade = _StubPricingFacade()
+    return PricingModule(facade=facade, routers=(build_router(facade),))

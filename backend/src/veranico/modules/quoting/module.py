@@ -29,6 +29,7 @@ from veranico.modules.quoting.contracts import (
     Submission,
     SubmissionApproved,
 )
+from veranico.modules.quoting.http.router import build_router
 from veranico.shared.infrastructure.settings import Settings
 from veranico.shared.kernel.clock import Clock
 from veranico.shared.kernel.coded import Coded
@@ -112,7 +113,8 @@ class _StubDispatcher:
 
 
 def build(deps: QuotingDeps) -> QuotingModule:
-    return QuotingModule(facade=_StubQuotingFacade(), routers=())
+    facade = _StubQuotingFacade()
+    return QuotingModule(facade=facade, routers=(build_router(facade),))
 
 
 def build_dispatcher(

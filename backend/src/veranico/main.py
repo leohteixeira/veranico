@@ -15,20 +15,26 @@ import asyncio
 import os
 import signal
 import threading
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncIterator, Callable, Sequence
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from types import FrameType
-from typing import Literal
+from typing import Any, Literal, get_args
 
 from fastapi import FastAPI, Response
 from pydantic import BaseModel
+from pydantic.json_schema import models_json_schema
 from starlette.datastructures import MutableHeaders
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from veranico.bootstrap import Container, build_container
+from veranico.modules.assistant.contracts import AgentEvent
 from veranico.shared.infrastructure import telemetry
 from veranico.shared.infrastructure.http_auth import install_auth
-from veranico.shared.infrastructure.problems import install_problem_handlers
+from veranico.shared.infrastructure.problems import (
+    PROBLEM_RESPONSES,
+    Problem,
+    install_problem_handlers,
+)
 from veranico.shared.infrastructure.settings import Settings
 
 API_PREFIX = "/api/v1"
@@ -58,8 +64,10 @@ def create_app(settings: Settings | None = None, *, container: Container | None 
         title="Veranico" if is_api else "Veranico mock carrier",
         version="1",
         lifespan=_lifespan(container),
+        responses=PROBLEM_RESPONSES,
     )
     install_problem_handlers(app)
+    _add_schemas(app, [Problem, *(get_args(AgentEvent) if is_api else ())])
     telemetry.setup_telemetry(settings, app)
 
     @app.get("/healthz", operation_id="healthz", tags=["health"])
@@ -89,6 +97,31 @@ def create_app(settings: Settings | None = None, *, container: Container | None 
     else:
         app.include_router(container.carriers.carrier_router)
     return app
+
+
+def _add_schemas(app: FastAPI, models: Sequence[type[BaseModel]]) -> None:
+    """Put models that no route returns as a JSON success body into the OpenAPI components.
+
+    The problem document and the events of the chat stream travel in media types FastAPI
+    does not describe with a model, and the frontend still needs their types.
+    """
+    generate = app.openapi
+
+    def openapi() -> dict[str, Any]:
+        if app.openapi_schema is not None:
+            return app.openapi_schema
+        document = generate()
+        _, definitions = models_json_schema(
+            [(model, "serialization") for model in models],
+            ref_template="#/components/schemas/{model}",
+        )
+        schemas = document.setdefault("components", {}).setdefault("schemas", {})
+        for name, schema in definitions.get("$defs", {}).items():
+            schemas.setdefault(name, schema)
+        document["components"]["schemas"] = dict(sorted(schemas.items()))
+        return document
+
+    app.openapi = openapi  # type: ignore[method-assign]  # FastAPI's documented way to extend the document
 
 
 def _lifespan(container: Container) -> Callable[[FastAPI], AbstractAsyncContextManager[None]]:

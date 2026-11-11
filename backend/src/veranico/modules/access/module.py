@@ -18,6 +18,7 @@ from veranico.modules.access.contracts import (
     SpendRecorded,
     VisitorRef,
 )
+from veranico.modules.access.http.router import build_router
 from veranico.shared.infrastructure.settings import Settings
 from veranico.shared.kernel.clock import Clock
 from veranico.shared.kernel.principal import Principal
@@ -69,4 +70,5 @@ class _StubAccessFacade:
 
 
 def build(deps: AccessDeps) -> AccessModule:
-    return AccessModule(facade=_StubAccessFacade(), routers=())
+    facade = _StubAccessFacade()
+    return AccessModule(facade=facade, routers=(build_router(facade),))

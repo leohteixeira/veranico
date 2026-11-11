@@ -9,12 +9,26 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from veranico.shared.infrastructure import telemetry
-from veranico.shared.kernel.errors import DomainError, InvalidArgumentsError
+from veranico.shared.kernel.errors import (
+    DomainError,
+    InvalidArgumentsError,
+    NotImplementedYetError,
+)
 
 PROBLEM_MEDIA_TYPE = "application/problem+json"
 PROBLEM_TYPE_BASE = "https://veranico.dev/problems/"
 # The interface offers the recorded replay when it sees one of these.
 REPLAY_CODES = frozenset({"allowance_exhausted", "spend_ceiling_reached"})
+
+
+# Every route may answer with a problem document. Passed to `FastAPI(responses=...)`, it
+# also keeps FastAPI's own validation error body, which is never sent, out of OpenAPI.
+PROBLEM_RESPONSES: dict[int | str, dict[str, Any]] = {
+    "default": {
+        "description": "Problem document (RFC 9457); the stable `code` names the error.",
+        "content": {PROBLEM_MEDIA_TYPE: {"schema": {"$ref": "#/components/schemas/Problem"}}},
+    }
+}
 
 
 class Problem(BaseModel):
@@ -66,6 +80,12 @@ async def _validation_error(request: Request, error: Exception) -> JSONResponse:
     return problem_response(invalid, telemetry.current_trace_id())
 
 
+async def _not_implemented(request: Request, error: Exception) -> JSONResponse:
+    """A facade or route of a module that has not landed yet: `501`, not a server error."""
+    return problem_response(NotImplementedYetError(), telemetry.current_trace_id())
+
+
 def install_problem_handlers(app: FastAPI) -> None:
     app.add_exception_handler(DomainError, _domain_error)
     app.add_exception_handler(RequestValidationError, _validation_error)
+    app.add_exception_handler(NotImplementedError, _not_implemented)

@@ -19,6 +19,7 @@ from veranico.modules.climate.contracts import (
     Region,
     RegionCube,
 )
+from veranico.modules.climate.http.router import build_router
 from veranico.shared.infrastructure.blobs import BlobStore
 from veranico.shared.infrastructure.settings import Settings
 from veranico.shared.kernel.clock import Clock
@@ -65,4 +66,5 @@ class _StubClimateFacade:
 
 
 def build(deps: ClimateDeps) -> ClimateModule:
-    return ClimateModule(facade=_StubClimateFacade(), routers=())
+    facade = _StubClimateFacade()
+    return ClimateModule(facade=facade, routers=(build_router(facade),))
