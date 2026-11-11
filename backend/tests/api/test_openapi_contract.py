@@ -127,7 +127,6 @@ STILL_STUBBED: set[tuple[str, str]] = {
     ("GET", f"{V1}/allowance"),
     ("GET", f"{V1}/regions"),
     ("GET", f"{V1}/regions/{{id}}/cells"),
-    ("GET", f"{V1}/weather/seasons"),
     ("POST", f"{V1}/internal/outbox/{{event_id}}/deliver"),
     ("POST", "/carrier/v1/submissions"),
 }
