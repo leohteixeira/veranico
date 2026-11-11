@@ -50,6 +50,10 @@ class ToolResultEntry:
     # "ok": the tool's output model, serialised, in full.
     # "error": the tool error as the model sees it, `{error_code, message, retryable}`.
     result: Mapping[str, object]
+    # What the interface showed for the call, kept to restore the screen after a reload:
+    # the summary as `{"code": ..., "params": {...}}` and how long the tool took.
+    summary: Mapping[str, object] | None = None
+    duration_ms: int = 0
 
 
 Entry = UserEntry | AssistantStep | ToolResultEntry
