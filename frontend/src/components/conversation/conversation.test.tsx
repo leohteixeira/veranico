@@ -264,6 +264,33 @@ describe("conversation card [R-12.1-3]", () => {
     expect(screen.getByText("Step 1 of 6: Locate")).toBeVisible();
   });
 
+  it("tool_not_executed_row_says_the_call_was_not_run [R-12.4-2]", () => {
+    const session = reduce([
+      { type: "user_sent", text: "Coffee farm" },
+      { type: "started", data: { conversation_id: "cv-1", message_id: "m-0002" } },
+      {
+        type: "tool_finished",
+        data: {
+          call_id: "call-9",
+          tool: "price_cover",
+          status: "error",
+          duration_ms: 0,
+          summary: { code: "tool.error", params: { error_code: "tool_not_executed" } },
+          result: null,
+          error: { error_code: "tool_not_executed", message: "not executed", retryable: false },
+        },
+      },
+    ]);
+    renderCard({ session });
+    const row = document.querySelector('[data-tool="price_cover"]');
+    expect(row).toHaveTextContent(
+      "This call was not run: the agent had used its calls or attempts for this request.",
+    );
+    expect(row).toHaveTextContent("not run");
+    expect(row).not.toHaveTextContent("Failed");
+    expect(row).not.toHaveTextContent("0 ms");
+  });
+
   it("figure_links_to_its_tab_and_field [R-12.3-5]", () => {
     const { props } = renderCard({ session: liveSession(2) });
     const premium = plain(formatMoney(PREMIUM_CENTS, "en"));

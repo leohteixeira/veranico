@@ -86,6 +86,57 @@ export const ptBR: Messages = {
   "tab.quote": "Cotação",
   "tab.approvals": "Aprovações",
 
+  "tabs.label": "Detalhes",
+  "state.loading": "Carregando",
+  "state.failed": "Isto não carregou.",
+
+  // Risk tab
+  "risk.empty": "Escolha uma região para ver a superfície de risco.",
+  "risk.no_cell": "O ponto segurado está fora da grade de clima desta região.",
+  "risk.cell": "Célula segurada",
+  "risk.cell.no_value": "sem valor",
+  "risk.neighbours": "Células vizinhas",
+  "risk.range": "{min} a {max}",
+  "risk.reading.frequency":
+    "Na célula segurada, esta cobertura teria pago em {rate} das {seasons} safras. As vizinhas vão de {min} a {max}.",
+  "risk.reading.season":
+    "Em {season}, o índice na célula segurada ficou {anomaly} em relação à mediana. {paying} das {cells} células da região teriam pago.",
+  "risk.reading.season_plain":
+    "Em {season}, o índice na célula segurada ficou {anomaly} em relação à mediana.",
+  "risk.legend.frequency": "Parcela das safras que pagam",
+  "risk.legend.anomaly": "Índice em relação à mediana da célula, de seco a úmido",
+  "risk.legend.class": "{low} a {high}",
+  "risk.neighbourhood": "A célula segurada e suas vizinhas, com o norte no alto",
+  "risk.neighbourhood.insured": "célula segurada",
+  "risk.neighbourhood.outside": "fora da grade",
+
+  // History tab
+  "history.empty":
+    "Ainda não há backtest. Descreva uma exposição na conversa e o agente reproduz o índice em todas as safras.",
+  "history.index_title.rainfall_below": "Chuva na janela, por safra",
+  "history.index_title.dry_spell_above": "Maior período seco na janela, por safra",
+  "history.payout_title": "Pagamento por safra",
+  "history.trigger_line": "Gatilho {value}",
+  "history.exit_line": "Saída {value}",
+  "history.range_label": "Safra",
+  "history.hint": "Selecione uma barra, ou use as setas, para pôr essa safra no mapa.",
+  "history.tip.index": "Índice",
+  "history.tip.payout": "Pagamento",
+  "history.no_payout": "Sem pagamento",
+  "history.aggregates": "Agregados",
+  "history.seasons_used": "Safras usadas",
+  "history.trigger_frequency": "Frequência do gatilho",
+  "history.burn_cost": "Burn cost (pagamento médio)",
+  "history.max_payout": "Maior pagamento",
+  "history.max_payout_in": "{value} em {season}",
+  "history.seasons_excluded": "Safras excluídas",
+  "history.table.show": "Mostrar todas as safras em tabela",
+  "history.table.hide": "Ocultar a tabela",
+  "history.table.caption": "Todas as safras",
+  "history.table.season": "Safra",
+  "history.table.index": "Índice",
+  "history.table.payout": "Pagamento",
+
   // Conversation card
   "chat.title": "Conversa",
   "chat.restart": "Recomeçar",
@@ -118,6 +169,7 @@ export const ptBR: Messages = {
   "chat.tool.running": "em execução",
   "chat.tool.ok": "concluída",
   "chat.tool.failed": "falhou",
+  "chat.tool.not_run": "não executada",
   "chat.tool.arguments": "Argumentos",
   "chat.figure.open": "{value}: mostrar a origem na aba {tab}",
   "chat.figure.flagged": "não encontrado em nenhuma saída de ferramenta",
@@ -220,6 +272,9 @@ export const ptBR: Messages = {
   "problem.message_too_long": "A mensagem é longa demais. Encurte e envie de novo.",
   "problem.not_implemented": "Esta parte do serviço ainda não está disponível.",
   "problem.shutting_down": "O serviço reiniciou durante a resposta. Envie a mensagem de novo.",
+  // A tool call the agent asked for beyond the limit, or after the tool had failed twice
+  "problem.tool_not_executed":
+    "Esta chamada não foi executada: o agente já havia usado as chamadas ou tentativas deste pedido.",
   // Two codes of the interface itself, for a failure that carries no problem document
   "problem.network": "Não foi possível contatar o serviço. Verifique a conexão e tente de novo.",
   "problem.unknown": "O pedido falhou. Tente de novo em instantes.",

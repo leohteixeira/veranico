@@ -1,7 +1,7 @@
 import { useId, useState } from "react";
 
 import { translate, useI18n } from "../../i18n";
-import { translateCoded, translateValue } from "../../i18n/coded";
+import { translateCoded, translateProblem, translateValue } from "../../i18n/coded";
 import { formatMs } from "../../i18n/format";
 import type { ToolRow as ToolRowState } from "../../state/session";
 import { Icon } from "../common/Icon";
@@ -21,9 +21,15 @@ export function ToolRow({ row }: ToolRowProps) {
   const [open, setOpen] = useState(false);
   const panelId = useId();
 
+  // The agent asked for the call but it was never run (beyond the limit of the request, or after
+  // the tool had failed twice): that is not a failure of the tool.
+  const code = row.error?.error_code;
+  const notRun = row.status === "error" && code === "tool_not_executed";
+
   let summary: string | null = null;
-  if (row.status === "error") {
-    const code = row.error?.error_code;
+  if (notRun) {
+    summary = translateProblem("tool_not_executed", locale);
+  } else if (row.status === "error") {
     summary = translateCoded(
       { code: "tool.error", params: code === undefined ? {} : { error_code: code } },
       locale,
@@ -49,8 +55,9 @@ export function ToolRow({ row }: ToolRowProps) {
         {row.status === "ok" && (
           <span className="sr-only">{translate(locale, "chat.tool.ok")}</span>
         )}
-        {row.status === "error" && translate(locale, "chat.tool.failed")}
-        {row.durationMs !== null && (
+        {row.status === "error" &&
+          translate(locale, notRun ? "chat.tool.not_run" : "chat.tool.failed")}
+        {row.durationMs !== null && !notRun && (
           <span className="tool__duration">{formatMs(row.durationMs, locale)}</span>
         )}
       </span>

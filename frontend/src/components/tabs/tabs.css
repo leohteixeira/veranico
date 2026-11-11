@@ -1,0 +1,419 @@
+/* The tabs card and the Risk and History tabs. Where the card sits is the shell's decision. */
+
+.tabs {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.tabs__list {
+  flex: none;
+  display: flex;
+  gap: 2px;
+  padding: 6px 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.tabs__tab {
+  flex: 1 1 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 9px 6px 10px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.tabs__tab:hover {
+  color: var(--ink);
+}
+
+.tabs__tab[aria-selected="true"] {
+  border-bottom-color: var(--accent);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.tabs__tab:focus-visible {
+  outline-offset: -2px;
+}
+
+.tabs__badge {
+  min-width: 18px;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.tabs__panel {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 14px 16px 16px;
+  overflow-y: auto;
+  overflow-wrap: anywhere;
+  scrollbar-width: thin;
+}
+
+.tabs__panel:focus-visible {
+  outline-offset: -2px;
+}
+
+/* Loading, failed and empty states of a tab */
+.tab-state {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 18px 0;
+  font-size: 0.875rem;
+  color: var(--ink-2);
+}
+
+.tab-state[data-state="failed"] {
+  color: var(--ink);
+}
+
+/* Risk */
+.risk {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.risk__stats {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+  margin: 0;
+}
+
+.risk__stat dt {
+  font-size: 0.75rem;
+  color: var(--ink-3);
+}
+
+.risk__stat dd {
+  margin: 2px 0 0;
+}
+
+.risk__figure {
+  font-family: var(--font-display);
+  font-weight: var(--display-weight);
+  font-size: 2rem;
+  line-height: 1.1;
+  letter-spacing: var(--display-tracking);
+}
+
+.risk__range {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.9;
+}
+
+.risk__reading {
+  margin: 0;
+  color: var(--ink-2);
+  line-height: 1.5;
+}
+
+/* The three by three: each cell wears the colour of its class and says its value. */
+.hood {
+  width: 100%;
+  max-width: 264px;
+  border-collapse: separate;
+  border-spacing: 3px;
+  table-layout: fixed;
+}
+
+.hood__cell {
+  height: 52px;
+  padding: 0;
+  border-radius: 6px;
+  background: var(--soft);
+  text-align: center;
+  vertical-align: middle;
+}
+
+.hood__cell[data-inside="false"] {
+  background: none;
+  border: 1px dashed var(--line-strong);
+}
+
+/* The insured cell is framed, so the mark does not rest on its colour. */
+.hood__cell[data-insured="true"] {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
+}
+
+.hood__value {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--ink);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.hood__cell[data-inside="false"] .hood__value {
+  background: none;
+  color: var(--ink-3);
+  font-weight: 400;
+  font-size: 0.6875rem;
+}
+
+.legend__title {
+  margin: 0 0 6px;
+  font-size: 0.75rem;
+  color: var(--ink-3);
+}
+
+.legend__classes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap: 4px 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.legend__class {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.75rem;
+  color: var(--ink-2);
+}
+
+.legend__swatch {
+  flex: none;
+  width: 18px;
+  height: 12px;
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+
+/* History */
+.history {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.history__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.history__readout {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: var(--display-weight);
+  font-size: 1.0625rem;
+  line-height: 1.3;
+}
+
+.history__charts {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-radius: 6px;
+}
+
+.history__charts:has(.history__range:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.history__panel {
+  margin: 0;
+  border-radius: 6px;
+}
+
+.history__panel figcaption {
+  margin-bottom: 2px;
+  font-size: 0.75rem;
+  color: var(--ink-3);
+}
+
+.history__panel[data-highlight="true"],
+.aggregates__row[data-highlight="true"] {
+  background: var(--accent-wash);
+  box-shadow: 0 0 0 4px var(--accent-wash);
+}
+
+/* The range input takes the keyboard, unseen; the bars take the pointer. */
+.history__range {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.chart {
+  width: 100%;
+  min-width: 0;
+}
+
+.chart .recharts-bar-rectangle {
+  cursor: pointer;
+}
+
+.chart {
+  cursor: pointer;
+}
+
+/* The key of the two reference lines: each name carries a sample of its line's dash. */
+.chart-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+  margin: 0 0 2px;
+  font-size: 0.75rem;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.chart-key__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chart-key__item::before {
+  content: "";
+  flex: none;
+  width: 18px;
+  border-top: 1.5px dashed var(--ink);
+}
+
+.chart-key__item--exit::before {
+  border-top-style: dotted;
+}
+
+.chart-tip {
+  display: grid;
+  gap: 1px;
+  padding: 7px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
+  font-size: 0.75rem;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.chart-tip__title {
+  color: var(--ink);
+}
+
+.chart-tip__line b {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.aggregates {
+  display: grid;
+  gap: 0;
+  margin: 0;
+}
+
+.aggregates__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border-top: 1px solid var(--line);
+  border-radius: 3px;
+}
+
+.aggregates__row dt {
+  font-size: 0.8125rem;
+  color: var(--ink-2);
+}
+
+.aggregates__row dd {
+  margin: 0;
+  font-weight: 600;
+  text-align: right;
+}
+
+.season-table__scroll {
+  max-height: 260px;
+  margin-top: 8px;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  scrollbar-width: thin;
+}
+
+.season-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.season-table th,
+.season-table td {
+  padding: 5px 10px;
+  border-top: 1px solid var(--line);
+  text-align: right;
+  font-weight: 400;
+}
+
+.season-table thead th {
+  position: sticky;
+  top: 0;
+  border-top: 0;
+  background: var(--card);
+  color: var(--ink-3);
+  font-size: 0.75rem;
+  box-shadow: 0 1px 0 var(--line);
+}
+
+.season-table th:first-child {
+  text-align: left;
+}
+
+.season-table tr[data-pays="true"] td:last-child {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.season-table tr[data-selected="true"] {
+  background: var(--accent-wash);
+}
+
+.season-table__season {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--line-strong);
+  text-underline-offset: 3px;
+  cursor: pointer;
+}

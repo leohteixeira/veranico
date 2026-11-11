@@ -91,6 +91,57 @@ export const en = {
   "tab.quote": "Quote",
   "tab.approvals": "Approvals",
 
+  "tabs.label": "Details",
+  "state.loading": "Loading",
+  "state.failed": "This did not load.",
+
+  // Risk tab
+  "risk.empty": "Choose a region to see its risk surface.",
+  "risk.no_cell": "The insured point is outside this region's weather grid.",
+  "risk.cell": "Insured cell",
+  "risk.cell.no_value": "no value",
+  "risk.neighbours": "Neighbouring cells",
+  "risk.range": "{min} to {max}",
+  "risk.reading.frequency":
+    "At the insured cell this cover would have paid in {rate} of the {seasons} seasons. Its neighbours range from {min} to {max}.",
+  "risk.reading.season":
+    "In {season} the index at the insured cell was {anomaly} against its median. {paying} of the {cells} cells of the region would have paid.",
+  "risk.reading.season_plain":
+    "In {season} the index at the insured cell was {anomaly} against its median.",
+  "risk.legend.frequency": "Share of seasons that pay",
+  "risk.legend.anomaly": "Index against the cell's median, dry to wet",
+  "risk.legend.class": "{low} to {high}",
+  "risk.neighbourhood": "The insured cell and its neighbours, north at the top",
+  "risk.neighbourhood.insured": "insured cell",
+  "risk.neighbourhood.outside": "outside the grid",
+
+  // History tab
+  "history.empty":
+    "No backtest yet. Describe an exposure in the conversation and the agent replays the index over every season.",
+  "history.index_title.rainfall_below": "Rainfall in the window, per season",
+  "history.index_title.dry_spell_above": "Longest dry spell in the window, per season",
+  "history.payout_title": "Payout per season",
+  "history.trigger_line": "Trigger {value}",
+  "history.exit_line": "Exit {value}",
+  "history.range_label": "Season",
+  "history.hint": "Select a bar, or use the arrow keys, to put that season on the map.",
+  "history.tip.index": "Index",
+  "history.tip.payout": "Payout",
+  "history.no_payout": "No payout",
+  "history.aggregates": "Aggregates",
+  "history.seasons_used": "Seasons used",
+  "history.trigger_frequency": "Trigger frequency",
+  "history.burn_cost": "Burn cost (average payout)",
+  "history.max_payout": "Largest payout",
+  "history.max_payout_in": "{value} in {season}",
+  "history.seasons_excluded": "Seasons excluded",
+  "history.table.show": "Show every season as a table",
+  "history.table.hide": "Hide the table",
+  "history.table.caption": "Every season",
+  "history.table.season": "Season",
+  "history.table.index": "Index",
+  "history.table.payout": "Payout",
+
   // Conversation card
   "chat.title": "Conversation",
   "chat.restart": "Start over",
@@ -122,6 +173,7 @@ export const en = {
   "chat.tool.running": "running",
   "chat.tool.ok": "done",
   "chat.tool.failed": "failed",
+  "chat.tool.not_run": "not run",
   "chat.tool.arguments": "Arguments",
   "chat.figure.open": "{value}: show its source in the {tab} tab",
   "chat.figure.flagged": "not found in any tool output",
@@ -224,6 +276,9 @@ export const en = {
   "problem.message_too_long": "The message is too long. Shorten it and send again.",
   "problem.not_implemented": "This part of the service is not available yet.",
   "problem.shutting_down": "The service restarted during the answer. Send the message again.",
+  // A tool call the agent asked for beyond the limit, or after the tool had failed twice
+  "problem.tool_not_executed":
+    "This call was not run: the agent had used its calls or attempts for this request.",
   // Two codes of the interface itself, for a failure that carries no problem document
   "problem.network": "The service could not be reached. Check the connection and try again.",
   "problem.unknown": "The request failed. Try again in a moment.",
