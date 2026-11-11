@@ -84,11 +84,11 @@ async def test_dispatcher_without_the_methods_is_left_alone() -> None:
         pass
 
 
-async def test_stub_dispatcher_of_the_foundation_has_neither_method() -> None:
+async def test_dispatcher_of_the_test_settings_is_the_relay_with_both_methods() -> None:
     dispatcher = api_container().dispatcher
 
-    assert not hasattr(dispatcher, "start")
-    assert not hasattr(dispatcher, "stop")
+    assert hasattr(dispatcher, "start")
+    assert hasattr(dispatcher, "stop")
 
 
 async def test_carrier_role_has_no_dispatcher_and_its_lifespan_runs() -> None:

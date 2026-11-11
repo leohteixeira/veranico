@@ -110,20 +110,9 @@ HEALTH_ROUTES: list[Route] = [
 
 # Routes that still answer 501. In M0 it holds every product route.
 STILL_STUBBED: set[tuple[str, str]] = {
-    ("POST", f"{V1}/quotes"),
-    ("GET", f"{V1}/quotes"),
-    ("GET", f"{V1}/quotes/{{id}}"),
-    ("POST", f"{V1}/quotes/{{id}}/submissions"),
-    ("GET", f"{V1}/approvals"),
-    ("POST", f"{V1}/approvals/{{id}}/decision"),
-    ("POST", f"{V1}/approvals/{{id}}/redeliver"),
-    ("POST", f"{V1}/internal/outbox/sweep"),
-    ("GET", f"{V1}/quotes/{{id}}/term-sheet.pdf"),
-    ("GET", f"{V1}/quotes/{{id}}/evidence.nc"),
     ("POST", f"{V1}/chat"),
     ("GET", f"{V1}/conversations/{{id}}"),
     ("GET", f"{V1}/replays/{{locale}}"),
-    ("POST", f"{V1}/internal/outbox/{{event_id}}/deliver"),
 }
 
 INDEX = {"index_type", "window_start", "window_end", "trigger", "exit"}
@@ -457,11 +446,12 @@ async def test_stubbed_route_answers_501_with_a_problem_document(method: str, pa
     assert body["type"] == "https://veranico.dev/problems/not_implemented"
 
 
-async def test_foundation_application_answers_501_before_access_has_landed() -> None:
-    """With the stub `access` facade a cookie route is `not_implemented`, not a server error."""
+async def test_cookie_route_opens_a_workspace_and_answers_from_the_real_modules() -> None:
+    """With `access` and `quoting` landed, a first visit gets a workspace cookie and no quotes."""
     transport = httpx.ASGITransport(app=app_for("api"))
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as http:
         response = await http.get(f"{V1}/quotes")
 
-    assert response.status_code == 501
-    assert response.json()["code"] == "not_implemented"
+    assert response.status_code == 200
+    assert response.json() == []
+    assert "vr_ws" in response.cookies

@@ -164,18 +164,21 @@ class Env:
     async def clean(self) -> None:
         """Delete what the two workspaces of this test wrote, and nothing else."""
         for workspace_id in (self.workspace_id, self.stranger.workspace_id):
-            owned = FieldFilter("workspace_id", "==", workspace_id)
-            async for quote in self.client.collection(QUOTES).where(filter=owned).stream():
-                async for entry in quote.reference.collection(AUDIT).stream():
-                    await entry.reference.delete()
-                events = self.client.collection(OUTBOX).where(
-                    filter=FieldFilter("quote_id", "==", quote.id)
-                )
-                async for event in events.stream():
-                    await event.reference.delete()
-                await quote.reference.delete()
-            async for key in self.client.collection(IDEMPOTENCY).where(filter=owned).stream():
-                await key.reference.delete()
+            await delete_workspace_documents(self.client, workspace_id)
+
+
+async def delete_workspace_documents(client: AsyncClient, workspace_id: WorkspaceId) -> None:
+    """Delete the quoting documents of one workspace: quotes, audit, outbox, keys."""
+    owned = FieldFilter("workspace_id", "==", workspace_id)
+    async for quote in client.collection(QUOTES).where(filter=owned).stream():
+        async for entry in quote.reference.collection(AUDIT).stream():
+            await entry.reference.delete()
+        events = client.collection(OUTBOX).where(filter=FieldFilter("quote_id", "==", quote.id))
+        async for event in events.stream():
+            await event.reference.delete()
+        await quote.reference.delete()
+    async for key in client.collection(IDEMPOTENCY).where(filter=owned).stream():
+        await key.reference.delete()
 
 
 @pytest.fixture
