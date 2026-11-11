@@ -1,0 +1,45 @@
+{
+ "request": {
+  "method": "GET",
+  "url": "https://geocoding-api.open-meteo.com/v1/search?name=Sorriso&count=10&language=pt&format=json&countryCode=BR"
+ },
+ "status": 200,
+ "body": {
+  "results": [
+   {
+    "id": 6318714,
+    "name": "Sorriso",
+    "latitude": -12.54528,
+    "longitude": -55.71139,
+    "elevation": 363.0,
+    "feature_code": "PPL",
+    "country_code": "BR",
+    "admin1_id": 3457419,
+    "admin2_id": 6324221,
+    "timezone": "America/Cuiaba",
+    "population": 124665,
+    "country_id": 3469034,
+    "country": "Brasil",
+    "admin1": "Mato Grosso",
+    "admin2": "Sorriso"
+   },
+   {
+    "id": 11153389,
+    "name": "Sorriso Airport",
+    "latitude": -12.48073,
+    "longitude": -55.6733,
+    "elevation": 384.0,
+    "feature_code": "AIRP",
+    "country_code": "BR",
+    "admin1_id": 3457419,
+    "admin2_id": 6324221,
+    "timezone": "America/Cuiaba",
+    "country_id": 3469034,
+    "country": "Brasil",
+    "admin1": "Mato Grosso",
+    "admin2": "Sorriso"
+   }
+  ],
+  "generationtime_ms": 0.0
+ }
+}
