@@ -12,6 +12,7 @@
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
+    "format": "prettier --write .",
     "test": "vitest run",
     "gen-client": "openapi-typescript ../backend/openapi.json -o src/api/schema.d.ts"
   },
@@ -28,9 +29,13 @@
     "@vitejs/plugin-react": "^6.3.0",
     "eslint": "^10.14.0",
     "openapi-typescript": "^7.13.0",
+    "prettier": "^3.9.10",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.72.2",
     "vite": "^8.3.7",
     "vitest": "^5.1.0"
+  },
+  "prettier": {
+    "printWidth": 100
   }
 }

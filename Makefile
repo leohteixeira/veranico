@@ -1,10 +1,191 @@
-# Veranico. Task 13 of plan 00 completes this file; for now it holds the client targets.
+# Veranico: the one entry point for people and CI. `make help` lists the targets.
 
-.PHONY: gen-client
+# --- Environment file -------------------------------------------------------------------
+# The owner keeps real keys in a Git-ignored `.env`. It is loaded here when it exists, so a
+# recipe receives the keys without anyone opening the file. `env.example` documents the names.
+#
+# * One `NAME=value` per line, no quotes. The value is passed verbatim (JSON, `$` and all);
+#   an unquoted `#` starts a comment.
+# * A name left empty in the file is unset for the recipes, so it never replaces a default or
+#   a generated development secret. This holds even when the calling shell exported a value.
+# * A non-empty value in the file wins over the calling shell.
+# * Only the names the file defines are exported. No recipe prints the environment.
+#
+# `ENV_FILE` exists for the test of this loader (backend/tests/architecture/test_makefile_env.py).
+ENV_FILE ?= .env
+_env_before := $(foreach v,$(.VARIABLES),$(if $(filter file,$(origin $v)),$v))
+-include $(ENV_FILE)
+_env_names := $(filter-out $(_env_before) _env_before,$(foreach v,$(.VARIABLES),$(if $(filter file,$(origin $v)),$v)))
+$(foreach v,$(_env_names),$(if $(strip $(value $v)),$(eval $v := $$(value $v))$(eval export $v),$(eval undefine $v)))
+
+# --- Shared definitions -----------------------------------------------------------------
+SHELL := bash
+.SHELLFLAGS := -eu -o pipefail -c
+.DEFAULT_GOAL := help
+
+# The project name is explicit, so no recipe depends on the directory name or on
+# COMPOSE_PROJECT_NAME.
+COMPOSE := docker compose -p veranico
+
+# Default suites leave out what needs the emulators, the network or the fault proxy.
+FAST := not integration and not live and not failure
+
+# Development ports (SPEC section 17). WEB_PORT can be overridden for one run.
+WEB_PORT ?= 3500
+API_PORT := 8500
+CARRIER_PORT := 8510
+FIRESTORE_HOST := 127.0.0.1:8580
+STORAGE_HOST := http://127.0.0.1:8590
+
+# One role on the host. The access log is off because it prints the client address
+# (SPEC 10.3 and 15). Plan 09 moves the roles into Compose services.
+UVICORN := uv run uvicorn veranico.main:create_app --factory --host 0.0.0.0 --no-access-log --timeout-graceful-shutdown 5
+
+# A fresh random secret, printed to stdout for a `$$(...)` capture and written nowhere.
+GEN_SECRET := head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n'
+
+# Result files of the campaigns (plan 09 reads them): .evidence/<kind>/<run_id>/.
+EVIDENCE := $(CURDIR)/.evidence
+ifndef RUN_ID
+RUN_ID := $(shell date -u +%Y%m%dT%H%M%SZ)
+endif
+
+# $(call with_emulators,<command>): run a command in backend/ against the emulators. They are
+# stopped afterwards only when this call started them, so a running `make dev` survives.
+define with_emulators
+running="$$($(COMPOSE) ps -q --status running)"; \
+export FIRESTORE_EMULATOR_HOST=$(FIRESTORE_HOST) STORAGE_EMULATOR_HOST=$(STORAGE_HOST); \
+$(COMPOSE) up -d --wait firestore storage; \
+status=0; (cd backend && $(1)) || status=$$?; \
+if [ -z "$$running" ]; then $(COMPOSE) down; fi; \
+exit $$status
+endef
+
+# $(call wait_for,<url>,<name>): poll a health endpoint for up to 30 seconds.
+define wait_for
+for attempt in $$(seq 1 60); do \
+	if curl --fail --silent --output /dev/null $(1); then break; fi; \
+	if [ "$$attempt" = 60 ]; then echo "$(2) did not answer on $(1)" >&2; exit 1; fi; \
+	sleep 0.5; \
+done
+endef
+
+.PHONY: help dev test test-integration test-failure lint fmt gen-client ingest build-cube \
+	mutation-proof evals load evidence traceability \
+	verify-m0 verify-m1 verify-m2 verify-m3 verify-m4 verify-m5 verify-m6
+
+help:
+	@echo "make dev               the whole stack locally; needs no .env and no key"
+	@echo "make test              backend unit and architecture tests; frontend tests and type check"
+	@echo "make test-integration  tests against the emulators"
+	@echo "make test-failure      failure campaign with the fault proxy"
+	@echo "make lint | fmt        ruff, mypy, import-linter, boundary script, eslint | ruff format, prettier"
+	@echo "make gen-client        export OpenAPI and regenerate the typed client (CHECK=1: fail on drift)"
+	@echo "make ingest LAT= LON=  fetch and cache point history"
+	@echo "make build-cube REGION= [SYNTHETIC=1 SEED=] [MEASURE=1]"
+	@echo "make mutation-proof | evals | load | evidence | traceability"
+	@echo "make verify-m0 .. verify-m6   the executable gate of each milestone"
+
+# Frontend dependencies follow the lockfile; pnpm rewrites .modules.yaml on every install.
+frontend/node_modules/.modules.yaml: frontend/pnpm-lock.yaml
+	pnpm --dir frontend install --frozen-lockfile
+	@touch $@
+
+# --- Development stack ------------------------------------------------------------------
+# Emulators and Jaeger through Compose; both roles and Vite on the host until plan 09 delivers
+# the image. The recipe passes the development values itself and generates the secrets the
+# roles need once per run; a non-empty value from the environment file is used instead.
+# Stopping it (Ctrl-C, or the end of any of the three processes) stops the processes and
+# removes the Compose services.
+dev: frontend/node_modules/.modules.yaml
+	@export FIRESTORE_EMULATOR_HOST=$(FIRESTORE_HOST) STORAGE_EMULATOR_HOST=$(STORAGE_HOST); \
+	export VERANICO_DELIVERY__INTERNAL_AUTH=token; \
+	export VERANICO_COOKIE_SIGNING_SECRET="$${VERANICO_COOKIE_SIGNING_SECRET:-$$($(GEN_SECRET))}"; \
+	export VERANICO_ACCESS__IP_HASH_SALT="$${VERANICO_ACCESS__IP_HASH_SALT:-$$($(GEN_SECRET))}"; \
+	export VERANICO_DELIVERY__WEBHOOK_SIGNING_SECRET="$${VERANICO_DELIVERY__WEBHOOK_SIGNING_SECRET:-$$($(GEN_SECRET))}"; \
+	export VERANICO_DELIVERY__INTERNAL_TOKEN="$${VERANICO_DELIVERY__INTERNAL_TOKEN:-$$($(GEN_SECRET))}"; \
+	frame_ancestors='["http://127.0.0.1:3450"]'; \
+	export VERANICO_FRAME_ANCESTORS="$${VERANICO_FRAME_ANCESTORS:-$$frame_ancestors}"; \
+	if [ -z "$${ANTHROPIC_API_KEY:-}" ]; then export VERANICO_ASSISTANT__MODEL_CLIENT=scripted; fi; \
+	bucket="$${VERANICO_STORAGE_BUCKET:-veranico-dev}"; \
+	pids=""; \
+	cleanup() { \
+		trap - EXIT INT TERM; \
+		if [ -n "$$pids" ]; then kill $$pids 2>/dev/null || true; wait $$pids 2>/dev/null || true; fi; \
+		$(COMPOSE) down; \
+	}; \
+	trap cleanup EXIT; trap 'exit 130' INT; trap 'exit 143' TERM; \
+	$(COMPOSE) up -d --wait firestore storage jaeger; \
+	created="$$(curl --silent --output /dev/null --write-out '%{http_code}' --request POST \
+		--header 'Content-Type: application/json' --data "{\"name\": \"$$bucket\"}" \
+		'$(STORAGE_HOST)/storage/v1/b?project=veranico-dev')"; \
+	case "$$created" in \
+		200|409) ;; \
+		*) echo "dev: could not create the bucket $$bucket in the storage emulator (HTTP $$created)" >&2; exit 1 ;; \
+	esac; \
+	(cd backend && APP_ROLE=api exec $(UVICORN) --port $(API_PORT)) & pids="$$pids $$!"; \
+	(cd backend && APP_ROLE=carrier exec $(UVICORN) --port $(CARRIER_PORT)) & pids="$$pids $$!"; \
+	(exec pnpm --dir frontend exec vite --port $(WEB_PORT)) & pids="$$pids $$!"; \
+	echo "dev: web http://127.0.0.1:$(WEB_PORT)  api http://127.0.0.1:$(API_PORT)  carrier http://127.0.0.1:$(CARRIER_PORT)  jaeger http://127.0.0.1:8516"; \
+	wait -n $$pids
+
+# --- Tests ------------------------------------------------------------------------------
+test: frontend/node_modules/.modules.yaml
+	cd backend && uv run pytest tests -q -m "$(FAST)"
+	pnpm --dir frontend test
+	pnpm --dir frontend typecheck
+
+# `make test-integration TESTS=tests/integration/test_emulators_smoke.py` runs one file.
+TESTS ?= tests
+test-integration:
+	@$(call with_emulators,uv run pytest $(TESTS) -m integration -q)
+
+# Failure campaign (SPEC 16.3): the emulators, the fault proxy of the `failure` Compose
+# profile and a carrier role on the host. The three VERANICO_FAULT_PROXY_* variables are in
+# the proxy's own terms: its control API as the host reaches it, and the `upstream` and
+# `listen` values of the proxy the tests create. The host reaches the listener on the same
+# port. Results go to .evidence/failure/<run_id>/{junit.xml,req.json}.
+test-failure:
+	@if [ -z "$$(find backend/tests/failure -name 'test_*.py' -print -quit 2>/dev/null)" ]; then \
+		echo "test-failure: not implemented in this milestone (plans 01, 03, 04, 06)" >&2; exit 2; \
+	fi
+	@export FIRESTORE_EMULATOR_HOST=$(FIRESTORE_HOST) STORAGE_EMULATOR_HOST=$(STORAGE_HOST); \
+	export VERANICO_DELIVERY__WEBHOOK_SIGNING_SECRET="$${VERANICO_DELIVERY__WEBHOOK_SIGNING_SECRET:-$$($(GEN_SECRET))}"; \
+	export VERANICO_FAULT_PROXY_API=http://127.0.0.1:8521; \
+	export VERANICO_FAULT_PROXY_UPSTREAM=host.docker.internal:$(CARRIER_PORT); \
+	export VERANICO_FAULT_PROXY_LISTEN=0.0.0.0:8520; \
+	running="$$($(COMPOSE) ps -q --status running)"; \
+	carrier=""; \
+	cleanup() { \
+		trap - EXIT INT TERM; \
+		if [ -n "$$carrier" ]; then kill $$carrier 2>/dev/null || true; wait $$carrier 2>/dev/null || true; fi; \
+		if [ -z "$$running" ]; then $(COMPOSE) --profile failure down; else $(COMPOSE) --profile failure rm --stop --force toxiproxy; fi; \
+	}; \
+	trap cleanup EXIT; trap 'exit 130' INT; trap 'exit 143' TERM; \
+	$(COMPOSE) --profile failure up -d --wait firestore storage toxiproxy; \
+	(cd backend && APP_ROLE=carrier exec $(UVICORN) --port $(CARRIER_PORT)) & carrier=$$!; \
+	$(call wait_for,http://127.0.0.1:$(CARRIER_PORT)/healthz,the carrier role); \
+	mkdir -p $(EVIDENCE)/failure/$(RUN_ID); \
+	cd backend && uv run pytest tests/failure -m failure \
+		--junitxml=$(EVIDENCE)/failure/$(RUN_ID)/junit.xml \
+		--req-report=$(EVIDENCE)/failure/$(RUN_ID)/req.json
+
+# --- Static checks ----------------------------------------------------------------------
+lint: frontend/node_modules/.modules.yaml
+	cd backend && uv run ruff check .
+	cd backend && uv run ruff format --check .
+	cd backend && uv run mypy
+	cd backend && uv run lint-imports
+	cd backend && uv run python scripts/validate_boundaries.py src/veranico/modules --strict
+	pnpm --dir frontend lint
+
+fmt: frontend/node_modules/.modules.yaml
+	cd backend && uv run ruff format .
+	pnpm --dir frontend format
 
 # Export the OpenAPI document and regenerate the typed frontend client from it.
 # `make gen-client CHECK=1` writes nothing and fails when either file is out of date.
-gen-client:
+gen-client: frontend/node_modules/.modules.yaml
 ifeq ($(CHECK),1)
 	cd backend && uv run python scripts/export_openapi.py --check
 	@generated="$$(mktemp -d)" && trap 'rm -rf "$$generated"' EXIT && \
@@ -19,3 +200,69 @@ else
 	cd backend && uv run python scripts/export_openapi.py
 	pnpm --dir frontend gen-client
 endif
+
+# --- Data scripts (plan 01) -------------------------------------------------------------
+# `--lat=<value>` keeps a negative coordinate from being read as an option.
+ingest:
+	@if [ -z "$(LAT)" ] || [ -z "$(LON)" ]; then echo "usage: make ingest LAT=<lat> LON=<lon>" >&2; exit 2; fi
+	cd backend && uv run python scripts/ingest.py --lat=$(LAT) --lon=$(LON)
+
+build-cube:
+	@if [ -z "$(REGION)" ]; then echo "usage: make build-cube REGION=<id> [SYNTHETIC=1 SEED=<n>] [MEASURE=1]" >&2; exit 2; fi
+	cd backend && uv run --group cube python scripts/build_cube.py --region $(REGION) \
+		$(if $(filter 1,$(SYNTHETIC)),--synthetic $(if $(SEED),--seed $(SEED))) \
+		$(if $(filter 1,$(MEASURE)),--measure)
+
+# --- Campaigns --------------------------------------------------------------------------
+# Result: .evidence/mutation/<run_id>/mutants.json. A run that wrote nothing leaves no directory.
+mutation-proof:
+	@mkdir -p $(EVIDENCE)/mutation/$(RUN_ID)
+	@status=0; \
+	(cd backend && uv run python scripts/mutation_proof.py --json $(EVIDENCE)/mutation/$(RUN_ID)/mutants.json) || status=$$?; \
+	rmdir $(EVIDENCE)/mutation/$(RUN_ID) $(EVIDENCE)/mutation $(EVIDENCE) 2>/dev/null || true; \
+	exit $$status
+
+evals:
+	@if [ ! -f backend/tests/evals/run.py ]; then echo "evals: not implemented in this milestone (plan 06)" >&2; exit 2; fi
+	cd backend && uv run python -m tests.evals.run
+
+load:
+	@if [ ! -f load/run.py ]; then echo "load: not implemented in this milestone (plan 09)" >&2; exit 2; fi
+	cd backend && uv run python ../load/run.py
+
+# The requirement-to-test matrix of the current tree, from every suite that can run here.
+# Results: .evidence/traceability/<run_id>/{backend.req.json,backend-integration.req.json,
+# frontend.req.json (when the frontend suite writes frontend/.cache/req.json),matrix.json,matrix.md}.
+# `REQUIRE_ALL=1` also fails when a requirement has no passing test. The matrix is written
+# even when a test fails; the target then exits non-zero.
+TRACE := $(EVIDENCE)/traceability/$(RUN_ID)
+traceability: frontend/node_modules/.modules.yaml
+	@mkdir -p $(TRACE); status=0; \
+	(cd backend && uv run pytest tests -q -m "$(FAST)" --req-report=$(TRACE)/backend.req.json) || status=1; \
+	($(call with_emulators,uv run pytest tests -q -m integration --req-report=$(TRACE)/backend-integration.req.json)) || status=1; \
+	rm -f frontend/.cache/req.json; \
+	pnpm --dir frontend test || status=1; \
+	reports="--report $(TRACE)/backend.req.json --report $(TRACE)/backend-integration.req.json"; \
+	if [ -f frontend/.cache/req.json ]; then \
+		cp frontend/.cache/req.json $(TRACE)/frontend.req.json; \
+		reports="$$reports --report $(TRACE)/frontend.req.json"; \
+	fi; \
+	(cd backend && uv run python scripts/traceability.py --check-ids --matrix --json $(TRACE)/matrix.json \
+		$(if $(filter 1,$(REQUIRE_ALL)),--require-all) $$reports > $(TRACE)/matrix.md) || status=1; \
+	echo "traceability: results in $(TRACE)"; \
+	exit $$status
+
+# The three campaigns run even when one fails, so the record shows the failure; the target
+# then exits non-zero. Load and evaluation sections come from their newest stored run.
+evidence:
+	@if [ ! -f backend/scripts/evidence.py ]; then echo "evidence: not implemented in this milestone (plan 09)" >&2; exit 2; fi
+	@status=0; \
+	$(MAKE) traceability || status=1; \
+	$(MAKE) mutation-proof || status=1; \
+	$(MAKE) test-failure || status=1; \
+	(cd backend && uv run python scripts/evidence.py render) || status=1; \
+	exit $$status
+
+# --- Gates ------------------------------------------------------------------------------
+verify-m0 verify-m1 verify-m2 verify-m3 verify-m4 verify-m5 verify-m6: verify-%:
+	cd backend && uv run python scripts/gate.py $*

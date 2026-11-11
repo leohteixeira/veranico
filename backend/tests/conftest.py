@@ -9,11 +9,13 @@ none) and `outcome` is `passed`, `failed` or `skipped`. Deselected tests are not
 """
 
 import json
+import os
 from pathlib import Path
 
 import pytest
 
 _OPTION = "--req-report"
+_PROVIDER_KEYS = ("ANTHROPIC_API_KEY", "CDS_API_KEY")
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -26,6 +28,11 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 
 
 def pytest_configure(config: pytest.Config) -> None:
+    # The Makefile exports the owner's keys to its recipes. No test may reach a keyed or paid
+    # service (goal.md section 3), so the keys never enter a test process: a test that needs
+    # a value sets its own. The evaluation runner is not a pytest run and keeps its key.
+    for name in _PROVIDER_KEYS:
+        os.environ.pop(name, None)
     path = config.getoption(_OPTION)
     if path is not None:
         config.pluginmanager.register(_RequirementReport(Path(path)), "veranico-req-report")
