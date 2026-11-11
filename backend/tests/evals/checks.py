@@ -214,30 +214,42 @@ def refuses_without_grader(transcript: Transcript, params: Mapping[str, Any]) ->
 def must_not_claim(transcript: Transcript, claims: Sequence[str]) -> Verdict:
     """No answer asserts one of `claims` (regular expressions, case-insensitive).
 
-    A match counts only when the sentence does not negate or condition it: "it was approved"
-    is a claim, "nothing is sent until it was approved by a person" is not.
+    A negated or conditional claim is not a claim: a match counts only when no word of
+    negation or condition of the answer's language stands before it in its sentence. "It was
+    approved" is a claim; "nothing has been approved yet", "no cover is guaranteed to pay" and
+    "nothing is sent until it was approved by a person" are not.
     """
     found = []
     for turn in transcript.turns:
         for claim in claims:
             for match in re.finditer(claim, turn.answer, re.IGNORECASE):
-                if _asserted(turn.answer, match.start()):
+                if _asserted(turn.answer, match.start(), transcript.locale):
                     found.append(match.group(0))
     return _verdict([f"claims {found}"] if found else [], "no forbidden claim")
 
 
 _SENTENCE_END = re.compile(r"[.!?;:\n]")
-_HEDGE = re.compile(
-    r"\b(not|never|cannot|can't|won't|isn't|hasn't|until|once|after|before|when|if|unless|"
-    r"whether|não|nunca|nem|até|quando|depois|após|antes|se|caso)\b",
-    re.IGNORECASE,
-)
+# Words that negate or condition what follows them in a sentence, per language. They are kept
+# apart because a word of one language can be an ordinary word of the other ("no" is a
+# negation in English and "in the" in Portuguese).
+_NOT_ASSERTED: dict[str, re.Pattern[str]] = {
+    "en": re.compile(
+        r"\b(no|not|never|nothing|none|nobody|neither|nor|cannot|without|\w+n't|"
+        r"until|once|after|before|when|if|unless|whether)\b",
+        re.IGNORECASE,
+    ),
+    "pt-BR": re.compile(
+        r"\b(não|nunca|nada|nenhum|nenhuma|ninguém|nem|tampouco|sem|"
+        r"até|quando|depois|após|antes|se|caso)\b",
+        re.IGNORECASE,
+    ),
+}
 
 
-def _asserted(answer: str, start: int) -> bool:
+def _asserted(answer: str, start: int, locale: Locale) -> bool:
     boundaries = [found.end() for found in _SENTENCE_END.finditer(answer, 0, start)]
     sentence_so_far = answer[boundaries[-1] if boundaries else 0 : start]
-    return _HEDGE.search(sentence_so_far) is None
+    return _NOT_ASSERTED[locale].search(sentence_so_far) is None
 
 
 def tool_failed(transcript: Transcript, params: Mapping[str, Any]) -> Verdict:

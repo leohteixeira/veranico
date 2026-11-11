@@ -92,7 +92,7 @@ def test_prompt_never_lets_synthetic_figures_pass_as_real_history() -> None:
 
 @pytest.mark.req("R-9.3-8")
 def test_version_comes_from_the_file_name() -> None:
-    assert PROMPT.version == "v2"
+    assert PROMPT.version == "v3"
     assert PROMPT.text.startswith("You are the cover structuring agent of Veranico.")
 
 
@@ -121,7 +121,7 @@ def test_a_directory_without_a_prompt_fails_loudly(tmp_path: Path) -> None:
 def test_prompt_text_matches_the_checksum_recorded_for_its_version() -> None:
     # An edit without a new version fails here: add `system.v<N+1>.md` and its checksum instead.
     assert PROMPT.sha256 == PROMPT_SHA256[PROMPT.version]
-    assert set(PROMPT_SHA256) == {"v1", "v2"}
+    assert set(PROMPT_SHA256) == {"v1", "v2", "v3"}
 
 
 @pytest.mark.req("R-9.3-8")
@@ -146,6 +146,19 @@ def test_the_prompt_closes_what_the_first_evaluation_run_showed() -> None:
     assert "do not trim, correct or complete it" in numbered[6]
     # Text written between tool calls contradicted the final answer.
     assert "Write nothing before or between tool calls" in PROMPT.text
+
+
+@pytest.mark.req("R-9.3-1", "R-9.3-2", "R-9.3-6")
+def test_the_prompt_closes_what_the_full_runs_on_v2_showed() -> None:
+    numbered = rules()
+
+    # A rate was written with its last digit cut off, which no tool value rounds to.
+    assert "or round it correctly; never truncate" in PROMPT.text
+    # With every essential stated, the agent asked for confirmation and skipped the backtest.
+    assert "do not ask the user to confirm them or for permission to continue" in PROMPT.text
+    assert "run through `backtest_index` in the same turn" in PROMPT.text
+    # The state the user gave was dropped from the place name, which made it ambiguous.
+    assert "with the state when the user gave one" in numbered[6]
 
 
 def user(seq: int, turn: int, text: str) -> UserEntry:

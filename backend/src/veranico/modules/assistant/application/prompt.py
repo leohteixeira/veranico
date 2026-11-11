@@ -45,6 +45,10 @@ PROMPT_SHA256 = {
     # one answer after the tools instead of a narration between them, questions that end with
     # a question mark, and no Markdown marks (the interface shows the text as written).
     "v2": "3020e73e8e6aa63d04f90099e71e4f4253d3b58699a07e6c071a3ca618a54f65",
+    # v3, after two full runs on v2: figures written with the tool's digits or rounded, never
+    # truncated; no confirmation question when every essential is stated, the backtest runs in
+    # the same turn; the place name goes to the tool with the state the user gave.
+    "v3": "abe71ec7e5e8205c7c9344a66110112f36bf4822a7df0281a35df8fd9588df58",
 }
 
 _PROMPT_FILE = re.compile(r"^system\.v(\d+)\.md$")
