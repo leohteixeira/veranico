@@ -30,6 +30,7 @@ negative local-day total (which a wrong time convention produces) fails. A misma
 an answer it does not recognise.
 """
 
+import io
 import math
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
@@ -50,6 +51,11 @@ CRS = "EPSG:4326"
 STEP_DEG = 0.1
 # The documented limit of one `computePixels` request.
 MAX_BANDS = 1024
+# The structured array names every band in its header, about 44 bytes each: a year of 733
+# bands needs about 32 kB, over NumPy's default limit of 10,000 bytes, which the client's own
+# NUMPY_NDARRAY conversion keeps. The raw NPY answer is loaded here with this bound instead,
+# room for MAX_BANDS, and never with pickles.
+MAX_NPY_HEADER_BYTES = 100_000
 # The client reads no environment variable for the project (ADR 0019), so this is ours.
 PROJECT_VARIABLE = "EARTHENGINE_PROJECT"
 AUTHENTICATE_COMMAND = "cd backend && uv run --group cube earthengine authenticate"
@@ -368,7 +374,7 @@ def earth_engine_fetch(project: str) -> Fetch:
             lambda: ee.data.computePixels(
                 {
                     "expression": collection.toBands(),
-                    "fileFormat": "NUMPY_NDARRAY",
+                    "fileFormat": "NPY",
                     "grid": request.grid,
                 }
             )
@@ -379,10 +385,18 @@ def earth_engine_fetch(project: str) -> Fetch:
             native_transform=projection.get("transform", []),
             image_ids=info["ids"],
             time_starts_ms=info["times"],
-            pixels=pixels,
+            pixels=load_npy(pixels),
         )
 
     return fetch
+
+
+def load_npy(raw: bytes) -> np.ndarray:
+    """The structured array of a raw NPY answer, without pickles and with a bounded header."""
+    loaded = np.load(io.BytesIO(raw), allow_pickle=False, max_header_size=MAX_NPY_HEADER_BYTES)
+    if not isinstance(loaded, np.ndarray):
+        raise EarthEngineResponseError("the answer is not one NumPy array")
+    return loaded
 
 
 def _milliseconds(moment: datetime) -> int:

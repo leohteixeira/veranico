@@ -775,3 +775,28 @@ def test_creating_the_api_application_leaves_the_earth_engine_client_unloaded() 
 
     assert result.returncode == 0, result.stderr[-2000:]
     assert result.stdout.strip() == "[]"
+
+
+def test_a_raw_answer_with_a_year_of_bands_loads_without_pickles() -> None:
+    """A structured array of 733 named bands has a header over NumPy's default limit."""
+    import io
+
+    fields = [(f"2024010{n:04d}_total_precipitation", "<f4") for n in range(733)]
+    array = np.zeros((20, 20), dtype=fields)
+    buffer = io.BytesIO()
+    np.save(buffer, array, allow_pickle=False)
+
+    loaded = download.load_npy(buffer.getvalue())
+
+    assert loaded.dtype.names == array.dtype.names
+    assert loaded.shape == (20, 20)
+
+
+def test_a_raw_answer_holding_pickled_objects_is_refused() -> None:
+    import io
+
+    buffer = io.BytesIO()
+    np.save(buffer, np.array([{"not": "pixels"}], dtype=object), allow_pickle=True)
+
+    with pytest.raises(ValueError, match="allow_pickle"):
+        download.load_npy(buffer.getvalue())
