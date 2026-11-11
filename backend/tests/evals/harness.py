@@ -8,9 +8,14 @@ relay of the API role runs. The two roles and the outside world meet in one HTTP
 
 - `http://api.test` is the API role (the relay calls its internal deliver route there);
 - `http://carrier.test` is the mock carrier (the signed webhook goes there);
-- any other address is answered from the recordings under `fixtures/`, each stored with the
-  exact request URL that produced it. A request without a recording fails and is listed in
-  `Application.unrecorded`, so nothing here reaches the network.
+- any other address is answered from recorded answers, each stored with the exact request
+  URL that produced it: the files under `fixtures/` here and the geocoding recordings of the
+  climate tests. A request without a recording is refused as a connection error and listed
+  in `Application.unrecorded`, so nothing here reaches the network.
+
+With `any_place_name` the geocoder is answered by place name instead of by exact URL, without
+regard to case or accents, and a name nobody recorded gets the geocoder's "nothing matches"
+answer. A real model words its searches freely, so the evaluation suite needs that.
 
 Weather comes from cubes installed by `install_synthetic_cubes`: generated, seeded data that
 the application labels `synthetic`. Nothing measured on them is real weather history.
@@ -25,8 +30,9 @@ import os
 import socket
 import subprocess
 import sys
+import unicodedata
 import uuid
-from collections.abc import AsyncIterator, Sequence
+from collections.abc import AsyncIterator, Callable, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -40,14 +46,21 @@ from veranico.main import create_app
 from veranico.shared.infrastructure.settings import Settings
 
 BACKEND = Path(__file__).resolve().parents[2]
-FIXTURES = Path(__file__).resolve().parent / "fixtures"
+RECORDINGS = (
+    Path(__file__).resolve().parent / "fixtures",
+    BACKEND / "tests" / "unit" / "climate" / "fixtures" / "geocoding",
+)
 FIRESTORE_HOST = os.environ.get("FIRESTORE_EMULATOR_HOST", "127.0.0.1:8580")
 STORAGE_HOST = os.environ.get("STORAGE_EMULATOR_HOST", "http://127.0.0.1:8590")
 API_HOST = "api.test"
 CARRIER_HOST = "carrier.test"
+GEOCODING_HOST = "geocoding-api.open-meteo.com"
 BROWSER_ADDRESS = "203.0.113.61"  # the socket peer of the browser (TEST-NET-3)
 SHOWCASE_REGIONS = ("sul-de-minas", "sorriso", "ribeirao-preto")
 CUBE_SEED = 1
+NOTHING_MATCHES: dict[str, Any] = {"generationtime_ms": 0.0}  # the geocoder's empty answer
+
+ModelFactory = Callable[[Settings], object]
 
 
 class EmulatorDownError(RuntimeError):
@@ -89,31 +102,48 @@ def install_synthetic_cubes(root: Path, regions: Sequence[str] = SHOWCASE_REGION
 
 
 def recordings() -> dict[str, dict[str, Any]]:
-    """Every recorded answer under `fixtures/`, by request URL."""
+    """Every recorded answer, by request URL."""
     found = {}
-    for path in sorted(FIXTURES.rglob("*.json")):
-        recording = json.loads(path.read_text(encoding="utf-8"))
-        found[recording["request"]["url"]] = recording
+    for directory in RECORDINGS:
+        for path in sorted(directory.rglob("*.json")):
+            recording = json.loads(path.read_text(encoding="utf-8"))
+            found[recording["request"]["url"]] = recording
     return found
+
+
+def plain_name(name: str) -> str:
+    """A place name without case, accents or surrounding space."""
+    decomposed = unicodedata.normalize("NFKD", name.strip().casefold())
+    return "".join(char for char in decomposed if not unicodedata.combining(char))
 
 
 class _Network(httpx.AsyncBaseTransport):
     """Routes a request to a role by host and answers the rest from the recordings."""
 
-    def __init__(self, recorded: dict[str, dict[str, Any]]) -> None:
+    def __init__(self, recorded: dict[str, dict[str, Any]], *, any_place_name: bool) -> None:
         self.roles: dict[str, httpx.ASGITransport] = {}
         self.recorded = recorded
         self.unrecorded: list[str] = []
+        self._places: dict[str, dict[str, Any]] | None = None
+        if any_place_name:
+            self._places = {
+                plain_name(httpx.URL(url).params["name"]): recording
+                for url, recording in recorded.items()
+                if httpx.URL(url).host == GEOCODING_HOST
+            }
 
     async def handle_async_request(self, request: httpx.Request) -> httpx.Response:
         role = self.roles.get(request.url.host)
         if role is not None:
             return await role.handle_async_request(request)
+        if self._places is not None and request.url.host == GEOCODING_HOST:
+            place = self._places.get(plain_name(request.url.params.get("name", "")))
+            return httpx.Response(200, json=place["body"] if place else NOTHING_MATCHES)
         url = str(request.url)
         recording = self.recorded.get(url)
         if recording is None or recording["request"]["method"] != request.method:
             self.unrecorded.append(f"{request.method} {url}")
-            raise AssertionError(f"no recording for {request.method} {url}")
+            raise httpx.ConnectError(f"no recording for {request.method} {url}", request=request)
         return httpx.Response(recording["status"], json=recording["body"])
 
 
@@ -122,6 +152,7 @@ class Application:
     api: FastAPI
     settings: Settings
     container: Container
+    model_client: object | None  # what `model_client` or `model_factory` gave
     unrecorded: list[str]  # outside requests that had no recording
     _stack: contextlib.AsyncExitStack = field(repr=False)
 
@@ -139,10 +170,16 @@ async def application(
     weather_root: Path,
     *,
     model_client: object | None = None,
-    assistant: dict[str, Any] | None = None,
+    model_factory: ModelFactory | None = None,
+    any_place_name: bool = False,
     **overrides: Any,
 ) -> AsyncIterator[Application]:
-    """Both roles, running. `model_client` replaces the client the `assistant` settings name."""
+    """Both roles, running.
+
+    `model_client` replaces the client the `assistant` settings name; `model_factory` builds
+    it from the settings of this application instead. `overrides` go to the API role's
+    settings.
+    """
     require_emulators()
     shared = {
         "firestore_emulator_host": FIRESTORE_HOST,
@@ -161,10 +198,11 @@ async def application(
             "relay_backoff_base_seconds": 0.05,
             "relay_backoff_cap_seconds": 0.2,
         },
-        assistant=assistant or {},
         **overrides,
     )
-    network = _Network(recordings())
+    if model_factory is not None:
+        model_client = model_factory(settings)
+    network = _Network(recordings(), any_place_name=any_place_name)
     async with contextlib.AsyncExitStack() as stack:
         http = await stack.enter_async_context(httpx.AsyncClient(transport=network))
         carrier = create_app(
@@ -181,6 +219,7 @@ async def application(
             api=api,
             settings=settings,
             container=container,
+            model_client=model_client,
             unrecorded=network.unrecorded,
             _stack=stack,
         )

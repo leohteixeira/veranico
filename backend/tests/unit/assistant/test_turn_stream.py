@@ -84,6 +84,23 @@ async def test_chat_stream_never_carries_user_message() -> None:
     assert MESSAGE not in json.dumps([event.model_dump(mode="json") for event in events])
 
 
+@pytest.mark.req("R-2-2")
+async def test_a_clarifying_question_is_relayed_and_no_tool_runs() -> None:
+    # Whether the model asks is measured by the `clarify_*` cases of the evaluation suite;
+    # this proves the loop carries the question to the user and runs nothing on its own.
+    kit = build_turn_kit()
+    question = "Which limit do you want, and which window should the cover span?"
+    service, model = kit.scripted(say(question))
+
+    events = await run(service)
+
+    assert text_of(events) == question
+    assert finished_tools(events) == []
+    assert not any(isinstance(event, ToolStarted) for event in events)
+    assert done(events).stop_reason == "end_turn"
+    assert len(model.requests) == 1
+
+
 async def test_plain_answer_ends_with_end_turn() -> None:
     kit = build_turn_kit()
     service, model = kit.scripted(say("Hello. How can I help?"))
