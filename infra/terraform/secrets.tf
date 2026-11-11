@@ -3,8 +3,8 @@
 #
 #   gcloud secrets versions add <secret id> --data-file=-
 #
-# The Copernicus CDS key is not here and is in no service's environment: it is used only by
-# the offline cube build (SPEC 17).
+# The Earth Engine project and credentials are not here and are in no service's environment:
+# they are used only by the offline cube build (SPEC 17, ADR 0019).
 
 locals {
   # Secret id => the environment variable that carries it and the roles that read it.

@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 
 _OPTION = "--req-report"
-_PROVIDER_KEYS = ("ANTHROPIC_API_KEY", "CDS_API_KEY")
+_PROVIDER_KEYS = ("ANTHROPIC_API_KEY", "EARTHENGINE_PROJECT")
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:

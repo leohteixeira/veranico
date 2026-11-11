@@ -53,4 +53,4 @@ Backend:
 
 ## Not in this list
 
-Open human gates are not omissions and are tracked in the goal contract (`docs/veranico/goal.md` in the workspace repository): the three real cubes and ADR 0016 (chunking) need a Copernicus CDS account; the deployment needs a Google Cloud project.
+Open human gates are not omissions and are tracked in the goal contract (`docs/veranico/goal.md` in the workspace repository): the three real cubes and ADR 0016 (chunking) need a Cloud project registered for Google Earth Engine (ADR 0019); the deployment needs a Google Cloud project.

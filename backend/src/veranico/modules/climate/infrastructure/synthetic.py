@@ -79,7 +79,7 @@ def generate_cube(region: RegionDef, first_year: int, last_year: int, seed: int)
     )
 
 
-def write_synthetic_cds_year(
+def write_synthetic_year(
     path: Path, region: Grid, year: int, seed: int, *, south_to_north: bool = False
 ) -> None:
     """Write one synthetic yearly file in the shape the cube converter reads (metres).

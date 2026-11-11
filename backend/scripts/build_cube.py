@@ -4,10 +4,12 @@
     uv run --group cube python scripts/build_cube.py --region <id> [--synthetic --seed <n>]
         [--measure]
 
-Without `--synthetic` the cube is real ERA5-Land from the Copernicus Climate Data Store
-(ADR 0018). That needs the personal access token in `CDS_API_KEY`; without it the script
-says that human gate H1 is open and exits 3. Yearly files are kept under
-`.cache/cds/<region>/`, so a rerun downloads only the missing years.
+Without `--synthetic` the cube is real ERA5-Land read from Google Earth Engine (ADR 0018,
+ADR 0019). That needs a Cloud project registered for Earth Engine, named in
+`EARTHENGINE_PROJECT`, and credentials stored once by `earthengine authenticate`; without
+either the script says that human gate H1 is open, names the step to take and exits 3,
+before any download. Yearly files are kept under `.cache/earth-engine/<region>/`, so a
+rerun downloads only the missing years.
 
 With `--synthetic` a seeded, generated cube is installed and labelled synthetic: the region
 then answers `synthetic = true`, and every cell reports the source `synthetic`.
@@ -20,8 +22,8 @@ layouts to a working directory under `.cache/chunking/`, measured, and the copie
 The numbers go to standard output as a Markdown table and to
 `.cache/chunking/<region>.json`; they are the evidence for ADR 0016.
 
-Exit codes: 0 built or measured, 1 failed, 3 no CDS key or no network (reported as open by
-`gate.py`).
+Exit codes: 0 built or measured, 1 failed (including a request Earth Engine refused), 3 no
+project, no credentials or no network (reported as open by `gate.py`).
 """
 
 import argparse
@@ -51,14 +53,17 @@ from veranico.modules.climate.domain.regions import (
     cell_centre,
     region_by_id,
 )
-from veranico.modules.climate.infrastructure.cds_download import (
-    CdsRefusedError,
-    CdsUnreachableError,
-    CdsYearlySource,
-    cdsapi_retrieve,
-)
 from veranico.modules.climate.infrastructure.chunk_measure import markdown_table, measure
 from veranico.modules.climate.infrastructure.cube_build import convert_to_arrays, file_checksum
+from veranico.modules.climate.infrastructure.earth_engine_download import (
+    PROJECT_VARIABLE,
+    EarthEngineRefusedError,
+    EarthEngineSetupError,
+    EarthEngineUnreachableError,
+    EarthEngineYearlySource,
+    Fetch,
+    earth_engine_fetch,
+)
 from veranico.modules.climate.infrastructure.synthetic import (
     GENERATOR,
     generate_cube,
@@ -69,8 +74,7 @@ from veranico.shared.kernel.clock import Clock, SystemClock
 from veranico.shared.kernel.errors import DatasetNotFoundError
 
 EXIT_OK, EXIT_FAILED, EXIT_OPEN = 0, 1, 3
-CDS_KEY_VARIABLE = "CDS_API_KEY"
-CDS_CACHE = Path(".cache/cds")
+YEARLY_CACHE = Path(".cache/earth-engine")
 MEASUREMENTS = Path(".cache/chunking")
 DEFAULT_SEED = 1
 
@@ -87,11 +91,11 @@ async def build_real(
     region: RegionDef,
     first_year: int,
     last_year: int,
-    key: str,
+    fetch: Fetch,
     cache_root: Path,
 ) -> BuildReport:
     build = BuildCube(
-        store, CdsYearlySource(cdsapi_retrieve(key)), convert_to_arrays, file_checksum, cache_root
+        store, EarthEngineYearlySource(fetch), convert_to_arrays, file_checksum, cache_root
     )
     return await build(region, first_year, last_year)
 
@@ -170,11 +174,13 @@ def main(argv: list[str] | None = None) -> int:
         return measure_installed(store_from_environment(settings, clock), region, clock)
     first_year = settings.climate.first_year
     last_year = last_complete_year(clock.now().date())
-    key = os.environ.get(CDS_KEY_VARIABLE, "").strip()
-    if not arguments.synthetic and not key:
+    project = os.environ.get(PROJECT_VARIABLE, "").strip()
+    if not arguments.synthetic and not project:
         print(
-            f"build_cube: open, {CDS_KEY_VARIABLE} is not set: the real cube needs a Copernicus "
-            "account (human gate H1). Use --synthetic for a seeded cube labelled synthetic.",
+            f"build_cube: open, {PROJECT_VARIABLE} is not set: the real cube needs a Cloud "
+            "project registered for Earth Engine (human gate H1); put its id in .env as "
+            f"{PROJECT_VARIABLE}=<project-id>. Use --synthetic for a seeded cube labelled "
+            "synthetic.",
             file=sys.stderr,
         )
         return EXIT_OPEN
@@ -186,11 +192,17 @@ def main(argv: list[str] | None = None) -> int:
                 build_synthetic(store, region, first_year, last_year, arguments.seed)
             )
         else:
-            report = asyncio.run(build_real(store, region, first_year, last_year, key, CDS_CACHE))
-    except CdsUnreachableError:
-        print("build_cube: open, no answer from the Climate Data Store", file=sys.stderr)
+            fetch = earth_engine_fetch(project)  # before any download
+            report = asyncio.run(
+                build_real(store, region, first_year, last_year, fetch, YEARLY_CACHE)
+            )
+    except EarthEngineSetupError as error:
+        print(f"build_cube: open, {error}", file=sys.stderr)
         return EXIT_OPEN
-    except CdsRefusedError as error:
+    except EarthEngineUnreachableError:
+        print("build_cube: open, no answer from Earth Engine", file=sys.stderr)
+        return EXIT_OPEN
+    except EarthEngineRefusedError as error:
         print(f"build_cube: failed, {error}", file=sys.stderr)
         return EXIT_FAILED
     except WeatherDataError as error:

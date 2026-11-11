@@ -49,5 +49,5 @@ def test_every_variable_is_documented_once_and_nothing_else_is() -> None:
 def test_no_secret_has_a_value() -> None:
     secrets = {name for name, secret in read_by_settings().items() if secret}
 
-    assert len(secrets) == 7
+    assert len(secrets) == 6  # the Earth Engine project id (ADR 0019) is not a secret
     assert {name: value for name, value in documented() if name in secrets and value} == {}

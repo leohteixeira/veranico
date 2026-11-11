@@ -344,7 +344,7 @@ footer{border-top:1px solid var(--line-strong);margin-top:72px;padding-top:20px;
         <div class="diagram-scroll" tabindex="0" role="region" aria-label="System context diagram, scrollable on small screens">
         <svg viewBox="0 0 960 600" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="d1-title d1-desc">
           <title id="d1-title">System context</title>
-          <desc id="d1-desc">The visitor browser and a broker API client call the API role. The API role calls the Anthropic API, Open-Meteo, Firestore, Cloud Storage, Cloud Tasks and the carrier role. Cloud Tasks and Cloud Scheduler call the API role back. The browser loads EOX tiles directly. An offline build downloads from the Copernicus CDS and uploads cubes to Cloud Storage.</desc>
+          <desc id="d1-desc">The visitor browser and a broker API client call the API role. The API role calls the Anthropic API, Open-Meteo, Firestore, Cloud Storage, Cloud Tasks and the carrier role. Cloud Tasks and Cloud Scheduler call the API role back. The browser loads EOX tiles directly. An offline build reads ERA5-Land from Google Earth Engine and uploads cubes to Cloud Storage.</desc>
           <defs>
             <marker id="d1-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0 0 10 5 0 10Z" class="mk"/></marker>
             <marker id="d1-at" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0 0 10 5 0 10Z" class="mk-teal"/></marker>
@@ -370,7 +370,7 @@ footer{border-top:1px solid var(--line-strong);margin-top:72px;padding-top:20px;
           <text class="ts" x="501" y="84" text-anchor="middle">ERA5-Land, no key</text>
 
           <rect class="box k-ochre" x="590" y="40" width="134" height="64" rx="12"/>
-          <text class="tt" x="657" y="66" text-anchor="middle">Copernicus CDS</text>
+          <text class="tt" x="657" y="66" text-anchor="middle">Earth Engine</text>
           <text class="ts" x="657" y="84" text-anchor="middle">ERA5-Land NetCDF</text>
 
           <rect class="box k-teal dashed" x="774" y="40" width="150" height="64" rx="12"/>
@@ -457,7 +457,7 @@ footer{border-top:1px solid var(--line-strong);margin-top:72px;padding-top:20px;
           <span><i class="plain"></i>people and clients</span>
           <span><i class="ln"></i>arrow: from the caller to what it calls</span>
         </div>
-        <figcaption><strong>Diagram 1 — System context.</strong> The dashed box is not deployed: the cube build runs offline, and it is the only code that talks to the Copernicus CDS. EOX tiles are fetched by the browser; the backend never calls EOX.</figcaption>
+        <figcaption><strong>Diagram 1 — System context.</strong> The dashed box is not deployed: the cube build runs offline, and it is the only code that talks to Google Earth Engine (ERA5-Land, ADR 0019). EOX tiles are fetched by the browser; the backend never calls EOX.</figcaption>
       </figure>
 
       <div class="table-wrap">
@@ -469,7 +469,7 @@ footer{border-top:1px solid var(--line-strong);margin-top:72px;padding-top:20px;
             <tr><td>Visitor browser</td><td>EOX tiles</td><td class="wrap">Relief and satellite basemap tiles, directly from the browser. No account and no key.</td></tr>
             <tr><td>API role</td><td>Anthropic API</td><td class="wrap">The Messages API with tool use, called by the agent loop through the <code>ModelClient</code> port.</td></tr>
             <tr><td>API role</td><td>Open-Meteo</td><td class="wrap">Daily history from <code>/v1/archive</code> for points outside the showcase regions, fetched on first use; the Geocoding API behind the geocoding port for free-text place names. No key.</td></tr>
-            <tr><td>Offline build</td><td>Copernicus CDS</td><td class="wrap">ERA5-Land daily statistics as NetCDF, one request per region and year. <code>CDS_API_KEY</code> is used only here and never reaches the running service.</td></tr>
+            <tr><td>Offline build</td><td>Google Earth Engine</td><td class="wrap">Hourly ERA5-Land precipitation at two time steps a day on the region's 0.1° grid, one request per region and year, summed to local days and written as NetCDF. The Earth Engine project and credentials are used only here and never reach the running service.</td></tr>
             <tr><td>API role</td><td>Firestore</td><td class="wrap">Transactional state, in collections owned by one module each.</td></tr>
             <tr><td>API role</td><td>Cloud Storage</td><td class="wrap">Weather cubes, point stores and quote documents. Documents are served through the API, never through public bucket URLs.</td></tr>
             <tr><td>API role</td><td>Cloud Tasks</td><td class="wrap">One task per committed outbox event, named after the event id. The task calls back <code>POST /internal/outbox/{event_id}/deliver</code>, which performs one delivery attempt.</td></tr>
@@ -1067,7 +1067,7 @@ footer{border-top:1px solid var(--line-strong);margin-top:72px;padding-top:20px;
         <div class="diagram-scroll" tabindex="0" role="region" aria-label="Weather data paths diagram, scrollable on small screens">
         <svg viewBox="0 0 960 604" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="d6-title d6-desc">
           <title id="d6-title">Weather data paths</title>
-          <desc id="d6-desc">Regional cubes are built offline: NetCDF files from the Copernicus CDS are merged and converted to one Zarr store per region and uploaded to Cloud Storage. Points outside the regions are fetched from Open-Meteo on first use and stored as one-cell Zarr stores. The WeatherStore port reads both, and ClimateFacade serves pricing, documents and the assistant.</desc>
+          <desc id="d6-desc">Regional cubes are built offline: NetCDF files of ERA5-Land read from Google Earth Engine are merged and converted to one Zarr store per region and uploaded to Cloud Storage. Points outside the regions are fetched from Open-Meteo on first use and stored as one-cell Zarr stores. The WeatherStore port reads both, and ClimateFacade serves pricing, documents and the assistant.</desc>
           <defs>
             <marker id="d6-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto"><path d="M0 0 10 5 0 10Z" class="mk"/></marker>
           </defs>
@@ -1076,7 +1076,7 @@ footer{border-top:1px solid var(--line-strong);margin-top:72px;padding-top:20px;
           <rect class="zone" x="24" y="24" width="728" height="192" rx="16"/>
           <text class="tz" x="42" y="47">REGIONAL CUBES · BUILT OFFLINE · THREE SHOWCASE REGIONS</text>
           <rect class="box k-ochre" x="42" y="60" width="160" height="82" rx="12"/>
-          <text class="tt" x="58" y="84">Copernicus CDS</text>
+          <text class="tt" x="58" y="84">Earth Engine</text>
           <text class="ts" x="58" y="103">ERA5-Land daily</text>
           <text class="ts" x="58" y="119">statistics, NetCDF</text>
           <rect class="box k-teal dashed" x="262" y="60" width="210" height="82" rx="12"/>
@@ -1095,7 +1095,7 @@ footer{border-top:1px solid var(--line-strong);margin-top:72px;padding-top:20px;
           <path class="e" d="M732 101H783" marker-end="url(#d6-a)"/>
           <text class="ts sm" x="42" y="166">One request per region and year. Yearly files are cached, so a rerun downloads only the missing years.</text>
           <text class="ts sm" x="42" y="183">Chunks keep the full time axis together with small spatial blocks (for example <tspan class="m">time=-1, lat=10, lon=10</tspan>).</text>
-          <text class="ts sm" x="42" y="200">The manifest records source, request, years, checksums and build time. The running service never calls the CDS.</text>
+          <text class="ts sm" x="42" y="200">The manifest records source, request, years, checksums and build time. The running service never calls Earth Engine.</text>
 
           <!-- band B -->
           <rect class="zone k-teal" x="24" y="234" width="728" height="192" rx="16"/>
@@ -1173,7 +1173,7 @@ footer{border-top:1px solid var(--line-strong);margin-top:72px;padding-top:20px;
         <li><strong>Location resolution:</strong> free text goes through a geocoding port (default adapter: the Open-Meteo Geocoding API), restricted to Brazil. An ambiguous name returns candidates instead of a guess.</li>
         <li><strong>Attribution:</strong> Copernicus Climate Change Service (ERA5-Land) and Open-Meteo, CC BY 4.0, shown next to the map, in the term sheet and in the README.</li>
       </ul>
-      <div class="callout warn"><strong>Human gate.</strong> Building the three real cubes needs a Copernicus CDS account, which was missing on 2026-11-10. The pipeline is developed and tested against a small synthetic NetCDF file, and until the real cubes exist the showcase regions run on fixture cubes clearly labelled synthetic in the interface.</div>
+      <div class="callout warn"><strong>Human gate.</strong> Building the three real cubes needs a Cloud project registered for Google Earth Engine (ADR 0019; the Copernicus CDS account of the first plan could not be created). The pipeline is developed and tested against a small synthetic NetCDF file, and until the real cubes exist the showcase regions run on fixture cubes clearly labelled synthetic in the interface.</div>
     </section>
 
     <!-- ============================================================ -->
@@ -1285,7 +1285,7 @@ footer{border-top:1px solid var(--line-strong);margin-top:72px;padding-top:20px;
           <rect class="box k-teal dashed" x="36" y="400" width="180" height="86" rx="12"/>
           <text class="tt c-teal" x="50" y="423">Offline build</text>
           <text class="tm" x="50" y="441">make build-cube</text>
-          <text class="ts sm" x="50" y="459">CDS key stays here,</text>
+          <text class="ts sm" x="50" y="459">Credentials stay here,</text>
           <text class="ts sm" x="50" y="474">never in the service</text>
           <path class="e" d="M216 447H277" marker-end="url(#d7-a)"/>
         </svg>
@@ -1316,7 +1316,7 @@ footer{border-top:1px solid var(--line-strong);margin-top:72px;padding-top:20px;
             <ul>
               <li>Secret Manager holds the Anthropic key, the webhook signing secret, the cookie signing secret, the allowance code and the IP hash salt.</li>
               <li>The webhook secret is shared by the two roles: one signs, the other verifies.</li>
-              <li>The CDS key is used only by the offline cube build and never reaches the running service.</li>
+              <li>Earth Engine credentials and project are used only by the offline cube build and never reach the running service.</li>
               <li>No secret appears in code, fixtures, logs, spans or commits; gitleaks scans the full history.</li>
             </ul>
           </div>

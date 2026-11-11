@@ -1,8 +1,9 @@
 """Do a cube cell and a point series tell the same story? (SPEC 4.4)
 
 The check compares the cube of a region with the point series of a place inside it. They
-are two different products (ADR 0017): the cube is ERA5-Land on the 0.1 degree grid from
-the Climate Data Store, the point series is ERA5 on the 0.25 degree grid from Open-Meteo.
+are two different products (ADR 0017): the cube is ERA5-Land on the 0.1 degree grid, read
+from Google Earth Engine (ADR 0019), the point series is ERA5 on the 0.25 degree grid from
+Open-Meteo.
 Before 2019 they also cut the day one hour apart in the summers with daylight saving time
 (ADR 0018). So the two never agree exactly, and the check is a tolerance, not an equality.
 What it must catch is a mistake in the pipeline: a wrong unit, days shifted by one, a

@@ -2,7 +2,7 @@
 
 Variables use the prefix `VERANICO_` and `__` between a group and a field
 (`VERANICO_ACCESS__ALLOWANCE_MESSAGES`). The names the specification and the SDKs fix stay
-unprefixed: `APP_ROLE`, `AGENT_MODEL`, `ANTHROPIC_API_KEY`, `CDS_API_KEY`,
+unprefixed: `APP_ROLE`, `AGENT_MODEL`, `ANTHROPIC_API_KEY`, `EARTHENGINE_PROJECT`,
 `FIRESTORE_EMULATOR_HOST` and `STORAGE_EMULATOR_HOST`. pydantic-settings reads an unprefixed
 variable only into a top-level field, so these six are fields of `Settings` itself and not
 of the group they belong to. `env.example` at the repository root lists every variable.
@@ -156,7 +156,7 @@ class Settings(BaseSettings):
     agent_model: str = Field(default=DEFAULT_AGENT_MODEL, alias="AGENT_MODEL")
     anthropic_api_key: SecretStr | None = Field(default=None, alias="ANTHROPIC_API_KEY")
     # Offline cube build only; never needed by the running service.
-    cds_api_key: SecretStr | None = Field(default=None, alias="CDS_API_KEY")
+    earthengine_project: str | None = Field(default=None, alias="EARTHENGINE_PROJECT")
     # `host:port`, no scheme. The Firestore SDK reads the variable itself; see firestore.py.
     firestore_emulator_host: str | None = Field(default=None, alias="FIRESTORE_EMULATOR_HOST")
     # With the scheme: `http://host:port`.

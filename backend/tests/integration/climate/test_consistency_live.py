@@ -2,9 +2,9 @@
 
     uv run pytest tests/integration/climate/test_consistency_live.py -m live -q -s
 
-Needs the network and, for each region, a cube built from the Climate Data Store in the
-weather store the environment names. A region without a real cube is skipped with the
-reason: a synthetic cube has nothing to agree with.
+Needs the network and, for each region, a real cube (ERA5-Land read from Google Earth
+Engine, ADR 0019) in the weather store the environment names. A region without a real
+cube is skipped with the reason: a synthetic cube has nothing to agree with.
 
 The first run at H1 is a measurement: the printed reports are what the two tolerance
 constants in `domain/consistency.py` are set from, once.

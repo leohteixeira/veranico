@@ -286,7 +286,7 @@ export const ptBR: Messages = {
   "direction.decreasing": "de queda",
   "metric.trigger_frequency": "Frequência de gatilho",
   "metric.season_anomaly": "Anomalia da safra",
-  "source.era5-land/cds": "ERA5-Land, Copernicus Climate Data Store",
+  "source.era5-land/cds": "ERA5-Land, Copernicus Climate Change Service",
   "source.era5/open-meteo": "ERA5, Open-Meteo",
   "source.synthetic": "cubo sintético (gerado para a demonstração, não é histórico de clima)",
 

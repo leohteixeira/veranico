@@ -73,7 +73,7 @@ CATALOGUE: Final[dict[str, str]] = {
     "method.gamma_mle": "distribuição gama ajustada por máxima verossimilhança",
     "method.bootstrap": "bootstrap das safras históricas",
     "source.era5-land/cds": (
-        "precipitação diária do ERA5-Land (Copernicus Climate Change Service, Climate Data Store)"
+        "precipitação diária do ERA5-Land (Copernicus Climate Change Service)"
     ),
     "source.era5/open-meteo": (
         "precipitação diária do ERA5 (Copernicus Climate Change Service, por meio do Open-Meteo)"

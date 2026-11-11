@@ -100,9 +100,9 @@ A Python modular monolith with seven modules, one container image and two roles.
 
 | | Showcase regions | Any other point |
 |---|---|---|
-| Source | ERA5-Land from the Copernicus Climate Data Store | ERA5 through the Open-Meteo Historical Weather API |
+| Source | ERA5-Land (Copernicus Climate Change Service), read from Google Earth Engine | ERA5 through the Open-Meteo Historical Weather API |
 | Grid | 0.1°, three boxes of 20 by 20 cells (Sul de Minas, Sorriso, Ribeirão Preto) | the grid point the API answers from, keyed by its H3 resolution 6 cell |
-| Built | offline, once per region; the running service never calls the CDS | on first use, cached |
+| Built | offline, once per region; the running service never calls Earth Engine | on first use, cached |
 | State today | **synthetic** cubes generated from a seed (H1 open) | real, fetched on demand |
 
 * **Variable and years.** Daily precipitation in millimetres, from 1950 through the last
@@ -204,7 +204,7 @@ Other commands: `make test`, `make test-integration`, `make test-failure`, `make
 
 | Gate | State | Closed by |
 |---|---|---|
-| H1: real weather cubes | open | a Copernicus CDS account: `export CDS_API_KEY=…`, then `make build-cube REGION=sul-de-minas`, `REGION=sorriso`, `REGION=ribeirao-preto`; the same with `MEASURE=1` for the chunking numbers; the live consistency test; then ADR 0016, the tolerances, the example covers, the replays and `make evidence` |
+| H1: real weather cubes | open | a Cloud project registered for Earth Engine (noncommercial) with the Earth Engine API enabled; `cd backend && uv run --group cube earthengine authenticate` once; `EARTHENGINE_PROJECT=<project-id>` in `.env`; then `make build-cube REGION=sul-de-minas`, `REGION=sorriso`, `REGION=ribeirao-preto`; the same with `MEASURE=1` for the chunking numbers; the live consistency test; then ADR 0016, the tolerances, the example covers, the replays and `make evidence` |
 | H2: first deploy | open | the sequence below |
 | H3: the author's part | open | section 12 of this file, the interface finish review decision, the portfolio page |
 

@@ -137,4 +137,4 @@ def test_no_recipe_prints_the_environment() -> None:
 def test_no_provider_key_reaches_a_test_process() -> None:
     """`tests/conftest.py` drops the keys the Makefile exports, so no test can spend money."""
     assert "ANTHROPIC_API_KEY" not in os.environ
-    assert "CDS_API_KEY" not in os.environ
+    assert "EARTHENGINE_PROJECT" not in os.environ

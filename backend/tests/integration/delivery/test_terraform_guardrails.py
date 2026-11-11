@@ -33,7 +33,7 @@ GUARDRAIL_RUNS = (
     "federation_also_requires_the_repository_id_when_given",
     "deployer_has_no_primitive_role",
     "five_secrets_and_each_role_reads_only_its_own",
-    "cds_key_never_reaches_a_service",
+    "cube_build_credentials_never_reach_a_service",
     "uptime_check_and_budget_exist",
     "queue_and_application_share_their_limits",
     "internal_callers_use_the_identity_the_service_checks",

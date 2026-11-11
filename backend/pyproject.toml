@@ -38,7 +38,7 @@ build-backend = "uv_build"
 
 [dependency-groups]
 cube = [
-    "cdsapi>=0.7.7",
+    "earthengine-api==1.7.50",
 ]
 dev = [
     "import-linter>=2.16",
@@ -95,14 +95,19 @@ plugins = ["pydantic.mypy"]
 [[tool.mypy.overrides]]
 # These packages ship neither a py.typed marker nor a stub package.
 module = [
-    "cdsapi.*",
     "fsspec.*",
     "gcsfs.*",
     "google.cloud.storage.*",
     "h3.*",
     "h5netcdf.*",
+    "httplib2.*",
     "opentelemetry.exporter.cloud_trace.*",
 ]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# Typed, but only in the optional `cube` group, which a default sync leaves out.
+module = ["ee.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
@@ -285,7 +290,7 @@ forbidden_modules = [
     "h5netcdf",
     "h3",
     "gcsfs",
-    "cdsapi",
+    "ee",
     "reportlab",
     "opentelemetry",
 ]

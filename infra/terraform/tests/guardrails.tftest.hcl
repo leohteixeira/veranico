@@ -385,7 +385,7 @@ run "five_secrets_and_each_role_reads_only_its_own" {
   }
 }
 
-run "cds_key_never_reaches_a_service" {
+run "cube_build_credentials_never_reach_a_service" {
   command = plan
 
   assert {
@@ -393,9 +393,12 @@ run "cds_key_never_reaches_a_service" {
       for env in setunion(
         google_cloud_run_v2_service.api.template[0].containers[0].env,
         google_cloud_run_v2_service.carrier.template[0].containers[0].env,
-      ) : !strcontains(upper(env.name), "CDS")
+        ) : !anytrue([
+          for word in ["CDS", "EARTHENGINE", "GOOGLE_APPLICATION_CREDENTIALS"] :
+          strcontains(upper(env.name), word)
+      ])
     ])
-    error_message = "The CDS key belongs to the offline cube build and must not be in a service's environment."
+    error_message = "The cube build's Earth Engine project and credentials belong to the offline build and must not be in a service's environment."
   }
 }
 

@@ -154,11 +154,11 @@ requirements:
   plan: '01'
 - id: R-4.1-6
   section: '4.1'
-  text: the running service never calls the CDS
+  text: the running service never calls Earth Engine
   plan: '01'
 - id: R-4.1-7
   section: '4.1'
-  text: A backfill job requests ERA5-Land daily statistics from the Copernicus Climate Data Store as NetCDF, one request per region and year.
+  text: A backfill job reads hourly ERA5-Land accumulated precipitation from Google Earth Engine at two time steps a day on the region's 0.1° grid, one request per region and year, and writes one NetCDF file per region and year of local-day sums.
   plan: '01'
 - id: R-4.2-1
   section: '4.2'
@@ -1083,7 +1083,7 @@ requirements:
   plan: 09
 - id: R-17-5
   section: '17'
-  text: The CDS key is used only by the offline cube build and never reaches the running service.
+  text: Earth Engine credentials and project are used only by the offline cube build and never reach the running service.
   plan: 01, 09
 - id: R-17-6
   section: '17'

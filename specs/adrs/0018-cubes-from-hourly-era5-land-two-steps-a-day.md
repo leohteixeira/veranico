@@ -4,6 +4,8 @@
 
 Accepted on 2026-11-11 by the build coordinator while the owner was away. It amends step 1 of section 4.1 of the specification, so the owner's confirmation is requested in the delivery report. The request itself can only be proven with a Copernicus account (human gate H1); what is unverified is listed below.
 
+Source superseded on 2026-11-11 by ADR 0019: the same hourly ERA5-Land is read from Google Earth Engine instead of the Climate Data Store. Decisions 2 and 3 stand.
+
 ## Context
 
 Section 4.1 of the specification says the backfill job "requests ERA5-Land daily statistics from the Copernicus Climate Data Store". Read on 2026-11-11:

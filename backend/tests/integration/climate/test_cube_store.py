@@ -32,7 +32,7 @@ from veranico.modules.climate.domain.errors import WeatherDataError
 from veranico.modules.climate.domain.regions import REGIONS
 from veranico.modules.climate.infrastructure.cube_build import convert_years, file_checksum
 from veranico.modules.climate.infrastructure.local_store import LocalWeatherStore
-from veranico.modules.climate.infrastructure.synthetic import write_synthetic_cds_year
+from veranico.modules.climate.infrastructure.synthetic import write_synthetic_year
 from veranico.modules.climate.module import assemble
 from veranico.shared.infrastructure.settings import ClimateSettings
 from veranico.shared.kernel.clock import FixedClock
@@ -54,7 +54,7 @@ def yearly_files(directory: Path) -> list[Path]:
     paths = []
     for year in YEARS:
         path = directory / f"{REGION.region_id}-{year}.nc"
-        write_synthetic_cds_year(path, REGION, year, seed=2, south_to_north=year == YEARS[0])
+        write_synthetic_year(path, REGION, year, seed=2, south_to_north=year == YEARS[0])
         paths.append(path)
     return paths
 
@@ -187,7 +187,7 @@ async def test_every_manifest_field(store: CountingStore, tmp_path: Path) -> Non
 @pytest.mark.req("R-4.4-1")
 async def test_broken_yearly_files_leave_no_manifest(store: CountingStore, tmp_path: Path) -> None:
     paths = yearly_files(tmp_path)
-    write_synthetic_cds_year(tmp_path / "2023.nc", REGION, 2023, seed=2)
+    write_synthetic_year(tmp_path / "2023.nc", REGION, 2023, seed=2)
 
     with pytest.raises(WeatherDataError, match="missing year"):
         await store.write_cube(converted([*paths, tmp_path / "2023.nc"]))

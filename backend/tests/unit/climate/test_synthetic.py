@@ -11,7 +11,7 @@ from veranico.modules.climate.domain.regions import RegionDef, region_by_id
 from veranico.modules.climate.domain.validation import validate_daily
 from veranico.modules.climate.infrastructure.synthetic import (
     generate_cube,
-    write_synthetic_cds_year,
+    write_synthetic_year,
 )
 
 SORRISO = region_by_id("sorriso")
@@ -127,7 +127,7 @@ def test_the_full_history_has_the_size_the_service_will_hold() -> None:
 def test_a_synthetic_yearly_file_is_shaped_like_the_converter_input(tmp_path: Path) -> None:
     target = tmp_path / "tiny-2001.nc"
 
-    write_synthetic_cds_year(target, TINY, 2001, seed=3)
+    write_synthetic_year(target, TINY, 2001, seed=3)
 
     with xr.open_dataset(target, engine="h5netcdf") as dataset:
         assert list(dataset.data_vars) == ["tp"]
@@ -150,10 +150,10 @@ def test_yearly_files_are_seeded_per_year_and_independent_of_writing_order(tmp_p
         with xr.open_dataset(tmp_path / name, engine="h5netcdf") as dataset:
             return dataset["tp"].to_numpy()
 
-    write_synthetic_cds_year(tmp_path / "a-2001.nc", TINY, 2001, seed=3)
-    write_synthetic_cds_year(tmp_path / "a-2002.nc", TINY, 2002, seed=3)
-    write_synthetic_cds_year(tmp_path / "b-2002.nc", TINY, 2002, seed=3)
-    write_synthetic_cds_year(tmp_path / "c-2002.nc", TINY, 2002, seed=4)
+    write_synthetic_year(tmp_path / "a-2001.nc", TINY, 2001, seed=3)
+    write_synthetic_year(tmp_path / "a-2002.nc", TINY, 2002, seed=3)
+    write_synthetic_year(tmp_path / "b-2002.nc", TINY, 2002, seed=3)
+    write_synthetic_year(tmp_path / "c-2002.nc", TINY, 2002, seed=4)
 
     assert np.array_equal(values("a-2002.nc"), values("b-2002.nc"))
     assert not np.array_equal(values("a-2002.nc"), values("c-2002.nc"))
@@ -161,8 +161,8 @@ def test_yearly_files_are_seeded_per_year_and_independent_of_writing_order(tmp_p
 
 
 def test_a_file_ordered_south_to_north_holds_the_same_field(tmp_path: Path) -> None:
-    write_synthetic_cds_year(tmp_path / "north.nc", TINY, 2001, seed=3)
-    write_synthetic_cds_year(tmp_path / "south.nc", TINY, 2001, seed=3, south_to_north=True)
+    write_synthetic_year(tmp_path / "north.nc", TINY, 2001, seed=3)
+    write_synthetic_year(tmp_path / "south.nc", TINY, 2001, seed=3, south_to_north=True)
 
     with (
         xr.open_dataset(tmp_path / "north.nc", engine="h5netcdf") as north,

@@ -23,7 +23,7 @@ def _clean_environment(monkeypatch: pytest.MonkeyPatch) -> None:
             "APP_ROLE",
             "AGENT_MODEL",
             "ANTHROPIC_API_KEY",
-            "CDS_API_KEY",
+            "EARTHENGINE_PROJECT",
             "FIRESTORE_EMULATOR_HOST",
             "STORAGE_EMULATOR_HOST",
         }:
@@ -41,7 +41,7 @@ def test_loads_prefixed_nested_and_aliased_variables(monkeypatch: pytest.MonkeyP
         APP_ROLE="api",
         AGENT_MODEL="claude-test-model",
         ANTHROPIC_API_KEY="model-key",
-        CDS_API_KEY="cds-key",
+        EARTHENGINE_PROJECT="my-project",
         FIRESTORE_EMULATOR_HOST="127.0.0.1:8580",
         STORAGE_EMULATOR_HOST="http://127.0.0.1:8590",
         VERANICO_ENVIRONMENT="test",
@@ -60,7 +60,7 @@ def test_loads_prefixed_nested_and_aliased_variables(monkeypatch: pytest.MonkeyP
     assert settings.agent_model == "claude-test-model"
     assert settings.anthropic_api_key is not None
     assert settings.anthropic_api_key.get_secret_value() == "model-key"
-    assert settings.cds_api_key is not None
+    assert settings.earthengine_project == "my-project"
     assert settings.firestore_emulator_host == "127.0.0.1:8580"
     assert settings.storage_emulator_host == "http://127.0.0.1:8590"
     assert settings.environment == "test"

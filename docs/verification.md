@@ -32,8 +32,8 @@ Commands:
 
 ## 2. Scope and limits that apply to everything below
 
-1. **The weather data of the showcase regions is synthetic.** Human gate H1 (a Copernicus
-   Climate Data Store account) is open, so the three regional cubes are generated from a
+1. **The weather data of the showcase regions is synthetic.** Human gate H1 (a Cloud project
+   registered for Earth Engine, ADR 0019) is open, so the three regional cubes are generated from a
    seed (`make build-cube REGION=<id> SYNTHETIC=1 SEED=<n>`) and labelled synthetic
    wherever they are shown. Every figure in this record that involves a regional cube
    (prices, cell metrics, load latencies) shows the engine working on generated rain. None
@@ -52,7 +52,7 @@ Commands:
 
 | Gate | Needs | State | Closed by |
 |---|---|---|---|
-| H1 | Copernicus CDS account and `CDS_API_KEY` | **open** | `make build-cube REGION=<id>` for the three regions, then the chunking measurement of ADR 0016 on the real cubes |
+| H1 | a Cloud project registered for Earth Engine, `earthengine authenticate` and `EARTHENGINE_PROJECT` | **open** | `make build-cube REGION=<id>` for the three regions, then the chunking measurement of ADR 0016 on the real cubes |
 | H2 | first deploy to the Google Cloud project | **open** | the bootstrap `terraform apply`, then the first tag `v*.*.*` (workflow `deploy.yml`), the live `/healthz`, the uptime check and the budget alert |
 | H3 | the owner | **open** | README section 12 written by the author, the interface finish review decision, the portfolio page |
 

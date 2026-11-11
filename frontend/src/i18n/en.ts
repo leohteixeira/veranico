@@ -291,7 +291,7 @@ export const en = {
   "direction.decreasing": "falling",
   "metric.trigger_frequency": "Trigger frequency",
   "metric.season_anomaly": "Season anomaly",
-  "source.era5-land/cds": "ERA5-Land, Copernicus Climate Data Store",
+  "source.era5-land/cds": "ERA5-Land, Copernicus Climate Change Service",
   "source.era5/open-meteo": "ERA5, Open-Meteo",
   "source.synthetic": "synthetic cube (generated for the demo, not weather history)",
 

@@ -71,13 +71,13 @@ Both sources deliver the same reanalysis product, ERA5-Land daily, so results ar
 
 Three agricultural regions, each a box of about 2° by 2° on the 0.1° grid (20 by 20 cells): coffee in Sul de Minas (MG), soybean around Sorriso (MT), sugarcane around Ribeirão Preto (SP).
 
-1. **Download:** a backfill job requests ERA5-Land daily statistics from the Copernicus Climate Data Store as NetCDF, one request per region and year.
+1. **Download:** a backfill job reads hourly ERA5-Land accumulated precipitation from Google Earth Engine (`ECMWF/ERA5_LAND/HOURLY`) at two time steps a day on the region's 0.1° grid, one request per region and year, and writes one NetCDF file per region and year of local-day sums (ADR 0018, ADR 0019).
 2. **Convert:** xarray merges the yearly files, converts units (metres to millimetres), validates and writes one Zarr store per region.
 3. **Chunking:** chunk the full time axis together with small spatial blocks (for example `time=-1, lat=10, lon=10`). The measured read time for one point series under this layout and under a one-field-per-time-step layout is recorded in an ADR.
 4. **Resumable and idempotent:** yearly NetCDF files are cached; a rerun downloads only missing years. A `manifest.json` per cube records source, request, years, checksums and build time.
-5. **Built offline:** cubes are built once (locally or by a manual workflow) and uploaded to Cloud Storage. The running service never calls the CDS.
+5. **Built offline:** cubes are built once (locally or by a manual workflow) and uploaded to Cloud Storage. The running service never calls Earth Engine.
 
-The conversion pipeline is developed and tested against a small synthetic NetCDF file. Building the three real cubes needs a CDS account and is a human gate (section 20).
+The conversion pipeline is developed and tested against a small synthetic NetCDF file. Building the three real cubes needs a Cloud project registered for Earth Engine and is a human gate (section 20).
 
 ### 4.2 Point fallback (anywhere else)
 
@@ -410,7 +410,7 @@ k6 against the local stack (never production) on `POST /quotes` with repeated id
 
 ### 16.6 Agent evaluation
 
-Built with Inspect. Each case in `backend/tests/evals/cases.yaml` becomes a sample; a custom solver drives the real agent loop with its real tools against small fixture cubes (no calls to Open-Meteo or the CDS); custom scorers implement the checks below. Each case runs 3 epochs. The suite fails below a 90% overall pass rate. Logs are stored as a CI artifact and the summary goes into the README. It runs on demand, on release tags and on pull requests that change `assistant` or the system prompt.
+Built with Inspect. Each case in `backend/tests/evals/cases.yaml` becomes a sample; a custom solver drives the real agent loop with its real tools against small fixture cubes (no calls to Open-Meteo or Earth Engine); custom scorers implement the checks below. Each case runs 3 epochs. The suite fails below a 90% overall pass rate. Logs are stored as a CI artifact and the summary goes into the README. It runs on demand, on release tags and on pull requests that change `assistant` or the system prompt.
 
 | Check | Meaning |
 |---|---|
@@ -449,7 +449,7 @@ ruff (lint and format), mypy strict, eslint, TypeScript strict, gitleaks on the 
 * Terraform (Google provider), everything in `us-central1`: Artifact Registry with a cleanup policy keeping the last 3 images; two Cloud Run services (min 0, max 2 instances each); Firestore in Native mode with TTL policies; one Cloud Storage bucket; a Cloud Tasks queue with the retry policy; one Cloud Scheduler job for the outbox sweep; Secret Manager entries (Anthropic key, webhook signing secret, cookie signing secret, allowance code, IP hash salt); least-privilege service accounts per role; Workload Identity Federation for GitHub Actions; the uptime check; a billing budget with email alerts.
 * Terraform tests assert the guardrails (instance limits, region, no public bucket, cleanup policy, no JSON keys).
 * The address is the Cloud Run URL first; `veranico.leohteixeira.com` is an optional later mapping.
-* The CDS key is used only by the offline cube build and never reaches the running service.
+* Earth Engine credentials and project are used only by the offline cube build and never reach the running service.
 * Graceful shutdown: readiness turns false on SIGTERM and open streams end with a final event.
 * `ci.yml` on every push and pull request: lint, types, architecture checks, unit and integration tests, failure tests, mutation proof, frontend build and tests, `terraform fmt -check`, `terraform validate` and `terraform test`, gitleaks.
 * `evals.yml`: section 16.6. `load.yml`: on demand. `deploy.yml` on tags matching `v*.*.*`: build, push, `terraform apply` with the new image tag.
@@ -490,7 +490,7 @@ Each milestone ends in a working state and has an executable gate, `make verify-
 |---|---|---|
 | Anthropic Console | `ANTHROPIC_API_KEY` for the agent and the evaluation suite | available |
 | DNS for `leohteixeira.com` | optional custom domain | available |
-| Copernicus Climate Data Store | ERA5-Land NetCDF for the regional cubes | missing: human gate for the real cubes in M2 |
+| Google Earth Engine (a Cloud project registered for noncommercial use, `earthengine authenticate`) | ERA5-Land for the regional cubes (ADR 0019) | missing: human gate for the real cubes in M2 |
 | Google Cloud project linked to a billing account | everything in section 17 | account upgraded to paid by the owner on 2026-11-10; the first deploy remains a human gate in M5 |
 
 Work that depends on a missing account is built and verified against fixtures and emulators, and the gate is reported as open, never as passed.
@@ -499,7 +499,7 @@ No account or key is needed for Open-Meteo, EOX tiles, Inspect, Leaflet or any l
 
 ## 21. Verify against official documentation before coding
 
-Do not rely on memory for these: the CDS dataset name and request fields for ERA5-Land daily statistics; Open-Meteo archive and geocoding parameters; xarray and Zarr chunking and atomic-write behaviour; the Anthropic SDK streaming and tool-use shapes and the current model identifier and prices; Inspect tasks, solvers, scorers and epochs; H3 bindings; the EOX WMTS capabilities, tile URL templates, attribution text and licence for both layers; Leaflet canvas layers; Firestore transactions, TTL policies and emulator limits; Cloud Tasks HTTP targets with OIDC and task naming; Cloud Scheduler; OpenTelemetry exporters; the Terraform Google provider resources.
+Do not rely on memory for these: the Earth Engine collection, band, `computePixels` grid fields and limits for ERA5-Land; Open-Meteo archive and geocoding parameters; xarray and Zarr chunking and atomic-write behaviour; the Anthropic SDK streaming and tool-use shapes and the current model identifier and prices; Inspect tasks, solvers, scorers and epochs; H3 bindings; the EOX WMTS capabilities, tile URL templates, attribution text and licence for both layers; Leaflet canvas layers; Firestore transactions, TTL policies and emulator limits; Cloud Tasks HTTP targets with OIDC and task naming; Cloud Scheduler; OpenTelemetry exporters; the Terraform Google provider resources.
 
 ## 22. Changes from the original brief
 
@@ -523,3 +523,4 @@ Do not rely on memory for these: the CDS dataset name and request fields for ERA
 | Evapotranspiration | ingested next to precipitation | not ingested: no index uses it | none (scope reduction) |
 | Point weather source | ERA5-Land from Open-Meteo, the same product as the cubes | ERA5 (0.25°) from Open-Meteo, labelled `era5/open-meteo`: Open-Meteo serves no ERA5-Land precipitation. Amends the first sentence of section 4 and the product named in section 4.2 | 0017 |
 | Cube weather source | ERA5-Land daily statistics requested from the Climate Data Store | Hourly ERA5-Land accumulated precipitation at two time steps a day, summed to local days by the download step: the daily statistics entry omits accumulated variables. Amends step 1 of section 4.1 | 0018 |
+| Cube download service | Copernicus Climate Data Store | Google Earth Engine's copy of the same hourly ERA5-Land, one `computePixels` request per region and year on an explicit 0.1° grid. Amends step 1 of section 4.1 and section 20 | 0019 |

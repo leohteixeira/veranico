@@ -1,13 +1,14 @@
-"""The cube build: the CDS download step, the yearly cache, the script and its exit codes."""
+"""The cube build: the Earth Engine download step, the yearly cache, the script and its exit
+codes. Nothing here needs a network or an account: Earth Engine is a fake."""
 
 import json
 import subprocess
 import sys
-from collections.abc import Mapping
-from dataclasses import dataclass, field
+import types
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
 
 import numpy as np
 import pytest
@@ -16,22 +17,28 @@ from scripts import build_cube as script
 
 from veranico.modules.climate.application.build_cube import BuildCube, InstallSyntheticCube
 from veranico.modules.climate.domain.errors import WeatherDataError
-from veranico.modules.climate.domain.regions import RegionDef, region_by_id
-from veranico.modules.climate.infrastructure.cds_download import (
+from veranico.modules.climate.domain.regions import RegionDef, cell_centre, region_by_id
+from veranico.modules.climate.infrastructure import earth_engine_download as download
+from veranico.modules.climate.infrastructure.cube_build import convert_to_arrays, file_checksum
+from veranico.modules.climate.infrastructure.earth_engine_download import (
     ROUNDING_NOISE_M,
-    CdsResponseError,
-    CdsYearlySource,
+    Answer,
+    EarthEngineRefusedError,
+    EarthEngineResponseError,
+    EarthEngineSetupError,
+    EarthEngineUnreachableError,
+    EarthEngineYearlySource,
+    YearRequest,
+    earth_engine_fetch,
     local_day_totals,
-    next_day_request,
     year_request,
 )
-from veranico.modules.climate.infrastructure.cube_build import convert_to_arrays, file_checksum
 from veranico.modules.climate.infrastructure.local_store import LocalWeatherStore
 from veranico.modules.climate.infrastructure.synthetic import (
     GENERATOR,
     generate_cube,
     generator_parameters,
-    write_synthetic_cds_year,
+    write_synthetic_year,
 )
 from veranico.shared.kernel.clock import FixedClock
 from veranico.shared.kernel.ids import cube_dataset_id
@@ -43,22 +50,24 @@ assert _SORRISO is not None
 assert _SUL_DE_MINAS is not None
 SORRISO: RegionDef = _SORRISO  # UTC-4
 SUL_DE_MINAS: RegionDef = _SUL_DE_MINAS  # UTC-3
+HOUR = np.timedelta64(1, "h")
 
 
 # The two-step formula of ADR 0018, on a series written by hand.
 
 
 def two_steps(year: int, offset: int, values: Mapping[str, float]) -> tuple[np.ndarray, np.ndarray]:
-    """Accumulated `tp` of one cell at 00:00 and `offset`:00 of every day of `year` and of
-    1 January of the next: zero, except the time steps named in `values`."""
+    """Accumulated `tp` of one cell at 00:00 of every day from 2 January to 1 January of
+    the next year and at `offset`:00 of every day from 1 January to 1 January of the next
+    year: zero, except the time steps named in `values`."""
     days = np.arange(f"{year}-01-01", f"{year + 1}-01-02", dtype="datetime64[D]")
     midnight = days.astype("datetime64[h]")
-    stamps = np.concatenate([midnight, midnight + np.timedelta64(offset, "h")])
+    stamps = np.concatenate([midnight[1:], midnight + np.timedelta64(offset, "h")])
     tp = np.zeros((len(stamps), 1, 1))
     for stamp, value in values.items():
         (index,) = np.nonzero(stamps == np.datetime64(stamp, "h"))
         tp[index[0], 0, 0] = value
-    return stamps.astype("datetime64[ns]"), tp
+    return stamps.astype("datetime64[ms]"), tp
 
 
 def totals_by_day(days: np.ndarray, totals: np.ndarray) -> dict[str, float]:
@@ -134,7 +143,7 @@ def test_rounding_noise_becomes_zero_and_a_real_negative_fails() -> None:
     assert totals_by_day(days, totals) == {"2001-01-09": ROUNDING_NOISE_M / 2}
 
     stamps, wrong = two_steps(2001, 3, {"2001-01-10T03": 0.002})
-    with pytest.raises(CdsResponseError, match="negative"):
+    with pytest.raises(EarthEngineResponseError, match="negative"):
         local_day_totals(stamps, wrong, 2001, 3)
 
 
@@ -153,65 +162,33 @@ def test_missing_values_stay_missing() -> None:
         ("2002-01-01T00", None, "missing: 2002-01-01T00"),
         (None, "2001-06-01T05", "unexpected: 2001-06-01T05"),
         (None, "2001-06-01T03", "repeated: 2001-06-01T03"),
+        # Midnight of 1 January closes the year before: it does not belong here.
+        (None, "2001-01-01T00", "unexpected: 2001-01-01T00"),
     ],
 )
 def test_wrong_time_steps_fail(drop: str | None, add: str | None, message: str) -> None:
     stamps, tp = two_steps(2001, 3, {})
     if drop is not None:
-        keep = stamps != np.datetime64(drop, "ns")
+        keep = stamps != np.datetime64(drop, "ms")
         stamps, tp = stamps[keep], tp[keep]
     if add is not None:
-        stamps = np.append(stamps, np.datetime64(add, "ns"))
+        stamps = np.append(stamps, np.datetime64(add, "ms"))
         tp = np.concatenate([tp, np.zeros((1, 1, 1))])
 
-    with pytest.raises(CdsResponseError, match=message):
+    with pytest.raises(EarthEngineResponseError, match=message):
         local_day_totals(stamps, tp, 2001, 3)
 
 
 def test_the_time_steps_of_another_offset_fail() -> None:
     stamps, tp = two_steps(2001, 4, {})
 
-    with pytest.raises(CdsResponseError, match="wrong time steps for 2001"):
+    with pytest.raises(EarthEngineResponseError, match="wrong time steps for 2001"):
         local_day_totals(stamps, tp, 2001, 3)
 
 
-# The request, as a table. NOT verified against the CDS (human gate H1): the keys follow
-# the request form of the catalogue entry as far as it could be read without an account.
-
-
-@pytest.mark.req("R-4.1-7")
-def test_the_request_for_a_region_and_year() -> None:
-    assert year_request(SORRISO, 1987) == {
-        "variable": ["total_precipitation"],
-        "year": ["1987"],
-        "month": ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"],
-        "day": [f"{day:02d}" for day in range(1, 32)],
-        "time": ["00:00", "04:00"],  # Mato Grosso is four hours behind UTC
-        "data_format": "netcdf",
-        "download_format": "unarchived",
-        "area": [-11.6, -56.7, -13.5, -54.8],  # N, W, S, E: the outermost grid points
-    }
-    assert next_day_request(SORRISO, 1987) == {
-        "variable": ["total_precipitation"],
-        "year": ["1988"],
-        "month": ["01"],
-        "day": ["01"],
-        "time": ["00:00", "04:00"],
-        "data_format": "netcdf",
-        "download_format": "unarchived",
-        "area": [-11.6, -56.7, -13.5, -54.8],
-    }
-
-
-def test_the_time_steps_follow_the_offset_of_each_region() -> None:
-    steps = {region_id: year_request(region, 2000)["time"] for region_id, region in REGIONS.items()}
-
-    assert steps == {
-        "sul-de-minas": ["00:00", "03:00"],
-        "sorriso": ["00:00", "04:00"],
-        "ribeirao-preto": ["00:00", "03:00"],
-    }
-
+# The request, as a table. The collection, band and grid fields follow the Earth Engine
+# catalogue and the `computePixels` reference (ADR 0019); NOT verified against a real
+# answer (human gate H1).
 
 REGIONS = {
     region_id: region
@@ -220,118 +197,284 @@ REGIONS = {
 }
 
 
-# The download step, with answers written the way the CDS is assumed to answer.
+@pytest.mark.req("R-4.1-7")
+def test_the_request_for_a_region_and_year() -> None:
+    request = year_request(SORRISO, 1987)
+
+    assert request == YearRequest(
+        collection="ECMWF/ERA5_LAND/HOURLY",
+        band="total_precipitation",
+        hours=(0, 4),  # Mato Grosso is four hours behind UTC
+        start=datetime(1987, 1, 1, 1, tzinfo=UTC),
+        end=datetime(1988, 1, 1, 5, tzinfo=UTC),  # exclusive: 04:00 of 1 January is the last
+        grid={
+            "crsCode": "EPSG:4326",
+            "affineTransform": {
+                "scaleX": 0.1,
+                "shearX": 0,
+                "translateX": -56.75,  # the region's western edge
+                "shearY": 0,
+                "scaleY": -0.1,
+                "translateY": -11.55,  # its northern edge: row 0 is the northern row
+            },
+            "dimensions": {"width": 20, "height": 20},
+        },
+    )
+    steps = request.expected_steps()
+    assert len(steps) == 365 + 366  # 00:00 from 2 Jan to 1 Jan, 04:00 from 1 Jan to 1 Jan
+    assert (steps[0], steps[1], steps[-1]) == (
+        np.datetime64("1987-01-01T04"),
+        np.datetime64("1987-01-02T00"),
+        np.datetime64("1988-01-01T04"),
+    )
+
+
+def test_pixel_centres_are_the_cell_centres_of_every_region() -> None:
+    for region in REGIONS.values():
+        transform = year_request(region, 2000).grid["affineTransform"]
+        for row, col in ((0, 0), (region.ny - 1, region.nx - 1)):
+            lat = transform["translateY"] + (row + 0.5) * transform["scaleY"]
+            lon = transform["translateX"] + (col + 0.5) * transform["scaleX"]
+            assert np.allclose((lat, lon), cell_centre(region, row, col), atol=1e-9)
+
+
+def test_the_time_steps_follow_the_offset_of_each_region() -> None:
+    hours = {region_id: year_request(region, 2000).hours for region_id, region in REGIONS.items()}
+
+    assert hours == {"sul-de-minas": (0, 3), "sorriso": (0, 4), "ribeirao-preto": (0, 3)}
+
+
+def test_a_year_fits_in_one_request() -> None:
+    # 733 bands of a leap year at most, against the 1024 of one `computePixels` request.
+    assert max(len(year_request(SORRISO, year).expected_steps()) for year in (2003, 2004)) == 733
+
+
+# The download step, with answers made the way Earth Engine is assumed to answer.
+
+NATIVE_TRANSFORM = (0.1, 0.0, -180.05, 0.0, -0.1, 90.05)
 
 
 @dataclass
-class FakeCds:
-    """Answers every request with a file made from an hourly rain rule, and records it."""
+class FakeEarthEngine:
+    """Answers a request from an hourly rain rule, and records it.
 
-    rename: dict[str, str] = field(default_factory=dict)
-    units: str = "m"
-    drop_last_longitude: bool = False
-    requests: list[tuple[str, Mapping[str, Any]]] = field(default_factory=list)
+    0.1 mm falls every hour at cell (0, 0); `showers` add rain in one hour (named by its
+    end, in UTC) at one cell. `tp` at hour H of a day is the rain of that day from 00 UTC
+    to H; the value stamped 00:00 is the whole previous UTC day.
+    """
 
-    def retrieve(self, dataset: str, request: Mapping[str, Any], target: Path) -> None:
-        self.requests.append((dataset, request))
-        north, west, south, east = request["area"]
-        latitudes = np.linspace(north, south, 20).astype(np.float32)
-        longitudes = np.linspace(west, east, 20).astype(np.float32)
-        if self.drop_last_longitude:
-            longitudes = longitudes[:-1]
-        stamps = np.array(
-            [
-                np.datetime64(f"{year}-{month}-{day}T{time[:2]}", "h")
-                for year in request["year"]
-                for month in request["month"]
-                for day in request["day"]
-                for time in request["time"]
-                if _exists(year, month, day)
-            ]
+    showers: Mapping[str, tuple[int, int, float]] = field(default_factory=dict)
+    change: Callable[[Answer], Answer] = lambda answer: answer
+    requests: list[YearRequest] = field(default_factory=list)
+
+    def fetch(self, request: YearRequest) -> Answer:
+        self.requests.append(request)
+        height = request.grid["dimensions"]["height"]
+        width = request.grid["dimensions"]["width"]
+        steps = request.expected_steps()
+        ids = [str(step).replace("-", "") for step in steps]  # 19870101T04
+        names = [f"{image_id}_{request.band}" for image_id in ids]
+        pixels = np.zeros((height, width), dtype=[(name, np.float32) for name in names])
+        for step, name in zip(steps, names, strict=True):
+            start = (step - HOUR).astype("datetime64[D]").astype("datetime64[h]") + HOUR
+            values = np.zeros((height, width))
+            values[0, 0] = int((step - start) / HOUR + 1) * 0.0001
+            for end, (row, col, millimetres) in self.showers.items():
+                if start <= np.datetime64(end, "h") <= step:
+                    values[row, col] += millimetres / 1000
+            pixels[name] = values
+        times = (steps.astype("datetime64[ms]").astype(np.int64)).tolist()
+        return self.change(
+            Answer(
+                native_crs="EPSG:4326",
+                native_transform=NATIVE_TRANSFORM,
+                image_ids=ids,
+                time_starts_ms=times,
+                pixels=pixels,
+            )
         )
-        # Every hour of the record rains 0.1 mm at cell (0, 0), nothing elsewhere: the
-        # accumulation at hour H is H tenths of a millimetre, and a whole day (00:00) 2.4 mm.
-        hour = (stamps - stamps.astype("datetime64[D]")).astype(np.int64)
-        tp = np.zeros((len(stamps), len(latitudes), len(longitudes)), dtype=np.float32)
-        tp[:, 0, 0] = np.where(hour == 0, 24, hour) * 0.0001
-        dataset_out = xr.Dataset(
-            {"tp": (("valid_time", "latitude", "longitude"), tp, {"units": self.units})},
-            coords={
-                "valid_time": stamps.astype("datetime64[ns]"),
-                "latitude": latitudes,
-                "longitude": longitudes,
-                "number": 0,
-                "expver": "0001",
-            },
-        ).rename(self.rename)
-        dataset_out.to_netcdf(target, engine="h5netcdf")
-
-
-def _exists(year: str, month: str, day: str) -> bool:
-    try:
-        datetime(int(year), int(month), int(day), tzinfo=UTC)
-    except ValueError:
-        return False
-    return True
 
 
 @pytest.mark.req("R-4.1-7")
-def test_a_download_makes_two_requests_and_writes_local_day_sums(tmp_path: Path) -> None:
-    cds = FakeCds()
+def test_a_download_makes_one_request_and_writes_local_day_sums(tmp_path: Path) -> None:
+    showers = {
+        "1987-01-10T03": (1, 2, 3.0),  # 22-23 local on 9 Jan at UTC-4
+        "1987-01-10T05": (1, 2, 2.0),  # 00-01 local on 10 Jan
+        "1988-01-01T02": (2, 3, 4.0),  # 21-22 local on 31 Dec 1987: in the next year's answer
+    }
+    earth_engine = FakeEarthEngine(showers=showers)
     target = tmp_path / "1987.nc"
 
-    CdsYearlySource(cds.retrieve).download(SORRISO, 1987, target)
+    EarthEngineYearlySource(earth_engine.fetch).download(SORRISO, 1987, target)
 
-    assert cds.requests == [
-        ("reanalysis-era5-land", year_request(SORRISO, 1987)),
-        ("reanalysis-era5-land", next_day_request(SORRISO, 1987)),
-    ]
+    assert earth_engine.requests == [year_request(SORRISO, 1987)]
     dates, millimetres = convert_to_arrays([target], SORRISO)
     assert (dates[0], dates[-1]) == (np.datetime64("1987-01-01"), np.datetime64("1987-12-31"))
     assert millimetres.shape == (365, 20, 20)
-    # 0.1 mm an hour: every local day holds 2.4 mm, whatever the offset.
+    # 0.1 mm an hour: every local day holds 2.4 mm, whatever the offset; metres became mm.
     assert np.allclose(millimetres[:, 0, 0], 2.4, rtol=1e-5)
-    assert millimetres[:, 1:, :].sum() == 0.0
-    assert sorted(path.name for path in tmp_path.iterdir()) == ["1987.nc"]  # no scratch left
+    day = {str(date): index for index, date in enumerate(dates)}
+    assert np.isclose(millimetres[day["1987-01-09"], 1, 2], 3.0, rtol=1e-5)
+    assert np.isclose(millimetres[day["1987-01-10"], 1, 2], 2.0, rtol=1e-5)
+    assert np.isclose(millimetres[day["1987-12-31"], 2, 3], 4.0, rtol=1e-5)
+    assert np.isclose(millimetres[:, 1:, :].sum(), 9.0, rtol=1e-5)  # nothing else, nowhere
+    assert sorted(path.name for path in tmp_path.iterdir()) == ["1987.nc"]
     with xr.open_dataset(target, engine="h5netcdf") as dataset:
-        assert dataset.attrs["source"] == "era5-land/cds"
-        assert dataset.attrs["dataset"] == "reanalysis-era5-land"
+        assert dataset.attrs["collection"] == "ECMWF/ERA5_LAND/HOURLY"
+        assert dataset.attrs["band"] == "total_precipitation"
         assert "UTC-4" in dataset.attrs["local_day"]
 
 
+def _rename_first_band(answer: Answer) -> Answer:
+    pixels = answer.pixels.copy()
+    names = list(pixels.dtype.names or ())
+    names[0], names[1] = names[1], names[0]
+    pixels.dtype.names = tuple(names)
+    return replace(answer, pixels=pixels)
+
+
+def _drop_last_step(answer: Answer) -> Answer:
+    names = list(answer.pixels.dtype.names or ())[:-1]
+    return replace(
+        answer,
+        image_ids=answer.image_ids[:-1],
+        time_starts_ms=answer.time_starts_ms[:-1],
+        pixels=answer.pixels[names],
+    )
+
+
 @pytest.mark.parametrize(
-    ("cds", "message"),
+    ("change", "message"),
     [
-        (FakeCds(rename={"tp": "total_precipitation"}), "no variable 'tp' in the answer"),
-        (FakeCds(rename={"valid_time": "time"}), "has dimensions"),
-        (FakeCds(rename={"latitude": "lat"}), "has dimensions"),
-        (FakeCds(units="mm"), "is in 'mm', expected 'm'"),
-        (FakeCds(drop_last_longitude=True), "does not cover the region"),
+        (lambda a: replace(a, native_crs="EPSG:3857"), "native projection is EPSG:3857"),
+        (
+            lambda a: replace(a, native_transform=(0.1, 0.0, -180.0, 0.0, -0.1, 90.0)),
+            "would resample",
+        ),
+        (
+            lambda a: replace(a, native_transform=(0.25, 0.0, -180.125, 0.0, -0.25, 90.125)),
+            "would resample",
+        ),
+        (lambda a: replace(a, pixels=a.pixels[:, :19]), r"shape \(20, 19\)"),
+        (_rename_first_band, "are not the images"),
+        (lambda a: replace(a, image_ids=a.image_ids[:-1]), "image ids for"),
+        (_drop_last_step, "are not the 731 expected"),
+        (
+            lambda a: replace(a, time_starts_ms=[t + 1_800_000 for t in a.time_starts_ms]),
+            "are not the 731 expected",
+        ),
     ],
 )
 def test_an_answer_that_is_not_the_expected_one_fails_and_writes_no_file(
-    tmp_path: Path, cds: FakeCds, message: str
+    tmp_path: Path, change: Callable[[Answer], Answer], message: str
 ) -> None:
+    earth_engine = FakeEarthEngine(change=change)
     target = tmp_path / "1987.nc"
 
-    with pytest.raises(CdsResponseError, match=message):
-        CdsYearlySource(cds.retrieve).download(SORRISO, 1987, target)
+    with pytest.raises(EarthEngineResponseError, match=message):
+        EarthEngineYearlySource(earth_engine.fetch).download(SORRISO, 1987, target)
 
     assert list(tmp_path.iterdir()) == []
 
 
-def test_an_answer_that_is_not_netcdf_fails(tmp_path: Path) -> None:
-    def retrieve(dataset: str, request: Mapping[str, Any], target: Path) -> None:
-        target.write_bytes(b"PK\x03\x04 a zip archive, not NetCDF")
-
-    with pytest.raises(CdsResponseError, match="not a NetCDF file"):
-        CdsYearlySource(retrieve).download(SORRISO, 1987, tmp_path / "1987.nc")
-
-    assert list(tmp_path.iterdir()) == []
+def test_a_response_error_is_a_weather_data_error() -> None:
+    assert issubclass(EarthEngineResponseError, WeatherDataError)  # reported as failed
 
 
-def test_a_cds_error_is_a_weather_data_error() -> None:
-    assert issubclass(CdsResponseError, WeatherDataError)  # the script reports it as failed
+# The client set-up, over a fake `ee`: refusals come before any download.
+
+
+@pytest.fixture
+def fake_ee(monkeypatch: pytest.MonkeyPatch) -> types.SimpleNamespace:
+    """Fake `ee`, `httplib2` and `google.auth.exceptions` modules, recording calls."""
+
+    class EEException(Exception):  # noqa: N818 - the name of the client's class
+        pass
+
+    class HttpLib2Error(Exception):
+        pass
+
+    class RefreshError(Exception):
+        pass
+
+    class TransportError(Exception):
+        pass
+
+    state = types.SimpleNamespace(
+        credentials=True, initialize_error=None, initialized=[], EEException=EEException
+    )
+
+    def get_persistent_credentials() -> object:
+        if not state.credentials:
+            raise EEException("Please authorize access ... earthengine authenticate ...")
+        return object()
+
+    def initialize(project: str) -> None:
+        if state.initialize_error is not None:
+            raise state.initialize_error
+        state.initialized.append(project)
+
+    namespace = types.SimpleNamespace
+    auth_exceptions = namespace(RefreshError=RefreshError, TransportError=TransportError)
+    modules = {
+        "ee": namespace(
+            EEException=EEException,
+            Initialize=initialize,
+            data=namespace(get_persistent_credentials=get_persistent_credentials),
+        ),
+        "httplib2": namespace(HttpLib2Error=HttpLib2Error),
+        "google.auth": namespace(exceptions=auth_exceptions),
+        "google.auth.exceptions": auth_exceptions,
+    }
+    for name, module in modules.items():
+        monkeypatch.setitem(sys.modules, name, module)
+    state.RefreshError = RefreshError
+    return state
+
+
+@pytest.mark.req("R-4.1-6")
+def test_without_stored_credentials_the_setup_names_the_command(
+    fake_ee: types.SimpleNamespace,
+) -> None:
+    fake_ee.credentials = False
+
+    with pytest.raises(EarthEngineSetupError, match="earthengine authenticate"):
+        earth_engine_fetch("my-project")
+
+    assert fake_ee.initialized == []
+
+
+def test_the_setup_initialises_the_named_project(fake_ee: types.SimpleNamespace) -> None:
+    earth_engine_fetch("my-project")
+
+    assert fake_ee.initialized == ["my-project"]
+
+
+def test_refused_credentials_name_the_command_again(fake_ee: types.SimpleNamespace) -> None:
+    fake_ee.initialize_error = fake_ee.RefreshError("invalid_grant")
+
+    with pytest.raises(EarthEngineSetupError, match="earthengine authenticate --force"):
+        earth_engine_fetch("my-project")
+
+
+def test_a_project_earth_engine_refuses_is_one_line(fake_ee: types.SimpleNamespace) -> None:
+    fake_ee.initialize_error = fake_ee.EEException(
+        "Project my-project is not registered.\nSee the registration page."
+    )
+
+    with pytest.raises(EarthEngineRefusedError) as raised:
+        earth_engine_fetch("my-project")
+
+    assert str(raised.value) == (
+        "Earth Engine refused the request: Project my-project is not registered."
+    )
+
+
+def test_no_network_during_the_setup_is_unreachable(fake_ee: types.SimpleNamespace) -> None:
+    fake_ee.initialize_error = OSError("name resolution failed")
+
+    with pytest.raises(EarthEngineUnreachableError):
+        earth_engine_fetch("my-project")
 
 
 # The yearly cache.
@@ -349,7 +492,7 @@ class InMemoryYearlySource:
         if year == self.fail_on:
             target.write_bytes(b"half a file")
             raise ConnectionError("the download broke")
-        write_synthetic_cds_year(target, region, year, seed=9)
+        write_synthetic_year(target, region, year, seed=9)
 
     def provenance(self, region: RegionDef) -> dict[str, str]:
         return {"dataset": "in-memory", "region": region.region_id}
@@ -427,7 +570,7 @@ async def test_a_real_build_installs_a_cube_that_is_not_synthetic(tmp_path: Path
     cube = await store.read_cube("sorriso")
     cache = tmp_path / "cache" / "sorriso"
     manifest = json.loads((tmp_path / "weather/climate/cubes/sorriso/manifest.json").read_text())
-    assert report.source == "era5-land/cds"
+    assert report.source == "era5-land/cds"  # the frozen label of ERA5-Land (ADR 0019)
     assert cube.region.synthetic is False
     assert cube.precipitation_mm.shape == (730, 20, 20)
     assert (await store.describe(cube_dataset_id("sorriso", 3, 4))).source == "era5-land/cds"
@@ -471,32 +614,62 @@ async def test_a_synthetic_build_installs_a_cube_labelled_synthetic(tmp_path: Pa
 
 @pytest.fixture
 def script_environment(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    """The store under `tmp_path`, two years of history, and no CDS key."""
+    """The store under `tmp_path`, two years of history, and no Earth Engine project."""
     monkeypatch.setenv("VERANICO_CLIMATE__STORE_BACKEND", "local")
     monkeypatch.setenv("VERANICO_CLIMATE__STORE_ROOT", str(tmp_path / "weather"))
     monkeypatch.setenv("VERANICO_CLIMATE__FIRST_YEAR", "2024")
-    monkeypatch.delenv("CDS_API_KEY", raising=False)
+    monkeypatch.delenv("EARTHENGINE_PROJECT", raising=False)
+    monkeypatch.setattr(script, "YEARLY_CACHE", tmp_path / "yearly-cache")
     return tmp_path / "weather"
 
 
-def test_without_a_cds_key_the_script_reports_the_gate_open(
-    script_environment: Path, capsys: pytest.CaptureFixture[str]
+@pytest.mark.req("R-4.1-6")
+def test_without_a_project_the_script_reports_the_gate_open(
+    script_environment: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
+    def no_client(project: str) -> download.Fetch:
+        raise AssertionError("the client must not be set up without a project")
+
+    monkeypatch.setattr(script, "earth_engine_fetch", no_client)
+
     assert script.main(["--region", "sorriso"]) == 3
 
     captured = capsys.readouterr()
-    assert "CDS_API_KEY is not set" in captured.err
+    assert "EARTHENGINE_PROJECT is not set" in captured.err
+    assert "EARTHENGINE_PROJECT=<project-id>" in captured.err
     assert "H1" in captured.err
     assert captured.out == ""
     assert not script_environment.exists()  # nothing was installed
 
 
-def test_an_empty_cds_key_is_no_key(
+def test_an_empty_project_is_no_project(
     script_environment: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setenv("CDS_API_KEY", "  ")
+    monkeypatch.setenv("EARTHENGINE_PROJECT", "  ")
 
     assert script.main(["--region", "sorriso"]) == 3
+
+
+def test_without_credentials_the_script_names_the_command_before_any_download(
+    script_environment: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    def no_credentials(project: str) -> download.Fetch:
+        raise EarthEngineSetupError(
+            f"no Earth Engine credentials are stored: run `{download.AUTHENTICATE_COMMAND}` once"
+        )
+
+    monkeypatch.setenv("EARTHENGINE_PROJECT", "my-project")
+    monkeypatch.setattr(script, "earth_engine_fetch", no_credentials)
+
+    assert script.main(["--region", "sorriso"]) == 3
+
+    captured = capsys.readouterr()
+    assert captured.err == (
+        "build_cube: open, no Earth Engine credentials are stored: run "
+        "`cd backend && uv run --group cube earthengine authenticate` once\n"
+    )
+    assert not script_environment.exists()
+    assert not (script_environment.parent / "yearly-cache").exists()  # nothing downloaded
 
 
 def test_the_script_installs_a_synthetic_cube(
@@ -536,18 +709,23 @@ def test_an_unknown_region_fails(
     ("error", "code", "line"),
     [
         (
-            script.CdsRefusedError("the Climate Data Store refused the request: 401 Unauthorized"),
+            EarthEngineRefusedError("Earth Engine refused the request: Project is not registered"),
             1,
-            "build_cube: failed, the Climate Data Store refused the request: 401 Unauthorized\n",
+            "build_cube: failed, Earth Engine refused the request: Project is not registered\n",
         ),
         (
-            script.CdsUnreachableError("no answer"),
+            EarthEngineUnreachableError("no answer"),
             3,
-            "build_cube: open, no answer from the Climate Data Store\n",
+            "build_cube: open, no answer from Earth Engine\n",
+        ),
+        (
+            EarthEngineResponseError("the native projection is EPSG:3857"),
+            1,
+            "build_cube: failed, the native projection is EPSG:3857\n",
         ),
     ],
 )
-def test_a_refused_or_unreachable_cds_is_one_line_and_no_traceback(
+def test_a_refused_or_unreachable_download_is_one_line_and_no_traceback(
     script_environment: Path,
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
@@ -555,36 +733,34 @@ def test_a_refused_or_unreachable_cds_is_one_line_and_no_traceback(
     code: int,
     line: str,
 ) -> None:
-    def retrieve(dataset: str, request: Mapping[str, Any], target: Path) -> None:
+    def fetch(request: YearRequest) -> Answer:
         raise error
 
-    monkeypatch.setenv("CDS_API_KEY", "not-a-real-token")
-    monkeypatch.setattr(script, "cdsapi_retrieve", lambda key: retrieve)
-    monkeypatch.setattr(script, "CDS_CACHE", script_environment.parent / "cds-cache")
+    monkeypatch.setenv("EARTHENGINE_PROJECT", "my-project")
+    monkeypatch.setattr(script, "earth_engine_fetch", lambda project: fetch)
 
     assert script.main(["--region", "sorriso"]) == code
 
     captured = capsys.readouterr()
     assert captured.err == line
-    assert "not-a-real-token" not in captured.err + captured.out
     assert not script_environment.exists()  # no cube was installed
 
 
-# The service never loads the CDS client.
+# The service never loads the Earth Engine client.
 
 _PROBE = """
 import sys
 from tests.fakes.settings import settings_for_tests
 from veranico.main import create_app
-import veranico.modules.climate.infrastructure.cds_download
+import veranico.modules.climate.infrastructure.earth_engine_download
 
 create_app(settings_for_tests("api", firestore_emulator_host="127.0.0.1:8580"))
-print(sorted(name for name in sys.modules if name.split(".")[0] == "cdsapi"))
+print(sorted(name for name in sys.modules if name.split(".")[0] in ("ee", "httplib2")))
 """
 
 
 @pytest.mark.req("R-4.1-6")
-def test_creating_the_api_application_leaves_the_cds_client_unloaded() -> None:
+def test_creating_the_api_application_leaves_the_earth_engine_client_unloaded() -> None:
     # A new interpreter, so what other tests imported does not matter. The download module
     # itself is imported too: even that must not load the client.
     backend = Path(__file__).resolve().parents[3]

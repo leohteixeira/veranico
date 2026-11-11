@@ -68,7 +68,7 @@ GENERATED_SECRETS = (
     "VERANICO_DELIVERY__INTERNAL_TOKEN",
 )
 # Never handed to the load stack, even when the calling shell has them.
-WITHHELD_VARIABLES = ("ANTHROPIC_API_KEY", "CDS_API_KEY", "AGENT_MODEL")
+WITHHELD_VARIABLES = ("ANTHROPIC_API_KEY", "EARTHENGINE_PROJECT", "AGENT_MODEL")
 # ------------------------------------------------------------------------------------------
 
 # k6 v2.3.0; digest resolved with `docker buildx imagetools inspect` on 2026-11-11.

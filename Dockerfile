@@ -35,7 +35,7 @@ FROM python:3.12-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf22
 
 COPY --from=ghcr.io/astral-sh/uv:0.12.12@sha256:73d2665b478d8fa2de1cf105c6841f8e9cb6b09e568fc7700440c09f8fcd7ac4 /uv /bin/uv
 
-# No development dependencies (and not the `cube` group: the CDS client belongs to the
+# No development dependencies (and not the `cube` group: the Earth Engine client belongs to the
 # offline cube build and never reaches the running service). The interpreter is the
 # image's, never a download.
 ENV UV_NO_DEV=1 \

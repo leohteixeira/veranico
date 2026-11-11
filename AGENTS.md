@@ -25,7 +25,7 @@ This is a portfolio project built to be read by evaluators. This file extends `/
 5. **Contracts are frozen.** Changing a `contracts.py`, a wire schema or a collection owner needs an ADR that names every consumer, and the consumers change in the same commit.
 6. **Verify external APIs in official documentation** before using them (the list is section 21 of the spec). Do not rely on memory for parameter names, endpoints, defaults, model identifiers or prices.
 7. **A milestone ends green.** Do not start a milestone while the previous gate (`make verify-m<N>`) fails. Never weaken a test, a linter rule, a type check or a threshold to pass a gate.
-8. **Report evidence honestly.** A gate that needs a missing account (Copernicus CDS, Google Cloud) is reported as open, never as passed. Every measured result in `docs/verification.md` names its commit.
+8. **Report evidence honestly.** A gate that needs a missing account (Earth Engine, Google Cloud) is reported as open, never as passed. Every measured result in `docs/verification.md` names its commit.
 9. **Small explicit code over frameworks.** The agent loop is hand-written on the Anthropic Messages API so failure handling is visible. Add a dependency, abstraction, retry or state only for a failure or requirement you can name.
 10. **Tests use fakes built from contracts**, not mocks (`backend/tests/fakes/`). Integration tests run against the Firestore and Cloud Storage emulators. Every source of randomness is seeded.
 11. **No secrets** in code, fixtures, logs, spans or commits. Never log raw IP addresses, message text or tool payloads. Agents do not read, search or modify `.env` or `.env.*` files. The variables are documented in `env.example` (no leading dot, so the ignore rule does not hide it from agents); it holds names and safe defaults only. The owner keeps real keys in a Git-ignored `.env`; the `Makefile` loads it when it exists, so recipes get the keys without any agent opening the file.
@@ -59,7 +59,7 @@ Skills to read before backend work: `python-modular-monolith` (structure and val
 | Area | Choice |
 |---|---|
 | Backend | Python 3.12 managed by uv, FastAPI, Pydantic v2, anthropic SDK, httpx |
-| Data | xarray, zarr, h5netcdf, cdsapi (offline cube build only), h3, NumPy, SciPy |
+| Data | xarray, zarr, h5netcdf, earthengine-api (offline cube build only), h3, NumPy, SciPy |
 | State | Firestore in Native mode; Cloud Storage for cubes, points and documents |
 | Async delivery | transactional outbox, Cloud Tasks, Cloud Scheduler sweep; in-process relay in development |
 | Documents | reportlab |
@@ -84,7 +84,7 @@ Everything goes through the `Makefile`, so people and CI run the same thing.
 | `make lint` / `make fmt` | ruff, mypy, import-linter, boundary script, eslint / ruff format, prettier |
 | `make gen-client` | export OpenAPI and regenerate the typed client; CI fails on drift |
 | `make ingest LAT=.. LON=..` | fetch and cache point history from Open-Meteo |
-| `make build-cube REGION=..` | download ERA5-Land from the CDS and build the regional cube (needs `CDS_API_KEY`) |
+| `make build-cube REGION=..` | read ERA5-Land from Google Earth Engine and build the regional cube (needs `EARTHENGINE_PROJECT` and `earthengine authenticate`) |
 | `make mutation-proof` | apply the mutation catalogue to `pricing/domain` and assert the tests fail |
 | `make evals` | Inspect suite against fixture cubes (needs `ANTHROPIC_API_KEY`) |
 | `make load` | k6 against the local stack, then the Firestore oracle |
@@ -110,7 +110,7 @@ The design direction is recorded and binding: Atlas (real relief and satellite b
 | Account | Used for | Status on 2026-11-10 |
 |---|---|---|
 | Anthropic Console | `ANTHROPIC_API_KEY` for the agent and the evaluation suite | available |
-| Copernicus Climate Data Store | `CDS_API_KEY` for the offline cube build; never reaches the running service | missing |
+| Google Earth Engine (Cloud project registered for noncommercial use) | `EARTHENGINE_PROJECT` and the credentials of `earthengine authenticate` for the offline cube build; never reach the running service | missing |
 | Google Cloud project linked to a billing account | deployment | account available (upgraded 2026-11-10); the deploy itself is run by the owner |
 
 Everything else (Open-Meteo, EOX tiles, emulators, Inspect, libraries) needs no account.

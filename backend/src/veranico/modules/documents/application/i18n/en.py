@@ -81,9 +81,7 @@ CATALOGUE: Final[dict[str, str]] = {
     "index_type.dry_spell_above": "longest dry spell above the trigger",
     "method.gamma_mle": "gamma distribution fitted by maximum likelihood",
     "method.bootstrap": "bootstrap of the historical seasons",
-    "source.era5-land/cds": (
-        "ERA5-Land daily precipitation (Copernicus Climate Change Service, Climate Data Store)"
-    ),
+    "source.era5-land/cds": ("ERA5-Land daily precipitation (Copernicus Climate Change Service)"),
     "source.era5/open-meteo": (
         "ERA5 daily precipitation (Copernicus Climate Change Service, through Open-Meteo)"
     ),

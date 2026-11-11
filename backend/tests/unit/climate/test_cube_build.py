@@ -10,7 +10,7 @@ import xarray as xr
 from veranico.modules.climate.domain.errors import WeatherDataError
 from veranico.modules.climate.domain.regions import RegionDef
 from veranico.modules.climate.infrastructure.cube_build import convert_years, file_checksum
-from veranico.modules.climate.infrastructure.synthetic import write_synthetic_cds_year
+from veranico.modules.climate.infrastructure.synthetic import write_synthetic_year
 from veranico.modules.climate.infrastructure.yearly_file import write_yearly_file
 
 # Two rows by three columns on the 0.1 degree lattice: centres -11.6, -11.7 by -56.7 to -56.5.
@@ -64,8 +64,8 @@ def test_metres_become_millimetres(tmp_path: Path) -> None:
 
 @pytest.mark.req("R-4.1-2")
 def test_row_0_is_the_northern_edge_whatever_the_order_in_the_file(tmp_path: Path) -> None:
-    write_synthetic_cds_year(tmp_path / "north.nc", TINY, 2001, seed=3)
-    write_synthetic_cds_year(tmp_path / "south.nc", TINY, 2001, seed=3, south_to_north=True)
+    write_synthetic_year(tmp_path / "north.nc", TINY, 2001, seed=3)
+    write_synthetic_year(tmp_path / "south.nc", TINY, 2001, seed=3, south_to_north=True)
 
     north_first = values_of([tmp_path / "north.nc"])
     south_first = values_of([tmp_path / "south.nc"])
@@ -87,7 +87,7 @@ def test_a_hand_written_file_ordered_south_to_north_is_turned(tmp_path: Path) ->
 
 def test_years_merge_in_time_order_whatever_the_order_of_the_paths(tmp_path: Path) -> None:
     for year in (2001, 2002, 2003):
-        write_synthetic_cds_year(tmp_path / f"{year}.nc", TINY, year, seed=3)
+        write_synthetic_year(tmp_path / f"{year}.nc", TINY, year, seed=3)
     ordered = [tmp_path / f"{year}.nc" for year in (2001, 2002, 2003)]
 
     cube = convert_years([ordered[2], ordered[0], ordered[1]], TINY)
