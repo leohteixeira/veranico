@@ -521,3 +521,4 @@ Do not rely on memory for these: the CDS dataset name and request fields for ERA
 | Verification | tests and evaluation | plus traceability, failure tests, mutation proof, load with an oracle | 0014 |
 | Landing page | none | presentation page in the portfolio repository with a live map embed | 0015 |
 | Evapotranspiration | ingested next to precipitation | not ingested: no index uses it | none (scope reduction) |
+| Point weather source | ERA5-Land from Open-Meteo, the same product as the cubes | ERA5 (0.25°) from Open-Meteo, labelled `era5/open-meteo`: Open-Meteo serves no ERA5-Land precipitation. Amends the first sentence of section 4 and the product named in section 4.2 | 0017 |

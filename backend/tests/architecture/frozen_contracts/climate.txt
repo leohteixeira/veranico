@@ -22,7 +22,7 @@ class DatasetRef(BaseModel, frozen=True):
     last_year: int
     days: int
     missing_days: int
-    source: Literal["era5-land/cds", "era5-land/open-meteo", "synthetic"]
+    source: Literal["era5-land/cds", "era5/open-meteo", "synthetic"]
 
 class Region(BaseModel, frozen=True):
     region_id: str                        # "sul-de-minas" | "sorriso" | "ribeirao-preto"

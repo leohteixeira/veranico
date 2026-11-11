@@ -65,7 +65,7 @@ from veranico.shared.kernel.ids import (
 )
 from veranico.shared.kernel.money import Money
 
-Source = Literal["era5-land/cds", "era5-land/open-meteo", "synthetic"]
+Source = Literal["era5-land/cds", "era5/open-meteo", "synthetic"]
 
 LAT = -12.55  # near Sorriso, Mato Grosso
 LON = -55.72
