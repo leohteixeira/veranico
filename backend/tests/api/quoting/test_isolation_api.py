@@ -9,6 +9,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.req("R-10.1-2")]
 
 
 @pytest.mark.req("R-6-3")
+@pytest.mark.req("R-10.1-4")
 async def test_a_second_workspace_gets_not_found_on_every_route_with_an_id(
     api: QuotingApi,
 ) -> None:

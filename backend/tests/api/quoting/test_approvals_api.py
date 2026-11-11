@@ -31,6 +31,7 @@ async def _decide(
 
 @pytest.mark.req("R-6-3")
 @pytest.mark.req("R-6-7")
+@pytest.mark.req("R-10.1-4")
 @pytest.mark.req("R-11.2-6")
 async def test_an_approval_from_the_browser_session_approves_and_enqueues(
     api: QuotingApi,
@@ -65,6 +66,7 @@ async def test_an_approval_from_the_browser_session_approves_and_enqueues(
     assert event.data.premium.amount_cents == approval["premium"]["amount_cents"]
 
 
+@pytest.mark.req("R-10.1-4")
 @pytest.mark.req("R-11.2-6")
 async def test_a_rejection_decides_without_enqueueing(api: QuotingApi) -> None:
     session = await api.session()

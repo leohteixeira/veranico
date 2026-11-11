@@ -1,7 +1,9 @@
 from dataclasses import replace
 from datetime import datetime, timedelta
+from typing import Any
 
 import pytest
+from google.api_core.exceptions import Conflict
 from google.cloud.firestore_v1.base_query import FieldFilter
 
 from tests.fakes import builders
@@ -241,6 +243,41 @@ async def test_a_mutation_that_changes_nothing_writes_nothing(env: Env) -> None:
 
 
 @pytest.mark.req("R-6-7")
+@pytest.mark.req("R-3.1-13")
+async def test_a_commit_that_is_refused_leaves_neither_the_decision_nor_the_event(
+    env: Env, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The approval's writes plus one the server refuses: the commit is all or nothing."""
+    submission = await env.pending()
+    other = await env.draft()
+    write = env.quotes._write
+
+    def write_and_collide(writer: Any, mutation: Mutation, **options: Any) -> None:
+        write(writer, mutation, **options)
+        # A create of a document that exists: the server refuses the whole commit.
+        writer.create(env.client.collection(QUOTES).document(other.quote_id), {"taken": True})
+
+    monkeypatch.setattr(env.quotes, "_write", write_and_collide)
+    with pytest.raises(Conflict):
+        await env.service.decide(env.browser, submission.submission_id, Decision(approve=True))
+    monkeypatch.undo()
+
+    (quote,) = [q for q in await env.quotes.list_for_workspace(env.workspace_id) if q.submission]
+    assert quote.status == "pending_approval"
+    assert quote.current_event_id is None
+    assert "audit.approved" not in await env.audit_codes(quote.quote_id)
+    assert await env.outbox_documents() == []
+    assert env.dispatcher.enqueued == []
+    # Nothing is left half done: the same decision then goes through.
+    approval = await env.service.decide(
+        env.browser, submission.submission_id, Decision(approve=True)
+    )
+    assert approval.status == "approved"
+    assert len(await env.outbox_documents()) == 1
+
+
+@pytest.mark.req("R-6-7")
+@pytest.mark.req("R-3.1-13")
 async def test_an_approval_writes_state_audit_entry_and_outbox_event_in_one_commit(
     env: Env,
 ) -> None:
