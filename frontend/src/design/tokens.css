@@ -1,0 +1,82 @@
+/*
+ * Atlas design tokens. Three flat blocks, parsed by tokens.test.ts:
+ *   :root                              type, radii, motion (shared by both themes)
+ *   :root:not([data-theme="dark"])     light theme colours (also the default before the script runs)
+ *   :root[data-theme="dark"]           dark theme colours
+ * Every colour token is defined in both theme blocks. The map paint (veil, ramps, marker) is drawn
+ * on a canvas and lives in theme.ts.
+ */
+
+:root {
+  --font-display: "Fraunces Variable", Georgia, serif;
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --display-weight: 500;
+  --display-tracking: -0.015em;
+  --r: 16px;
+  --r-sm: 10px;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Light: the Atlas block of the approved preview. Two values are darker than the preview so that
+   small text meets AA contrast: --ink-3 (was #75818a) and --ok (was #1f7a55). */
+:root:not([data-theme="dark"]) {
+  color-scheme: light;
+  --bg: #efeadf;
+  --card: #fffdf8;
+  --line: #e7dfcf;
+  --line-strong: #cbbfa8;
+  --ink: #1b2428;
+  --ink-2: #4b585f;
+  --ink-3: #626e76;
+  --soft: #f5efe2;
+  --accent: #0f5e63;
+  --accent-wash: #dcecec;
+  --on-accent: #fffdf8;
+  --btn: #143c44;
+  --btn-ink: #fffdf8;
+  --ok: #1c7350;
+  --ok-wash: #e0f1e8;
+  --on-ok: #fffdf8;
+  --warn: #d39a12;
+  --warn-wash: #fbf0cf;
+  --danger: #b3261e;
+  --danger-wash: #f9e1de;
+  --water: #2f7f9f;
+  --pay: #b3472a;
+  --bar: #c9c1b1;
+  --shadow: 0 16px 40px rgba(64, 48, 20, 0.17);
+  --shadow-sm: 0 1px 3px rgba(64, 48, 20, 0.18);
+}
+
+/* Dark: Atlas's type, radii and solid card anatomy over the darkened satellite basemap. Colours
+   start from the preview's night treatment; the roles stay Atlas's: teal for actions, the active
+   step and the quote identifier, a warm tone for payouts, green for approved. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0a0e13;
+  --card: #121821;
+  --line: rgba(255, 255, 255, 0.11);
+  --line-strong: rgba(255, 255, 255, 0.24);
+  --ink: #eef2f6;
+  --ink-2: #bac4ce;
+  --ink-3: #8b97a4;
+  --soft: #232932;
+  --accent: #5cc8c4;
+  --accent-wash: #1d3239;
+  --on-accent: #0a0e13;
+  --btn: #eef2f6;
+  --btn-ink: #0a0e13;
+  --ok: #62d6a3;
+  --ok-wash: #1d3333;
+  --on-ok: #0a0e13;
+  --warn: #ffd166;
+  --warn-wash: #31302a;
+  --danger: #ff9486;
+  --danger-wash: #31282e;
+  --water: #5dbcf0;
+  --pay: #ffa857;
+  --bar: rgba(255, 255, 255, 0.34);
+  --shadow: 0 16px 44px rgba(0, 0, 0, 0.5);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+}

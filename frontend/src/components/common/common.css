@@ -1,0 +1,251 @@
+/* Atlas primitives. Focus rings come from global.css; nothing here removes an outline. */
+
+/* Card: an index card on the map. Solid, soft elevation, 16px radius. */
+.card {
+  background: var(--card);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+  min-width: 0;
+}
+
+/* Button */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 9px 16px;
+  border: 1px solid var(--btn);
+  border-radius: 999px;
+  background: var(--btn);
+  color: var(--btn-ink);
+  font-weight: 600;
+  line-height: 1.25;
+  white-space: nowrap;
+  transition:
+    background-color 140ms var(--ease-out),
+    border-color 140ms var(--ease-out),
+    color 140ms var(--ease-out),
+    filter 140ms var(--ease-out);
+}
+
+.btn:hover:not(:disabled) {
+  filter: brightness(0.92);
+}
+
+.btn:active:not(:disabled) {
+  filter: brightness(0.86);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+}
+
+.btn--sm {
+  padding: 7px 13px;
+  font-size: 0.8125rem;
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--line-strong);
+}
+
+.btn--ghost:hover:not(:disabled),
+.btn--ghost:active:not(:disabled) {
+  background: var(--soft);
+  filter: none;
+}
+
+.btn--approve {
+  background: var(--ok);
+  border-color: var(--ok);
+  color: var(--on-ok);
+}
+
+.btn--reject {
+  background: transparent;
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.btn--reject:hover:not(:disabled),
+.btn--reject:active:not(:disabled) {
+  background: var(--danger-wash);
+  filter: none;
+}
+
+.btn--link {
+  padding: 2px 0;
+  border: 0;
+  border-radius: 3px;
+  background: none;
+  color: var(--ink-2);
+  font-size: 0.78125rem;
+  font-weight: 400;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.btn--link:hover:not(:disabled) {
+  color: var(--ink);
+  filter: none;
+}
+
+/* Pill: a segmented switch. Floating on the map, or inset inside a card. */
+.pill {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+
+.pill--inset {
+  background: var(--soft);
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.pill__option {
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-2);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  white-space: nowrap;
+  transition:
+    background-color 140ms var(--ease-out),
+    color 140ms var(--ease-out);
+}
+
+.pill__option:hover {
+  color: var(--ink);
+}
+
+.pill__option[aria-pressed="true"] {
+  background: var(--btn);
+  color: var(--btn-ink);
+  font-weight: 600;
+}
+
+.pill--inset .pill__option {
+  padding: 5px 11px;
+  font-size: 0.78125rem;
+}
+
+.pill--inset .pill__option[aria-pressed="true"] {
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Note: a statement next to a result (a limit of the method, a wait, a confirmation). */
+.note {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 9px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  background: var(--soft);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.note__icon {
+  display: inline-flex;
+  flex: none;
+  margin-top: 3px;
+}
+
+.note__body {
+  min-width: 0;
+}
+
+.note--warn {
+  background: var(--warn-wash);
+  border-color: var(--warn);
+}
+
+.note--wait {
+  background: var(--accent-wash);
+  border-color: var(--accent);
+}
+
+.note--ok {
+  background: var(--ok-wash);
+  border-color: var(--ok);
+}
+
+.note--danger {
+  background: var(--danger-wash);
+  border-color: var(--danger);
+}
+
+/* StateBadge: the state of a quote, an approval or a delivery. */
+.state {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--soft);
+  color: var(--ink-2);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.state--pending {
+  background: var(--accent-wash);
+  color: var(--accent);
+}
+
+.state--ok {
+  background: var(--ok-wash);
+  color: var(--ok);
+}
+
+.state--bad {
+  background: var(--danger-wash);
+  color: var(--danger);
+}
+
+/* Spinner */
+.spin {
+  display: inline-block;
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--line-strong);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Icon: one authored set, one stroke. */
+.icon {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
