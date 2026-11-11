@@ -187,8 +187,8 @@ def test_the_time_steps_of_another_offset_fail() -> None:
 
 
 # The request, as a table. The collection, band and grid fields follow the Earth Engine
-# catalogue and the `computePixels` reference (ADR 0019); NOT verified against a real
-# answer (human gate H1).
+# catalogue and the `computePixels` reference (ADR 0019), and served the real build at
+# human gate H1.
 
 REGIONS = {
     region_id: region

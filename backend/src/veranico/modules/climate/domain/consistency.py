@@ -9,27 +9,46 @@ Before 2019 they also cut the day one hour apart in the summers with daylight sa
 What it must catch is a mistake in the pipeline: a wrong unit, days shifted by one, a
 wrong cell.
 
-PROVISIONAL TOLERANCES. No real cube exists yet (human gate H1), so the two limits below
-were not measured between the two products. They were chosen from the recorded Open-Meteo
-series of one place per region, 2020 and 2021:
+TOLERANCES, set once at human gate H1 (2026-11-11) from the first comparison of the real
+cubes with fresh Open-Meteo series, 1950 to 2025 (27,759 common days), at one place per
+region (the places of the tests):
 
-* a series against itself shifted by one day differs by 2.8 to 3.2 mm a day on average,
-  so the daily limit sits well below that;
-* the series of two different regions differ by 9% to 24% in their totals.
+    region           mean abs daily diff   share of days > 1 mm   relative total diff
+    sul-de-minas     1.438 mm              0.297                  0.083
+    sorriso          1.501 mm              0.310                  0.051
+    ribeirao-preto   1.264 mm              0.225                  0.025
 
-At H1 the limits are set once from the first comparison of the real cubes with fresh
-Open-Meteo series, written here with the measured differences, and the word "provisional"
-is removed. They are not adjusted afterwards to make a run pass.
+Rule, per metric: the worst of the three regions plus a margin of 20%, rounded to the
+nearest 0.1 mm and the nearest 0.01. The margin absorbs a revision of either product and
+the years added later; it is not adjusted afterwards to make a run pass.
+
+What the limits still catch, measured on the same real series:
+
+* a factor of 1000 either way (values left in metres, or converted twice): relative total
+  difference 2.00 in every region, twenty times the limit;
+* days shifted by one, either way: 3.28 to 3.64 mm a day, against 1.8;
+* the wrong region (the cube cell of another region's place): 2.78 to 4.41 mm a day.
+
+What they cannot catch is the neighbouring cell. The point series is ERA5 on the 0.25 degree
+grid, wider than two cube cells, so the eight neighbours of the right cell differ from it by
+1.16 to 1.83 mm a day, some less than the right cell itself. Every cell within one of the
+right cell passes; only from three to seven cells away (by region) does every cell fail.
+Cell indexing is proven instead without the second product: by the recorded consistency
+test, whose test cube holds another place's series in every other cell, by the cell
+geometry tests of `regions.py`, and by the request grid tests of the download step (pixel
+centres are the cell centres, ADR 0019).
 """
 
 from dataclasses import dataclass
 
 import numpy as np
 
-# Largest mean absolute difference between the two daily values, in millimetres.
-PROVISIONAL_MAX_MEAN_ABS_DAILY_DIFF_MM = 1.5
-# Largest difference between the two totals over the overlap, relative to their mean.
-PROVISIONAL_MAX_RELATIVE_TOTAL_DIFF = 0.10
+# Largest mean absolute difference between the two daily values, in millimetres:
+# 1.501 (Sorriso) plus 20%.
+MAX_MEAN_ABS_DAILY_DIFF_MM = 1.8
+# Largest difference between the two totals over the overlap, relative to their mean:
+# 0.083 (Sul de Minas) plus 20%.
+MAX_RELATIVE_TOTAL_DIFF = 0.10
 
 # The share of days in the report counts differences above this.
 NOTABLE_DAILY_DIFF_MM = 1.0
@@ -77,6 +96,6 @@ def compare_series(
 def within_tolerance(report: ConsistencyReport) -> bool:
     return (
         report.overlap_days > 0
-        and report.mean_abs_daily_diff_mm <= PROVISIONAL_MAX_MEAN_ABS_DAILY_DIFF_MM
-        and report.relative_total_diff <= PROVISIONAL_MAX_RELATIVE_TOTAL_DIFF
+        and report.mean_abs_daily_diff_mm <= MAX_MEAN_ABS_DAILY_DIFF_MM
+        and report.relative_total_diff <= MAX_RELATIVE_TOTAL_DIFF
     )

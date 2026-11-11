@@ -1,11 +1,11 @@
 """The cube against the point series, on recorded data (SPEC 4.4).
 
-No real cube exists before human gate H1, so this proves the mechanism end to end, not the
-agreement of the two products: a recorded Open-Meteo series is converted to metres, written
-as yearly files in the shape of the download step, taken through the converter and the
-store, and read back from the cube cell of the recorded place. Units, time alignment and
-cell indexing must survive the trip; a copy shifted by one day and the neighbouring cell
-must not pass.
+This proves the mechanism end to end and offline, not the agreement of the two products
+(the live test compares the real cubes): a recorded Open-Meteo series is converted to
+metres, written as yearly files in the shape of the download step, taken through the
+converter and the store, and read back from the cube cell of the recorded place. Units,
+time alignment and cell indexing must survive the trip; a copy shifted by one day, the
+neighbouring cell and a factor of 1000 must not pass.
 """
 
 import json
@@ -19,8 +19,8 @@ import pytest
 from tests.integration.climate.store_contract import CLOCK
 from veranico.modules.climate.application.ports import CubeWrite, PointFetch
 from veranico.modules.climate.domain.consistency import (
-    PROVISIONAL_MAX_MEAN_ABS_DAILY_DIFF_MM,
-    PROVISIONAL_MAX_RELATIVE_TOTAL_DIFF,
+    MAX_MEAN_ABS_DAILY_DIFF_MM,
+    MAX_RELATIVE_TOTAL_DIFF,
     ConsistencyReport,
     compare_series,
     within_tolerance,
@@ -148,21 +148,23 @@ async def test_a_one_day_shift_and_the_neighbouring_cell_are_out_of_tolerance(
 
     assert not within_tolerance(shifted)
     assert shifted.overlap_days == 730
-    assert shifted.mean_abs_daily_diff_mm > PROVISIONAL_MAX_MEAN_ABS_DAILY_DIFF_MM
+    assert shifted.mean_abs_daily_diff_mm > MAX_MEAN_ABS_DAILY_DIFF_MM
     assert not within_tolerance(wrong_cell)
-    assert wrong_cell.mean_abs_daily_diff_mm > PROVISIONAL_MAX_MEAN_ABS_DAILY_DIFF_MM
+    assert wrong_cell.mean_abs_daily_diff_mm > MAX_MEAN_ABS_DAILY_DIFF_MM
 
 
 @pytest.mark.req("R-4.4-3")
-async def test_values_left_in_metres_are_out_of_tolerance() -> None:
-    place = await recorded("sorriso")
+@pytest.mark.parametrize("factor", [1 / 1000, 1000], ids=["left-in-metres", "converted-twice"])
+@pytest.mark.parametrize("region_id", sorted(PLACES))
+async def test_a_factor_of_1000_is_out_of_tolerance(region_id: str, factor: float) -> None:
+    place = await recorded(region_id)
 
     report = compare_series(
-        place.dates, place.precipitation_mm / 1000.0, place.dates, place.precipitation_mm
+        place.dates, place.precipitation_mm * factor, place.dates, place.precipitation_mm
     )
 
     assert not within_tolerance(report)
-    assert report.relative_total_diff > PROVISIONAL_MAX_RELATIVE_TOTAL_DIFF
+    assert report.relative_total_diff > MAX_RELATIVE_TOTAL_DIFF
 
 
 # `compare_series` on series written by hand.
@@ -184,7 +186,18 @@ def test_the_report_of_two_hand_written_series() -> None:
         share_of_days_over_1mm=0.5,
         relative_total_diff=0.0,  # both total 16 mm
     )
-    assert within_tolerance(report)  # 1.5 mm a day on average, exactly the limit
+    assert within_tolerance(report)
+
+
+def test_a_daily_difference_exactly_at_the_limit_is_within_tolerance() -> None:
+    dates = days("2020-01-01", 2)
+    limit = MAX_MEAN_ABS_DAILY_DIFF_MM
+    # The same total, one limit apart on each day.
+    at_daily = compare_series(dates, np.array([limit, 0.0]), dates, np.array([0.0, limit]))
+
+    assert at_daily.mean_abs_daily_diff_mm == limit
+    assert at_daily.relative_total_diff == 0.0
+    assert within_tolerance(at_daily)
 
 
 def test_only_the_days_both_series_have_a_value_for_are_compared() -> None:
@@ -229,5 +242,5 @@ def test_each_limit_fails_on_its_own() -> None:
 
     assert moved.relative_total_diff == 0.0
     assert not within_tolerance(moved)
-    assert wetter.mean_abs_daily_diff_mm < PROVISIONAL_MAX_MEAN_ABS_DAILY_DIFF_MM
+    assert wetter.mean_abs_daily_diff_mm < MAX_MEAN_ABS_DAILY_DIFF_MM
     assert not within_tolerance(wetter)

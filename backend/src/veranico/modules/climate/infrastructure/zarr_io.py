@@ -55,8 +55,8 @@ def write_cube(
     """Write a cube of shape (days, ny, nx) as a new store.
 
     Chunks: the whole time axis by at most 10 by 10 cells, so the series of one cell is one
-    chunk object and the whole cube is a handful (the layout ADR 0016 will confirm or
-    replace from measurements). `chunks` exists for that measurement only.
+    chunk object and the whole cube is a handful (ADR 0016, measured on the real cubes).
+    `chunks` exists for that measurement only.
     """
     days, ny, nx = precipitation_mm.shape
     dataset = xr.Dataset(

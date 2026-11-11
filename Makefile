@@ -113,7 +113,17 @@ dev:
 	trap cleanup EXIT; trap 'exit 130' INT; trap 'exit 143' TERM; \
 	$(COMPOSE) up -d --build --wait firestore storage jaeger carrier api web; \
 	echo "dev: web http://127.0.0.1:$(WEB_PORT)  api http://127.0.0.1:$(API_PORT)  carrier http://127.0.0.1:$(CARRIER_PORT)  jaeger http://127.0.0.1:8516"; \
-	echo "dev: the three showcase regions run on seeded SYNTHETIC cubes, not on weather history"; \
+	real=""; \
+	for region in sul-de-minas sorriso ribeirao-preto; do \
+		if grep -qs '"source": *"era5-land/cds"' "backend/.data/weather/climate/cubes/$$region/manifest.json"; then real="$$real $$region"; fi; \
+	done; \
+	if [ "$$real" = " sul-de-minas sorriso ribeirao-preto" ]; then \
+		echo "dev: the three showcase regions run on the real ERA5-Land cubes of backend/.data/weather"; \
+	elif [ -n "$$real" ]; then \
+		echo "dev: real ERA5-Land cubes for$$real; the other showcase regions run on seeded SYNTHETIC cubes"; \
+	else \
+		echo "dev: the three showcase regions run on seeded SYNTHETIC cubes, not on weather history"; \
+	fi; \
 	$(COMPOSE) logs --follow api carrier web
 
 # --- Tests ------------------------------------------------------------------------------

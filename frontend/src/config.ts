@@ -81,11 +81,12 @@ const DEFAULT_BASEMAPS: Record<BasemapId, BasemapConfig> = {
 // windows and limits. The API has no default cover per region, so the first view takes it from
 // here.
 //
-// The triggers and exits are TUNED TO THE SYNTHETIC CUBES (`make build-cube ... SYNTHETIC=1`,
-// seeds 1, 2 and 3 for the three regions), so that each example pays in roughly one season in
-// seven or eight (checked against `GET /weather/seasons` on 2026-11-11: 11 of 76, 10 of 76 and
-// 8 of 75 seasons). They are not agronomic figures. Re-tune them when the real ERA5-Land cubes
-// arrive (gate H1).
+// The triggers and exits are set from the real ERA5-Land cubes (gate H1, built from Google Earth
+// Engine, ADR 0019) by one rule: the trigger is the 13th percentile of the example's season index
+// and the exit its 3rd percentile, each rounded to the nearest 5 mm, so each example pays in about
+// one season in seven and in full in the driest few. Measured with the `pricing` backtest on the
+// example point's cell, 1950 to 2025, on 2026-11-11: Sul de Minas pays in 11 of 76 seasons (3 in
+// full), Sorriso 11 of 76 (4), Ribeirão Preto 10 of 75 (3). They are not agronomic figures.
 const DEFAULT_EXAMPLE_COVERS: Record<string, ExampleCover> = {
   "sul-de-minas": {
     point: { lat: -21.41, lon: -45.48 },
@@ -94,8 +95,8 @@ const DEFAULT_EXAMPLE_COVERS: Record<string, ExampleCover> = {
       index: {
         index_type: "rainfall_below",
         window: { start: "09-01", end: "10-31" },
-        trigger: 80,
-        exit: 40,
+        trigger: 105,
+        exit: 70,
       },
       limit: { amount_cents: 30_000_000, currency: "BRL" },
     },
@@ -107,8 +108,8 @@ const DEFAULT_EXAMPLE_COVERS: Record<string, ExampleCover> = {
       index: {
         index_type: "rainfall_below",
         window: { start: "10-01", end: "11-30" },
-        trigger: 190,
-        exit: 110,
+        trigger: 255,
+        exit: 185,
       },
       limit: { amount_cents: 50_000_000, currency: "BRL" },
     },
@@ -120,8 +121,8 @@ const DEFAULT_EXAMPLE_COVERS: Record<string, ExampleCover> = {
       index: {
         index_type: "rainfall_below",
         window: { start: "11-15", end: "02-15" },
-        trigger: 520,
-        exit: 330,
+        trigger: 460,
+        exit: 335,
       },
       limit: { amount_cents: 40_000_000, currency: "BRL" },
     },

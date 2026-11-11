@@ -139,9 +139,10 @@ def _deltas(text: str) -> tuple[ModelTextDelta, ...]:
 
 # The built-in scenario
 
-# The first example request of the interface: a coffee farm near Três Pontas, in the Sul de
-# Minas showcase region; rainfall below 150 mm from 1 September to 31 October pays linearly
-# down to 75 mm, with a limit of R$ 300,000.
+# The scripted scenario's own cover, independent of the interface's example covers
+# (`frontend/src/config.ts`): a coffee farm near Três Pontas, in the Sul de Minas showcase
+# region; rainfall below 150 mm from 1 September to 31 October pays linearly down to 75 mm,
+# with a limit of R$ 300,000.
 HAPPY_PATH_QUERY = "Três Pontas"
 HAPPY_PATH_COVER: Mapping[str, object] = {
     "index_type": "rainfall_below",

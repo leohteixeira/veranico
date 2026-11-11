@@ -21,13 +21,15 @@ corner, so pixel centres are the region's cell centres. The native grid of the c
 is checked first: its pixel centres must be the same 0.1 degree points, or nothing is
 fetched, so no request can resample.
 
-NOT VERIFIED against a real answer (human gate H1 is open): that `system:time_start` is
-the end of the accumulation (the validity time), the band order of `toBands` and the
-native projection. Each is checked on the answer: the time steps against the expected
-list, the band names against the image ids, the projection against the grid, and a
+Each assumption about the answer is checked on it: the time steps against the expected
+list, the band names against the image ids, the native projection against the grid, and a
 negative local-day total (which a wrong time convention produces) fails. A mismatch raises
 `EarthEngineResponseError` naming what was found: the step never writes a yearly file from
-an answer it does not recognise.
+an answer it does not recognise. The real build at human gate H1 (2026-11-11, 228 answers)
+passed every check, and the consistency test against Open-Meteo confirms the units and
+that `system:time_start` is the end of the accumulation: the real cells differ from the
+point series by 1.26 to 1.50 mm a day, while the same cells shifted by one day differ by
+3.28 to 3.64 mm (`domain/consistency.py`).
 """
 
 import io
@@ -68,8 +70,14 @@ UTC_OFFSET_HOURS: Mapping[str, int] = {"sul-de-minas": 3, "ribeirao-preto": 3, "
 
 # The difference of two accumulations stored as 32-bit floats can come out a hair below
 # zero on a dry day. A value between minus this and zero is taken as zero; anything lower
-# is not rounding and fails. One micrometre of water. Provisional until the first real
-# answer shows the size of the noise (H1).
+# is not rounding and fails. One micrometre of water, kept after the real build at H1
+# (2026-11-11): the answers are 32-bit floats (the smallest positive local-day totals of the
+# three cubes are 2**-29 m, about 1.9e-9 m, and its multiples), so a rounding residue is a
+# few 32-bit steps of the accumulations involved; below 0.5 m (the largest local-day total
+# built is 0.44 m) one step is 2**-25 m, about 3e-8 m. No total of the 33 million built
+# (3 regions, 76 years, 400 cells) fell below minus this. It stays at 1e-6 m, a hundredth
+# of the 0.1 mm resolution of the point series, so a wrong time convention (whole
+# millimetres negative) still fails.
 ROUNDING_NOISE_M = 1e-6
 
 

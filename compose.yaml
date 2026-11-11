@@ -83,13 +83,17 @@ services:
       start_period: 2s
 
   cubes:
-    # Runs once and exits: installs the SYNTHETIC cube of each showcase region that the
-    # `weather` volume does not hold yet, so the stack serves the three regions with no
-    # network and no Copernicus key (human gate H1 is open). The data is generated from a
-    # seed; every region built here answers `synthetic = true` and is labelled so wherever
-    # it is shown. It is the documented script with the documented seeds
-    # (`make build-cube REGION=<id> SYNTHETIC=1 SEED=<n>`), mounted because the image holds
-    # the package and not the scripts. About ten seconds per region, on a new volume only.
+    # Runs once and exits: installs the cube of each showcase region in the `weather`
+    # volume. A cube the owner built on the host (`make build-cube REGION=<id>`, in
+    # backend/.data/weather) wins: it is copied in, replacing what the volume holds, whenever
+    # its manifest differs. Without one, a SYNTHETIC cube is seeded when the volume holds no
+    # cube for the region, so a bare copy of the repository (no backend/.data, no network,
+    # no Earth Engine project) still serves the three regions. Seeded data answers
+    # `synthetic = true` and is labelled so wherever it is shown. The seeding is the
+    # documented script with the documented seeds
+    # (`make build-cube REGION=<id> SYNTHETIC=1 SEED=<n>`); backend/ is mounted read-only
+    # because the image holds the package and not the scripts or the local data. About ten
+    # seconds per seeded region, on a new volume only; a copy takes about a second.
     <<: *app
     network_mode: none
     # A new named volume belongs to root and the image's user is 10001: the cubes are
@@ -97,7 +101,7 @@ services:
     user: "0:0"
     volumes:
       - weather:/tmp/veranico/weather
-      - ./backend/scripts/build_cube.py:/scripts/build_cube.py:ro
+      - ./backend:/backend:ro
     environment:
       - VERANICO_CLIMATE__STORE_ROOT=/tmp/veranico/weather
     command:
@@ -105,10 +109,21 @@ services:
       - -euc
       - |
         store=/tmp/veranico/weather
+        built=/backend/.data/weather/climate/cubes
+        mkdir -p "$$store/climate/cubes"
         for seeded in sul-de-minas:1 sorriso:2 ribeirao-preto:3; do
           region="$${seeded%%:*}"
-          if [ ! -f "$$store/climate/cubes/$$region/manifest.json" ]; then
-            python /scripts/build_cube.py --region "$$region" --synthetic --seed "$${seeded##*:}"
+          target="$$store/climate/cubes/$$region"
+          if [ -f "$$built/$$region/manifest.json" ]; then
+            if ! cmp -s "$$built/$$region/manifest.json" "$$target/manifest.json"; then
+              rm -rf "$$target.new"
+              cp -R "$$built/$$region" "$$target.new"
+              rm -rf "$$target"
+              mv "$$target.new" "$$target"
+              echo "cubes: $$region copied from backend/.data/weather"
+            fi
+          elif [ ! -f "$$target/manifest.json" ]; then
+            python /backend/scripts/build_cube.py --region "$$region" --synthetic --seed "$${seeded##*:}"
           fi
         done
         chown -R 10001:10001 "$$store"
@@ -227,7 +242,7 @@ services:
       start_period: 1s
 
 volumes:
-  # The local weather store of the API role: the seeded cubes and the cached points.
+  # The local weather store of the API role: the installed cubes and the cached points.
   weather:
 
 networks:

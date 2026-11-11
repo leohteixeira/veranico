@@ -94,7 +94,7 @@ For points outside the showcase regions, the Open-Meteo Historical Weather API (
 
 * Validate before writing: no duplicate dates, no gaps, no negative precipitation. Fail loudly otherwise.
 * Writes are atomic (temporary location then rename locally; generation precondition on Cloud Storage).
-* Consistency check (test): for one point inside each region, compare the cube series with the Open-Meteo series over the overlap and assert the difference stays within a documented tolerance.
+* Consistency check (test): for one point inside each region, compare the cube series with the Open-Meteo series over the overlap and assert the difference stays within a documented tolerance. The tolerance was set at human gate H1 from the measured differences of the three regions (worst region plus 20%): a mean absolute daily difference of at most 1.8 mm and a difference of totals of at most 10% of their mean. The measurements, and the defects the limits still catch, are in `climate/domain/consistency.py`.
 * `WeatherStore` port with `LocalWeatherStore` (development and tests) and `GcsWeatherStore` (production). It resolves a point to the regional cube when inside a region, otherwise to the point store.
 * Evidence export: the exact daily slice used by a quote (its window, over the seasons the quote was priced on), as NetCDF with provenance attributes (dataset id, grid point, source, request, cube manifest checksum, index definition).
 
