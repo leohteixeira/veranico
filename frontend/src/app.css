@@ -53,19 +53,12 @@
   right: var(--gutter);
   width: var(--tabs-w);
   max-height: calc(100% - var(--cards-top) - var(--gutter));
-  transition: width 200ms var(--ease-out);
 }
 
 .app__timeline {
   left: calc(var(--chat-w) + 2 * var(--gutter));
   right: calc(var(--tabs-w) + 2 * var(--gutter));
   bottom: var(--gutter);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .app__tabs {
-    transition: none;
-  }
 }
 
 @media (max-width: 1240px) {

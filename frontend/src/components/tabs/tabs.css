@@ -470,6 +470,8 @@
 
 .quote__id {
   margin: 0 auto 0 0;
+  /* The quote identifier is teal wherever it appears: here, in the queue, in the conversation. */
+  color: var(--accent);
   font-family: var(--font-mono);
   font-size: 1rem;
   font-weight: 500;
@@ -571,7 +573,7 @@
   display: grid;
   gap: 1px;
   padding-left: 10px;
-  border-left: 2px solid var(--line-strong);
+  border-left: 1px solid var(--line-strong);
   font-size: 0.8125rem;
   line-height: 1.4;
 }
@@ -661,7 +663,7 @@
   padding: 0;
   border: 0;
   background: none;
-  color: var(--ink);
+  color: var(--accent);
   font-family: var(--font-mono);
   font-size: 0.9375rem;
   font-weight: 500;

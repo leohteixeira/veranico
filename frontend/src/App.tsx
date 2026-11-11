@@ -199,6 +199,14 @@ export function Shell() {
   });
 
   const approvals = useApprovals();
+  // The conversation only knows that an approval was asked for; the queue knows when a person has
+  // decided it, and from then on the conversation stops saying that one waits.
+  const waiting = session.pendingApproval;
+  const decided =
+    waiting !== null &&
+    (approvals.data ?? []).some(
+      (approval) => approval.approval_id === waiting.approval_id && approval.status !== "pending",
+    );
   const source = latestResult(session, "get_weather_history")?.source;
   const datasetSource = typeof source === "string" ? source : null;
 
@@ -332,6 +340,7 @@ export function Shell() {
       />
       <ConversationCard
         {...card}
+        session={decided ? { ...session, pendingApproval: null } : session}
         className="app__chat"
         onReset={startOver}
         mapPoint={mapPoint}

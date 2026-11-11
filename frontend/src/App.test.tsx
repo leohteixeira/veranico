@@ -194,6 +194,21 @@ describe("application shell [R-12.1-1] [R-16.7-1]", () => {
     expect(screen.queryByText(firstRequest ?? "")).not.toBeInTheDocument();
   });
 
+  it("the conversation stops saying an approval waits once a person has decided it [R-12.4-7]", async () => {
+    window.localStorage.setItem(CONVERSATION_STORAGE_KEY, CONVERSATION_ID);
+    const { state } = renderApp({ turns: 4 });
+    const waiting = "A person decides this submission in the Approvals tab.";
+    expect(await screen.findByText(waiting)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("tab", { name: /Approvals/ }));
+    fireEvent.click(await screen.findByRole("button", { name: "Approve" }));
+
+    await waitFor(() => {
+      expect(state.stage).toBe("approved");
+      expect(screen.queryByText(waiting)).not.toBeInTheDocument();
+    });
+  });
+
   it("unknown_stored_conversation_starts_fresh", async () => {
     window.localStorage.setItem(CONVERSATION_STORAGE_KEY, "cv-forgotten");
     const { calls } = renderApp();

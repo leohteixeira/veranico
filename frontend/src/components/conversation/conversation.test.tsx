@@ -585,4 +585,27 @@ describe("conversation card [R-12.1-3]", () => {
     rerender({ session: liveSession(1) });
     expect(screen.queryByText("The agent ended the turn without an answer.")).toBeNull();
   });
+
+  it("a figure keeps the punctuation that closes it, and the sentence reads the same", () => {
+    renderCard({ session: liveSession(2) });
+    const bound = [...document.querySelectorAll(".msg__bound")];
+    expect(bound.length).toBeGreaterThan(0);
+    for (const piece of bound) {
+      // The figure, then its punctuation, in one piece that a line cannot break.
+      expect(piece.firstElementChild).toHaveClass("fig");
+      expect(piece.textContent).toMatch(/[,.;:!?)\]%]$/);
+      // The punctuation is set once: what follows does not repeat it.
+      expect(piece.nextSibling?.textContent ?? "").not.toMatch(/^[,.;:!?)\]%]/);
+    }
+    // No line of an answer can start with punctuation left behind by a figure.
+    for (const figure of document.querySelectorAll(".msg__text > .fig")) {
+      expect(figure.nextSibling?.textContent ?? "").not.toMatch(/^[,.;:!?)\]%]/);
+    }
+    const { turns } = happyPath("en");
+    const priced = (turns[1] ?? [])
+      .flatMap((event) => (event.type === "text_delta" ? [event.data.text] : []))
+      .join("");
+    const answers = [...document.querySelectorAll(".msg--agent")];
+    expect(plain(answers.at(-1)?.textContent ?? "")).toContain(plain(priced));
+  });
 });

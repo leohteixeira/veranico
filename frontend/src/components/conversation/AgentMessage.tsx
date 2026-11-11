@@ -15,6 +15,11 @@ interface AgentMessageProps {
   onOpen: OpenFigure;
 }
 
+/** The punctuation a text opens with when it closes what came before it: `; `, `.`, `),`. */
+function closing(text: string): string {
+  return /^[,.;:!?)\]%]+/.exec(text)?.[0] ?? "";
+}
+
 /** One answer: its tool calls, then its text with every figure linked to its source or marked. */
 export function AgentMessage({ message, toolResults, onOpen }: AgentMessageProps) {
   const { locale } = useI18n();
@@ -40,13 +45,26 @@ export function AgentMessage({ message, toolResults, onOpen }: AgentMessageProps
       )}
       {paragraphs.map((segments, at) => (
         <p key={at} className="msg__text">
-          {segments.map((segment, index) =>
-            segment.kind === "text" ? (
-              segment.text
+          {segments.map((segment, index) => {
+            if (segment.kind === "text") {
+              // Punctuation that closes a figure was already set with that figure.
+              const after = index > 0 && segments[index - 1]?.kind !== "text";
+              return after ? segment.text.slice(closing(segment.text).length) : segment.text;
+            }
+            const next = segments[index + 1];
+            const tail = next?.kind === "text" ? closing(next.text) : "";
+            const figure = <Figure key={index} segment={segment} onOpen={onOpen} />;
+            // A figure is a control, so a line may break after it: its punctuation is kept on
+            // the same line, or a line would start with a semicolon.
+            return tail === "" ? (
+              figure
             ) : (
-              <Figure key={index} segment={segment} onOpen={onOpen} />
-            ),
-          )}
+              <span key={index} className="msg__bound">
+                {figure}
+                {tail}
+              </span>
+            );
+          })}
         </p>
       ))}
       {flaggedCount > 0 && (

@@ -1,0 +1,193 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-11T09:30:00Z",
+  "title": "Design System: Veranico",
+  "extensions": {
+    "colorMeta": {
+      "parchment": { "role": "neutral", "displayName": "Parchment", "canonical": "#efeadf" },
+      "card": { "role": "neutral", "displayName": "Card White", "canonical": "#fffdf8" },
+      "soft": { "role": "neutral", "displayName": "Soft Paper", "canonical": "#f5efe2" },
+      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "#1b2428" },
+      "teal": { "role": "primary", "displayName": "Deep Teal", "canonical": "#0f5e63" },
+      "button": { "role": "primary", "displayName": "Ink Teal", "canonical": "#143c44" },
+      "brick": { "role": "secondary", "displayName": "Brick", "canonical": "#b3472a" },
+      "approved": { "role": "secondary", "displayName": "Approved Green", "canonical": "#1c7350" },
+      "warning": { "role": "tertiary", "displayName": "Amber", "canonical": "#d39a12" },
+      "danger": { "role": "tertiary", "displayName": "Signal Red", "canonical": "#b3261e" },
+      "night-ground": { "role": "neutral", "displayName": "Night Ground", "canonical": "#0a0e13" },
+      "night-card": { "role": "neutral", "displayName": "Night Card", "canonical": "#121821" },
+      "night-teal": { "role": "primary", "displayName": "Luminous Teal", "canonical": "#5cc8c4" },
+      "night-payout": { "role": "secondary", "displayName": "Ember", "canonical": "#ffa857" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "The one large figure of a tab." },
+      "title": { "displayName": "Title", "purpose": "Card titles, the wordmark, the timeline readout." },
+      "body": { "displayName": "Body", "purpose": "Conversation text and tab prose." },
+      "label": { "displayName": "Label", "purpose": "Field names, captions, switch options." },
+      "mono": { "displayName": "Mono", "purpose": "Identifiers, tool names and durations only." }
+    },
+    "shadows": [
+      {
+        "name": "card",
+        "value": "0 16px 40px rgba(64, 48, 20, 0.17)",
+        "purpose": "Cards and the floating switches of the top row (light theme)."
+      },
+      {
+        "name": "card-dark",
+        "value": "0 16px 44px rgba(0, 0, 0, 0.5)",
+        "purpose": "The same, dark theme."
+      },
+      {
+        "name": "small",
+        "value": "0 1px 3px rgba(64, 48, 20, 0.18)",
+        "purpose": "The pressed option of an inset switch, the notes on the map."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Every state transition; 140ms on controls. Reduced motion removes transitions."
+      }
+    ],
+    "breakpoints": [
+      { "name": "narrow-cards", "value": "1240px" },
+      { "name": "stacked", "value": "1100px" }
+    ],
+    "mapPaint": {
+      "source": "frontend/src/design/theme.ts (MAP_PAINT)",
+      "light": {
+        "sequential": [
+          "rgba(251,233,200,.6)",
+          "rgba(246,201,138,.7)",
+          "rgba(236,159,90,.76)",
+          "rgba(217,113,60,.82)",
+          "rgba(179,71,42,.86)",
+          "rgba(125,38,23,.9)"
+        ],
+        "diverging": [
+          "rgba(163,57,31,.88)",
+          "rgba(217,113,60,.78)",
+          "rgba(241,192,143,.68)",
+          "rgba(232,228,220,.5)",
+          "rgba(167,211,214,.68)",
+          "rgba(78,163,176,.8)",
+          "rgba(18,112,127,.9)"
+        ]
+      },
+      "dark": {
+        "sequential": [
+          "rgba(58,32,96,.32)",
+          "rgba(120,44,130,.48)",
+          "rgba(190,60,112,.62)",
+          "rgba(236,104,64,.74)",
+          "rgba(248,168,52,.84)",
+          "rgba(255,230,128,.92)"
+        ],
+        "diverging": [
+          "rgba(255,218,110,.92)",
+          "rgba(242,124,62,.8)",
+          "rgba(172,62,112,.58)",
+          "rgba(70,72,92,.26)",
+          "rgba(46,104,170,.56)",
+          "rgba(52,150,222,.76)",
+          "rgba(104,200,250,.88)"
+        ]
+      }
+    }
+  },
+  "components": [
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "A working panel that sits on the map like an index card.",
+      "html": "<section class=\"ds-card\"><h2>Conversation</h2><p>Step 1 of 6: Locate</p></section>",
+      "css": ".ds-card { background: var(--card); color: var(--ink); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 14px 16px; font: 400 0.875rem/1.5 var(--font-sans); } .ds-card h2 { margin: 0 0 6px; font: 500 1.0625rem/1.25 var(--font-display); letter-spacing: -0.015em; } .ds-card p { margin: 0; color: var(--ink-2); font-size: 0.75rem; }"
+    },
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The filled action of a card: approve, create a key.",
+      "html": "<button class=\"ds-btn\">Approve</button>",
+      "css": ".ds-btn { padding: 9px 16px; border: 0; border-radius: 999px; background: var(--btn); color: var(--btn-ink); font: 600 0.8125rem/1.2 var(--font-sans); cursor: pointer; transition: filter 140ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-btn:hover { filter: brightness(1.12); } .ds-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }"
+    },
+    {
+      "name": "Pill Switch",
+      "kind": "chip",
+      "refersTo": "pill-option-pressed",
+      "description": "A segmented switch between two named options; exactly one is pressed.",
+      "html": "<div class=\"ds-pill\" role=\"group\" aria-label=\"Basemap\"><button aria-pressed=\"true\">Relief</button><button aria-pressed=\"false\">Satellite</button></div>",
+      "css": ".ds-pill { display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; background: var(--card); border: 1px solid var(--line); box-shadow: var(--shadow); } .ds-pill button { padding: 6px 12px; border: 0; border-radius: 999px; background: transparent; color: var(--ink-2); font: 500 0.8125rem/1.2 var(--font-sans); cursor: pointer; } .ds-pill button:hover { color: var(--ink); } .ds-pill button[aria-pressed=\"true\"] { background: var(--btn); color: var(--btn-ink); font-weight: 600; } .ds-pill button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }"
+    },
+    {
+      "name": "Note",
+      "kind": "custom",
+      "refersTo": "note",
+      "description": "A statement next to a result: a limit of the method, a wait, a confirmation.",
+      "html": "<p class=\"ds-note\">Synthetic weather data: these figures are generated for the demo and are not weather history.</p>",
+      "css": ".ds-note { margin: 0; padding: 9px 12px; border: 1px solid var(--line-strong); border-radius: 10px; background: var(--soft); color: var(--ink); font: 400 0.8125rem/1.45 var(--font-sans); }"
+    },
+    {
+      "name": "Figure Link",
+      "kind": "custom",
+      "refersTo": "body",
+      "description": "A figure in an answer; it opens the tab and field it came from.",
+      "html": "<button class=\"ds-fig\">R$ 24,840.00</button>",
+      "css": ".ds-fig { padding: 0; border: 0; border-bottom: 1px dashed var(--ink-3); border-radius: 0; background: none; color: var(--ink); font: 600 0.875rem/1.5 var(--font-sans); font-variant-numeric: tabular-nums; cursor: pointer; } .ds-fig:hover { border-bottom-color: var(--accent); color: var(--accent); } .ds-fig:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The atlas page that answers back",
+    "overview": "The real terrain is the page. The risk is a wash of colour laid over it, and the working panels sit on it like index cards. This is the Atlas direction, pinned by the owner from three rendered alternatives after rejecting a schematic grid of flat squares on blank paper as unlike a map. The screen is a working surface (Operate): a broker describes an exposure, reads the basis risk a few kilometres from the farm, reaches a priced quote and approves the submission personally. The dark theme is not a second world. It keeps Atlas's type, radii and solid cards and puts them over the darkened satellite basemap with a luminous ramp.",
+    "keyCharacteristics": [
+      "The map fills the stage; every panel is a card floating on it.",
+      "One continuous risk surface over real terrain; the raw cells are one switch away.",
+      "Serif for titles and large figures, sans for text, mono only for identifiers and tool names.",
+      "Teal acts, brick pays, green approves. Colour is never the only carrier of a state.",
+      "Every figure is shown as the API returned it and can be traced to its tool result."
+    ],
+    "rules": [
+      {
+        "name": "The Three Verbs Rule",
+        "body": "Teal acts, brick pays, green approves. A colour used for one of these is not used for anything else.",
+        "section": "colors"
+      },
+      {
+        "name": "The Marked, Not Coloured Rule",
+        "body": "A state is never carried by colour alone: payout seasons have a mark under the baseline, a flagged figure has its note, a warning has its icon and its sentence.",
+        "section": "colors"
+      },
+      {
+        "name": "The Measured Mono Rule",
+        "body": "Mono is for identifiers, tool names and durations. It is never a costume for \"technical\".",
+        "section": "typography"
+      },
+      {
+        "name": "The Tabular Rule",
+        "body": "Every number that can be compared with another uses tabular numerals (the `num` class).",
+        "section": "typography"
+      },
+      {
+        "name": "The One Sheet Rule",
+        "body": "A card never sits inside a card. Inside a card, depth is a tone or a hairline, never a second shadow.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do keep the map as the stage and every panel as one card on it.",
+      "Do show figures exactly as the API returned them; the interface derives only the length of the measured leg and the minimum and maximum over returned cells.",
+      "Do label synthetic weather wherever its figures appear (`Region.synthetic`, a dataset source of `synthetic`), on the map, in the Risk tab and in the embed.",
+      "Do keep the attribution, the non-commercial notice and the pricing disclaimer in the timeline card, next to the map, in both layouts and in the embed.",
+      "Do route every visible string through the catalogue, in English and Brazilian Portuguese."
+    ],
+    "donts": [
+      "Don't draw the risk as flat squares on blank paper; the owner rejected that as unlike a map.",
+      "Don't put a card inside a card, or give anything inside a card its own shadow.",
+      "Don't use brick for errors, green for anything but approval, or amber as text.",
+      "Don't use mono for anything but identifiers, tool names and durations.",
+      "Don't let colour alone carry a state."
+    ]
+  }
+}
