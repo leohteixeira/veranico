@@ -1,12 +1,45 @@
-# Local infrastructure for development and tests: the emulators and Jaeger.
+# The local stack for development and tests (SPEC 17): the API role, the mock carrier role,
+# the Vite dev server, the Firestore and Cloud Storage emulators and Jaeger; the fault proxy
+# of the failure campaign in its own profile. `make dev` and `make test-failure` drive it.
 #
-# The API role, the carrier role and the Vite dev server run on the host (`make dev`) until
-# the container image exists (plan 09); their services are added here then.
+# The file works on a bare copy of the repository and names no secret value:
 #
-# This file reads no `.env` file and interpolates no variable: the stack starts on a bare
-# copy of the repository, and no secret can reach a container or the output of
-# `docker compose config`.
+# * A secret reaches a container only by name (`- NAME` under `environment`): Compose copies
+#   the value from the environment of the calling process, and leaves the variable out of
+#   the container when it is not set there. `make dev` generates the development secrets
+#   for one run; the roles refuse to start without them.
+# * Two variables are interpolated, both with a value that always exists: WEB_PORT
+#   (default 3500) and COMPOSE_PROJECT_NAME, which Compose sets itself to the project name.
+# * The Makefile calls Compose with `--env-file /dev/null`, so Compose never reads the
+#   `.env` file on its own: the Makefile's loader is its only reader.
+#
+# No container or image name is fixed to one stack, so the same file starts a second,
+# separate project (`docker compose -p veranico-load ...`, the load campaign), with the
+# published ports changed by load/compose.load.yaml.
 name: veranico
+
+# The one image of the Dockerfile, for both roles and for the cube seeding.
+x-app: &app
+  image: veranico:dev
+  build: .
+
+# Traces go to Jaeger over OTLP/HTTP. Jaeger is not a dependency: the exporter sends in the
+# background, so a role starts and answers without it and only logs the failed exports.
+x-traces:
+  - &traces-exporter VERANICO_TELEMETRY__EXPORTER=otlp
+  - &traces-endpoint VERANICO_TELEMETRY__OTLP_ENDPOINT=http://jaeger:4318/v1/traces
+
+# The image has neither curl nor wget, so the health check is the interpreter's own client.
+x-role-healthcheck: &role-healthcheck
+  test:
+    - CMD
+    - python
+    - -c
+    - 'import urllib.request; urllib.request.urlopen("http://127.0.0.1:8080/healthz", timeout=2)'
+  interval: 2s
+  timeout: 3s
+  retries: 30
+  start_period: 5s
 
 services:
   firestore:
@@ -49,19 +82,144 @@ services:
       retries: 30
       start_period: 2s
 
+  cubes:
+    # Runs once and exits: installs the SYNTHETIC cube of each showcase region that the
+    # `weather` volume does not hold yet, so the stack serves the three regions with no
+    # network and no Copernicus key (human gate H1 is open). The data is generated from a
+    # seed; every region built here answers `synthetic = true` and is labelled so wherever
+    # it is shown. It is the documented script with the documented seeds
+    # (`make build-cube REGION=<id> SYNTHETIC=1 SEED=<n>`), mounted because the image holds
+    # the package and not the scripts. About ten seconds per region, on a new volume only.
+    <<: *app
+    network_mode: none
+    # A new named volume belongs to root and the image's user is 10001: the cubes are
+    # written as root and the store is handed to that user, who also caches points in it.
+    user: "0:0"
+    volumes:
+      - weather:/tmp/veranico/weather
+      - ./backend/scripts/build_cube.py:/scripts/build_cube.py:ro
+    environment:
+      - VERANICO_CLIMATE__STORE_ROOT=/tmp/veranico/weather
+    command:
+      - sh
+      - -euc
+      - |
+        store=/tmp/veranico/weather
+        for seeded in sul-de-minas:1 sorriso:2 ribeirao-preto:3; do
+          region="$${seeded%%:*}"
+          if [ ! -f "$$store/climate/cubes/$$region/manifest.json" ]; then
+            python /scripts/build_cube.py --region "$$region" --synthetic --seed "$${seeded##*:}"
+          fi
+        done
+        chown -R 10001:10001 "$$store"
+
+  carrier:
+    # The mock carrier (SPEC 11.4). It signs with the same webhook secret as the sender and
+    # writes its receipts to the Firestore emulator, in the default project of the settings,
+    # which is also what the failure tests read.
+    <<: *app
+    depends_on:
+      firestore:
+        condition: service_healthy
+    environment:
+      - APP_ROLE=carrier
+      - FIRESTORE_EMULATOR_HOST=firestore:8580
+      - VERANICO_DELIVERY__CARRIER_FAIL_FIRST_ATTEMPT=false
+      - *traces-exporter
+      - *traces-endpoint
+      - VERANICO_DELIVERY__WEBHOOK_SIGNING_SECRET
+    ports:
+      - "8510:8080"
+    healthcheck: *role-healthcheck
+
+  api:
+    # The product. Documents and cached points stay in the container (the `local` backends
+    # of the image); the regional cubes come from the `weather` volume.
+    <<: *app
+    depends_on:
+      firestore:
+        condition: service_healthy
+      cubes:
+        condition: service_completed_successfully
+    volumes:
+      - weather:/tmp/veranico/weather
+    environment:
+      - APP_ROLE=api
+      - FIRESTORE_EMULATOR_HOST=firestore:8580
+      - VERANICO_CLIMATE__STORE_ROOT=/tmp/veranico/weather
+      - VERANICO_DELIVERY__CARRIER_BASE_URL=http://carrier:8080
+      # The in-process relay calls the deliver route of its own container.
+      - VERANICO_DELIVERY__INTERNAL_BASE_URL=http://127.0.0.1:8080
+      - VERANICO_DELIVERY__INTERNAL_AUTH=token
+      - *traces-exporter
+      - *traces-endpoint
+      # By name only, from the caller. The first four are required (generated by `make dev`).
+      - VERANICO_COOKIE_SIGNING_SECRET
+      - VERANICO_ACCESS__IP_HASH_SALT
+      - VERANICO_DELIVERY__WEBHOOK_SIGNING_SECRET
+      - VERANICO_DELIVERY__INTERNAL_TOKEN
+      - VERANICO_ACCESS__ALLOWANCE_CODE
+      - VERANICO_ACCESS__API_KEY_RATE_PER_MINUTE
+      - VERANICO_FRAME_ANCESTORS
+      # Without a key the caller sets the model client to `scripted`.
+      - ANTHROPIC_API_KEY
+      - AGENT_MODEL
+      - VERANICO_ASSISTANT__MODEL_CLIENT
+    ports:
+      - "8500:8080"
+    healthcheck: *role-healthcheck
+
+  web:
+    # The Vite dev server, from the frontend stage of the Dockerfile (Node.js, pnpm and the
+    # locked dependencies). The sources are mounted, so an edit on the host reloads the page.
+    image: veranico-web:dev
+    build:
+      context: .
+      target: web
+    depends_on:
+      api:
+        condition: service_healthy
+    command: ["pnpm", "exec", "vite", "--config", "vite.compose.config.ts"]
+    configs:
+      - source: vite-compose
+        target: /web/vite.compose.config.ts
+    volumes:
+      - ./frontend/src:/web/src:ro
+      - ./frontend/index.html:/web/index.html:ro
+    environment:
+      # Optional interface settings (env.example, "Frontend"); none is a secret.
+      - VITE_BASEMAP_RELIEF
+      - VITE_BASEMAP_SATELLITE
+      - VITE_EXAMPLE_COVERS
+      - VITE_API_MOCK
+    ports:
+      - "${WEB_PORT:-3500}:3500"
+    healthcheck:
+      # The image has neither curl nor wget.
+      test:
+        - CMD
+        - node
+        - -e
+        - 'fetch("http://127.0.0.1:3500/").then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))'
+      interval: 2s
+      timeout: 3s
+      retries: 30
+      start_period: 3s
+
   toxiproxy:
     # The fault proxy of the failure campaign; only `make test-failure` starts it. Tests
     # create the proxy through the control API, listening on 8520 and pointing at the
-    # carrier role, which runs on the host until its Compose service exists.
+    # carrier service (`carrier:8080`).
     profiles: ["failure"]
     image: ghcr.io/shopify/toxiproxy:2.13.0
     # A command replaces the image's default arguments, so the bind address is repeated.
     command: ["-host=0.0.0.0"]
+    depends_on:
+      carrier:
+        condition: service_healthy
     ports:
       - "8520:8520" # listener of the proxy the tests create
       - "8521:8474" # control API
-    extra_hosts:
-      - "host.docker.internal=host-gateway"
     healthcheck:
       # The image has no shell: exec form only.
       test: ["CMD", "/toxiproxy-cli", "list"]
@@ -70,8 +228,26 @@ services:
       retries: 30
       start_period: 1s
 
+configs:
+  vite-compose:
+    # frontend/vite.config.ts proxies `/api` to 127.0.0.1:8500, which is the host's view. In
+    # the `web` container the API is the service `api` on its container port; everything
+    # else of the configuration is kept.
+    content: |
+      import { mergeConfig } from "vite";
+      import base from "./vite.config";
+
+      export default mergeConfig(base, {
+        server: { proxy: { "/api": { target: "http://api:8080" } } },
+      });
+
+volumes:
+  # The local weather store of the API role: the seeded cubes and the cached points.
+  weather:
+
 networks:
   default:
-    # A fixed name, so a container started outside the project (the k6 container of the
-    # load campaign) can join it.
-    name: veranico
+    # The project name, so a container started outside Compose can join by a known name
+    # (the smoke test of the image, the k6 container of the load campaign) and two projects
+    # never share a network: `veranico` here, `veranico-load` for the load campaign.
+    name: ${COMPOSE_PROJECT_NAME}

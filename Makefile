@@ -24,22 +24,22 @@ SHELL := bash
 .DEFAULT_GOAL := help
 
 # The project name is explicit, so no recipe depends on the directory name or on
-# COMPOSE_PROJECT_NAME.
-COMPOSE := docker compose -p veranico
+# COMPOSE_PROJECT_NAME. `--env-file /dev/null` replaces Compose's default environment file,
+# so Compose never reads `.env` itself: the loader above is its only reader, and a container
+# receives exactly what a recipe exports and compose.yaml passes on by name.
+COMPOSE := docker compose --env-file /dev/null -p veranico
 
-# Default suites leave out what needs the emulators, the network or the fault proxy.
-FAST := not integration and not live and not failure
+# Default suites leave out what needs the emulators, the network, the fault proxy or a
+# stored campaign result (`evidence`, which only the traceability run includes).
+FAST := not integration and not live and not failure and not evidence
 
-# Development ports (SPEC section 17). WEB_PORT can be overridden for one run.
+# Development ports (SPEC section 17), published by compose.yaml. WEB_PORT can be
+# overridden for one run (`make dev WEB_PORT=3501`).
 WEB_PORT ?= 3500
 API_PORT := 8500
 CARRIER_PORT := 8510
 FIRESTORE_HOST := 127.0.0.1:8580
 STORAGE_HOST := http://127.0.0.1:8590
-
-# One role on the host. The access log is off because it prints the client address
-# (SPEC 10.3 and 15). Plan 09 moves the roles into Compose services.
-UVICORN := uv run uvicorn veranico.main:create_app --factory --host 0.0.0.0 --no-access-log --timeout-graceful-shutdown 5
 
 # A fresh random secret, printed to stdout for a `$$(...)` capture and written nowhere.
 GEN_SECRET := head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n'
@@ -59,15 +59,6 @@ $(COMPOSE) up -d --wait firestore storage; \
 status=0; (cd backend && $(1)) || status=$$?; \
 if [ -z "$$running" ]; then $(COMPOSE) down; fi; \
 exit $$status
-endef
-
-# $(call wait_for,<url>,<name>): poll a health endpoint for up to 30 seconds.
-define wait_for
-for attempt in $$(seq 1 60); do \
-	if curl --fail --silent --output /dev/null $(1); then break; fi; \
-	if [ "$$attempt" = 60 ]; then echo "$(2) did not answer on $(1)" >&2; exit 1; fi; \
-	sleep 0.5; \
-done
 endef
 
 .PHONY: help dev test test-integration test-failure lint fmt gen-client ingest build-cube \
@@ -92,14 +83,18 @@ frontend/node_modules/.modules.yaml: frontend/pnpm-lock.yaml
 	@touch $@
 
 # --- Development stack ------------------------------------------------------------------
-# Emulators and Jaeger through Compose; both roles and Vite on the host until plan 09 delivers
-# the image. The recipe passes the development values itself and generates the secrets the
-# roles need once per run; a non-empty value from the environment file is used instead.
-# Stopping it (Ctrl-C, or the end of any of the three processes) stops the processes and
-# removes the Compose services.
-dev: frontend/node_modules/.modules.yaml
-	@export FIRESTORE_EMULATOR_HOST=$(FIRESTORE_HOST) STORAGE_EMULATOR_HOST=$(STORAGE_HOST); \
-	export VERANICO_DELIVERY__INTERNAL_AUTH=token; \
+# Everything is a Compose service (compose.yaml): both roles from the image of the
+# Dockerfile, the Vite dev server, the emulators and Jaeger. The recipe generates the secrets
+# the roles need once per run; a non-empty value from the environment file is used instead.
+# They reach the containers by name and are written nowhere. `--build` rebuilds the image
+# from the working tree, so the roles never run stale code.
+#
+# The recipe follows the logs until Ctrl-C (or until the three services have ended), then
+# removes what belongs to it: the whole project when nothing was running before, otherwise
+# only its own services, so emulators a test run started keep running.
+DEV_SERVICES := web api carrier cubes jaeger
+dev:
+	@export WEB_PORT=$(WEB_PORT); \
 	export VERANICO_COOKIE_SIGNING_SECRET="$${VERANICO_COOKIE_SIGNING_SECRET:-$$($(GEN_SECRET))}"; \
 	export VERANICO_ACCESS__IP_HASH_SALT="$${VERANICO_ACCESS__IP_HASH_SALT:-$$($(GEN_SECRET))}"; \
 	export VERANICO_DELIVERY__WEBHOOK_SIGNING_SECRET="$${VERANICO_DELIVERY__WEBHOOK_SIGNING_SECRET:-$$($(GEN_SECRET))}"; \
@@ -107,27 +102,16 @@ dev: frontend/node_modules/.modules.yaml
 	frame_ancestors='["http://127.0.0.1:3450"]'; \
 	export VERANICO_FRAME_ANCESTORS="$${VERANICO_FRAME_ANCESTORS:-$$frame_ancestors}"; \
 	if [ -z "$${ANTHROPIC_API_KEY:-}" ]; then export VERANICO_ASSISTANT__MODEL_CLIENT=scripted; fi; \
-	bucket="$${VERANICO_STORAGE_BUCKET:-veranico-dev}"; \
-	pids=""; \
+	running="$$($(COMPOSE) ps -q --status running)"; \
 	cleanup() { \
 		trap - EXIT INT TERM; \
-		if [ -n "$$pids" ]; then kill $$pids 2>/dev/null || true; wait $$pids 2>/dev/null || true; fi; \
-		$(COMPOSE) down; \
+		if [ -z "$$running" ]; then $(COMPOSE) down; else $(COMPOSE) rm --stop --force $(DEV_SERVICES); fi; \
 	}; \
 	trap cleanup EXIT; trap 'exit 130' INT; trap 'exit 143' TERM; \
-	$(COMPOSE) up -d --wait firestore storage jaeger; \
-	created="$$(curl --silent --output /dev/null --write-out '%{http_code}' --request POST \
-		--header 'Content-Type: application/json' --data "{\"name\": \"$$bucket\"}" \
-		'$(STORAGE_HOST)/storage/v1/b?project=veranico-dev')"; \
-	case "$$created" in \
-		200|409) ;; \
-		*) echo "dev: could not create the bucket $$bucket in the storage emulator (HTTP $$created)" >&2; exit 1 ;; \
-	esac; \
-	(cd backend && APP_ROLE=api exec $(UVICORN) --port $(API_PORT)) & pids="$$pids $$!"; \
-	(cd backend && APP_ROLE=carrier exec $(UVICORN) --port $(CARRIER_PORT)) & pids="$$pids $$!"; \
-	(exec pnpm --dir frontend exec vite --port $(WEB_PORT)) & pids="$$pids $$!"; \
+	$(COMPOSE) up -d --build --wait firestore storage jaeger carrier api web; \
 	echo "dev: web http://127.0.0.1:$(WEB_PORT)  api http://127.0.0.1:$(API_PORT)  carrier http://127.0.0.1:$(CARRIER_PORT)  jaeger http://127.0.0.1:8516"; \
-	wait -n $$pids
+	echo "dev: the three showcase regions run on seeded SYNTHETIC cubes, not on weather history"; \
+	$(COMPOSE) logs --follow api carrier web
 
 # --- Tests ------------------------------------------------------------------------------
 test: frontend/node_modules/.modules.yaml
@@ -140,11 +124,16 @@ TESTS ?= tests
 test-integration:
 	@$(call with_emulators,uv run pytest $(TESTS) -m integration -q)
 
-# Failure campaign (SPEC 16.3): the emulators, the fault proxy of the `failure` Compose
-# profile and a carrier role on the host. The three VERANICO_FAULT_PROXY_* variables are in
-# the proxy's own terms: its control API as the host reaches it, and the `upstream` and
-# `listen` values of the proxy the tests create. The host reaches the listener on the same
-# port. Results go to .evidence/failure/<run_id>/{junit.xml,req.json}.
+# Failure campaign (SPEC 16.3): the emulators, the carrier service and the fault proxy of
+# the `failure` Compose profile. The three VERANICO_FAULT_PROXY_* variables are in the
+# proxy's own terms: its control API as the host reaches it, and the `upstream` (the carrier
+# service on the Compose network) and `listen` values of the proxy the tests create. The
+# host reaches the listener on the same port. The test process and the carrier service get
+# the same webhook signing secret, and both use the Firestore emulator of this project.
+# Results go to .evidence/failure/<run_id>/{junit.xml,req.json}.
+#
+# A carrier that is already running belongs to `make dev` and holds that run's secret; the
+# campaign would replace it, so it refuses to start instead.
 test-failure:
 	@if [ -z "$$(find backend/tests/failure -name 'test_*.py' -print -quit 2>/dev/null)" ]; then \
 		echo "test-failure: not implemented in this milestone (plans 01, 03, 04, 06)" >&2; exit 2; \
@@ -152,19 +141,18 @@ test-failure:
 	@export FIRESTORE_EMULATOR_HOST=$(FIRESTORE_HOST) STORAGE_EMULATOR_HOST=$(STORAGE_HOST); \
 	export VERANICO_DELIVERY__WEBHOOK_SIGNING_SECRET="$${VERANICO_DELIVERY__WEBHOOK_SIGNING_SECRET:-$$($(GEN_SECRET))}"; \
 	export VERANICO_FAULT_PROXY_API=http://127.0.0.1:8521; \
-	export VERANICO_FAULT_PROXY_UPSTREAM=host.docker.internal:$(CARRIER_PORT); \
+	export VERANICO_FAULT_PROXY_UPSTREAM=carrier:8080; \
 	export VERANICO_FAULT_PROXY_LISTEN=0.0.0.0:8520; \
+	if [ -n "$$($(COMPOSE) ps -q --status running carrier)" ]; then \
+		echo "test-failure: the carrier service is already running (make dev?); stop it first" >&2; exit 1; \
+	fi; \
 	running="$$($(COMPOSE) ps -q --status running)"; \
-	carrier=""; \
 	cleanup() { \
 		trap - EXIT INT TERM; \
-		if [ -n "$$carrier" ]; then kill $$carrier 2>/dev/null || true; wait $$carrier 2>/dev/null || true; fi; \
-		if [ -z "$$running" ]; then $(COMPOSE) --profile failure down; else $(COMPOSE) --profile failure rm --stop --force toxiproxy; fi; \
+		if [ -z "$$running" ]; then $(COMPOSE) --profile failure down; else $(COMPOSE) --profile failure rm --stop --force toxiproxy carrier; fi; \
 	}; \
 	trap cleanup EXIT; trap 'exit 130' INT; trap 'exit 143' TERM; \
-	$(COMPOSE) --profile failure up -d --wait firestore storage toxiproxy; \
-	(cd backend && APP_ROLE=carrier exec $(UVICORN) --port $(CARRIER_PORT)) & carrier=$$!; \
-	$(call wait_for,http://127.0.0.1:$(CARRIER_PORT)/healthz,the carrier role); \
+	$(COMPOSE) --profile failure up -d --build --wait firestore storage carrier toxiproxy; \
 	mkdir -p $(EVIDENCE)/failure/$(RUN_ID); \
 	cd backend && uv run pytest tests/failure -m failure \
 		--junitxml=$(EVIDENCE)/failure/$(RUN_ID)/junit.xml \
@@ -226,6 +214,10 @@ evals:
 	@if [ ! -f backend/tests/evals/run.py ]; then echo "evals: not implemented in this milestone (plan 06)" >&2; exit 2; fi
 	cd backend && uv run python -m tests.evals.run
 
+# The runner starts its own Compose project (`veranico-load`, compose.yaml plus
+# load/compose.load.yaml) and never the development one, so this does not depend on `dev`.
+# `KEEP_STACK=1 make load` and `make load KEEP_STACK=1` both reach it: Make passes the
+# variables of its environment and of its command line on to a recipe.
 load:
 	@if [ ! -f load/run.py ]; then echo "load: not implemented in this milestone (plan 09)" >&2; exit 2; fi
 	cd backend && uv run python ../load/run.py
@@ -239,7 +231,7 @@ TRACE := $(EVIDENCE)/traceability/$(RUN_ID)
 traceability: frontend/node_modules/.modules.yaml
 	@mkdir -p $(TRACE); status=0; \
 	(cd backend && uv run pytest tests -q -m "$(FAST)" --req-report=$(TRACE)/backend.req.json) || status=1; \
-	($(call with_emulators,uv run pytest tests -q -m integration --req-report=$(TRACE)/backend-integration.req.json)) || status=1; \
+	($(call with_emulators,uv run pytest tests -q -m "integration or evidence" --req-report=$(TRACE)/backend-integration.req.json)) || status=1; \
 	rm -f frontend/.cache/req.json; \
 	pnpm --dir frontend test || status=1; \
 	reports="--report $(TRACE)/backend.req.json --report $(TRACE)/backend-integration.req.json"; \

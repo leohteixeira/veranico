@@ -1,0 +1,31 @@
+# Changes to compose.yaml for the load campaign, which runs the same stack as a second
+# Compose project so it never touches the `veranico` project or its ports:
+#
+#   docker compose -p veranico-load -f compose.yaml -f load/compose.load.yaml \
+#     up -d --build --wait firestore storage carrier api
+#
+# (relative paths of both files resolve against the directory of the first one). The caller
+# exports the secrets the roles need and, to offer more than the default per-key rate,
+# VERANICO_ACCESS__API_KEY_RATE_PER_MINUTE; compose.yaml passes them on by name.
+#
+# The project publishes no host port: the runner reaches the containers by their addresses
+# on the project's network, which is named after the project (`veranico-load`) and is the
+# network k6 joins. To publish one on a free loopback port instead, replace a line below by
+# `ports: !override ["127.0.0.1::8080"]` and read it with `docker compose ... port api 8080`.
+#
+# `!reset` empties a list and `!override` replaces it; without a tag Compose would add
+# entries to the ports of compose.yaml.
+services:
+  firestore:
+    ports: !reset []
+  storage:
+    ports: !reset []
+  carrier:
+    ports: !reset []
+    environment:
+      # No Jaeger in this project: nothing is exported, so no failed export is logged.
+      VERANICO_TELEMETRY__EXPORTER: none
+  api:
+    ports: !reset []
+    environment:
+      VERANICO_TELEMETRY__EXPORTER: none
