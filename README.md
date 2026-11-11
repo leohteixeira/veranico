@@ -244,7 +244,7 @@ Configured values (their source in brackets):
 | Spend ceiling of the live agent | US$ 0.50 per day and US$ 10 per month across all visitors, checked before every model call (`VERANICO_ACCESS__DAY_CEILING_USD_MICROS`, `…MONTH_CEILING_USD_MICROS`) |
 | Visitor allowance | 2 conversations and 15 messages per day per visitor; 6 and 60 with the code carried by the portfolio link (`VERANICO_ACCESS__ALLOWANCE_*`, `…BOOSTED_*`) |
 | Cost per call | computed from token counts with prices in configuration (`AccessSettings.model_prices`) and recorded on each `llm.call` span |
-| Instances | two Cloud Run services, each from 0 to 2 instances (`infra/terraform/services.tf`) |
+| Instances | two Cloud Run services, each from 0 to 2 instances; one CPU each, 1 GiB of memory for the API and 512 MiB for the carrier (`infra/terraform/services.tf`). Under the load campaign with the same limits the API process peaked at 958 MiB of 1,024 MiB with three regions decoded, so a fourth region needs a larger instance or a smaller `VERANICO_CLIMATE__CUBE_CACHE_SIZE` ([docs/verification.md](docs/verification.md), section 6) |
 | Images kept | the last 3 (`infra/terraform/foundation/main.tf`) |
 | Uptime check | one, on `/healthz`, every 900 seconds (`infra/terraform/monitoring.tf`) |
 | Budget alert | a monthly budget of `budget_amount` in the billing currency, with email alerts at 50%, 90% and 100% (`infra/terraform/variables.tf`); the owner chooses the amount |
@@ -273,7 +273,8 @@ interface shows.
 
 | Source | Attribution | Licence |
 |---|---|---|
-| Weather | Weather: Copernicus Climate Change Service. ERA5-Land for the regional cubes; ERA5 through Open-Meteo for any other point. CC BY 4.0. | CC BY 4.0 |
+| Weather, region with a synthetic cube | Weather: the surface of this region is synthetic, generated for the demonstration; it is not weather history. A point outside the showcase regions uses ERA5 through Open-Meteo (Copernicus Climate Change Service, CC BY 4.0). | generated data; CC BY 4.0 for the ERA5 points |
+| Weather, region with a real cube | Weather: Copernicus Climate Change Service. ERA5-Land for the regional cubes; ERA5 through Open-Meteo for any other point. CC BY 4.0. | CC BY 4.0 |
 | Relief basemap | Terrain Light { Data © OpenStreetMap contributors and others, Rendering © EOX } (https://maps.eox.at/#data) | EOX::Maps, free to use with attribution |
 | Satellite basemap | EOxCloudless https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2025) | CC BY-NC-SA 4.0 |
 
@@ -281,8 +282,10 @@ interface shows.
 CC BY-NC-SA 4.0, which does not allow commercial use, so the demo is declared non-commercial
 here and in the interface ([ADR 0011](specs/adrs/0011-basemaps-and-licences.md)).
 
-Synthetic cubes carry no weather attribution of their own: they are generated data and are
-labelled "Synthetic weather data" in the interface.
+The weather line depends on the region. While human gate H1 is open all three showcase
+regions run on synthetic cubes, so the interface shows the first line; the ERA5-Land line is
+shown for a region whose cube was built from the real data. Synthetic cubes are generated
+data and are also labelled "Synthetic weather data" in the interface.
 
 ## 11. Decisions and verification
 
