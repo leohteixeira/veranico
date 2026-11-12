@@ -35,7 +35,9 @@
   z-index: 1;
 }
 
+/* Over the cards: the region list opens downwards, across the conversation card. */
 .app__top {
+  z-index: 2;
   top: var(--gutter);
   left: var(--gutter);
   right: var(--gutter);

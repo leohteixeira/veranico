@@ -81,8 +81,14 @@ function cellCalls(calls: readonly string[]): URLSearchParams[] {
     .map((call) => new URLSearchParams(call.slice(call.indexOf("?"))));
 }
 
-function regionSelect(name = "Region"): HTMLSelectElement {
-  return screen.getByRole<HTMLSelectElement>("combobox", { name });
+function regionSelect(name = "Region"): HTMLElement {
+  return screen.getByRole("combobox", { name: new RegExp(`^${name}`) });
+}
+
+/** Opens the region list and picks the option whose text starts with `name`. */
+function chooseRegion(name: string): void {
+  fireEvent.click(regionSelect());
+  fireEvent.click(screen.getByRole("option", { name: new RegExp(`^${name}`) }));
 }
 
 /** Makes the page as narrow as the stacked layout, as far as media queries can tell. */
@@ -114,7 +120,7 @@ describe("application shell [R-12.1-1] [R-16.7-1]", () => {
     const { calls } = renderApp();
 
     await waitFor(() => {
-      expect(regionSelect()).toHaveValue("sul-de-minas");
+      expect(regionSelect()).toHaveAttribute("data-value", "sul-de-minas");
     });
     expect(await screen.findByRole("region", { name: "Map of Sul de Minas" })).toBeInTheDocument();
 
@@ -138,10 +144,10 @@ describe("application shell [R-12.1-1] [R-16.7-1]", () => {
   it("choosing another region opens it with its own example", async () => {
     const { calls } = renderApp();
     await waitFor(() => {
-      expect(regionSelect()).toHaveValue("sul-de-minas");
+      expect(regionSelect()).toHaveAttribute("data-value", "sul-de-minas");
     });
 
-    fireEvent.change(regionSelect(), { target: { value: "sorriso" } });
+    chooseRegion("Sorriso");
     expect(await screen.findByRole("region", { name: "Map of Sorriso" })).toBeInTheDocument();
     await waitFor(() => {
       expect(calls.some((call) => call.startsWith("GET /api/v1/regions/sorriso/cells"))).toBe(true);
@@ -169,7 +175,7 @@ describe("application shell [R-12.1-1] [R-16.7-1]", () => {
     });
 
     // The map is on the region of the resolved place, coloured for the quote's index definition.
-    expect(regionSelect()).toHaveValue("sul-de-minas");
+    expect(regionSelect()).toHaveAttribute("data-value", "sul-de-minas");
     await waitFor(() => {
       const last = cellCalls(calls).at(-1);
       expect(last?.get("trigger")).toBe(String(INDEX.trigger));
@@ -225,7 +231,7 @@ describe("application shell [R-12.1-1] [R-16.7-1]", () => {
       expect(window.localStorage.getItem(CONVERSATION_STORAGE_KEY)).toBeNull();
     });
     await waitFor(() => {
-      expect(regionSelect()).toHaveValue("sul-de-minas");
+      expect(regionSelect()).toHaveAttribute("data-value", "sul-de-minas");
     });
     expect(screen.getByRole("tab", { name: "Risk" })).toHaveAttribute("aria-selected", "true");
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
@@ -280,7 +286,7 @@ describe("application shell [R-12.1-1] [R-16.7-1]", () => {
     });
 
     await waitFor(() => {
-      expect(regionSelect()).toHaveDisplayValue("Outside the showcase regions");
+      expect(regionSelect()).toHaveTextContent("Outside the showcase regions");
     });
     expect(screen.getByText(translate("en", "map.outside_showcase"))).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Map" })).toBeInTheDocument();
@@ -290,7 +296,7 @@ describe("application shell [R-12.1-1] [R-16.7-1]", () => {
     expect(calls.filter((call) => call.includes("/cells")).length).toBeLessThanOrEqual(1);
 
     // A showcase region is one choice away.
-    fireEvent.change(regionSelect(), { target: { value: "sorriso" } });
+    chooseRegion("Sorriso");
     expect(await screen.findByRole("region", { name: "Map of Sorriso" })).toBeInTheDocument();
   });
 
@@ -351,7 +357,7 @@ describe("application shell [R-12.1-1] [R-16.7-1]", () => {
     // Every piece of the screen is in Portuguese: top row, map, tabs, conversation, timeline.
     expect(document.documentElement.lang).toBe("pt-BR");
     const select = regionSelect(translate("pt-BR", "region.label"));
-    expect(within(select).getAllByRole("option")[0]).toHaveTextContent("Sul de Minas · Café");
+    expect(select).toHaveTextContent("Sul de Minas · Café");
     expect(
       screen.getByRole("region", {
         name: translate("pt-BR", "map.label", { region: "Sul de Minas" }),
@@ -375,7 +381,7 @@ describe("application shell [R-12.1-1] [R-16.7-1]", () => {
     narrowScreen();
     renderApp();
     await waitFor(() => {
-      expect(regionSelect()).toHaveValue("sul-de-minas");
+      expect(regionSelect()).toHaveAttribute("data-value", "sul-de-minas");
     });
 
     // One document order serves both layouts; stacked, it is the order on the page.
@@ -404,7 +410,7 @@ describe("application shell [R-12.1-1] [R-16.7-1]", () => {
   it("on a wide screen the map is the stage under the cards [R-12.1-1]", async () => {
     renderApp();
     await waitFor(() => {
-      expect(regionSelect()).toHaveValue("sul-de-minas");
+      expect(regionSelect()).toHaveAttribute("data-value", "sul-de-minas");
     });
     const app = screen.getByRole("main");
     expect(app).toHaveAttribute("data-layout", "stage");
