@@ -15,7 +15,7 @@ shows basis risk: how the same cover would have behaved in the grid cells around
 
 | | |
 |---|---|
-| Live demo | https://veranico-api-uulrhx4lha-uc.a.run.app (Cloud Run address; `veranico.leohteixeira.com` once its DNS record exists) |
+| Live demo | https://veranico.leohteixeira.com (Cloud Run domain mapping; also https://veranico-api-uulrhx4lha-uc.a.run.app) |
 | Recording | not recorded yet: there is no demo recording or screenshot in this repository |
 | Run it | `make dev`, then http://127.0.0.1:3500 (section 8) |
 
@@ -216,7 +216,7 @@ Other commands: `make test`, `make test-integration`, `make test-failure`, `make
 | Gate | State | Closed by |
 |---|---|---|
 | H1: real weather cubes | closed on 2026-11-11 | the owner built the three ERA5-Land cubes from Google Earth Engine (1950-01-01 to 2025-12-31, 27,759 days, 20 by 20 cells at 0.1°; [ADR 0019](specs/adrs/0019-cubes-from-earth-engine-era5-land.md)); the chunking was measured on them ([ADR 0016](specs/adrs/0016-weather-cube-chunking.md)); the live consistency test passes in the three regions within the final limits of `climate/domain/consistency.py`; the example covers were re-tuned on them; the replays were recorded on them, so `tests/unit/assistant/test_replay_fixtures.py` runs and passes. To rebuild them on another machine: a Cloud project registered for Earth Engine (noncommercial) with the Earth Engine API enabled; `cd backend && uv run --group cube earthengine authenticate` once; `EARTHENGINE_PROJECT=<project-id>` in `.env`; `make build-cube REGION=sul-de-minas`, then `REGION=sorriso` and `REGION=ribeirao-preto`; `make build-cube REGION=<id> MEASURE=1` for the chunking numbers; `cd backend && uv run pytest tests/integration/climate/test_consistency_live.py -m live -q -s`. Re-recording the replays is paid: `make record-replay LOCALE=en` and `LOCALE=pt-BR` |
-| H2: first deploy | closed on 2026-11-12 | the sequence below, run by the owner and the coordinator: bootstrap apply, secrets, tag `v0.1.2` (workflow `deploy.yml` green, `/health` answered), the three real cubes in Cloud Storage (`/api/v1/regions` answers `"synthetic": false`), and the happy path once on the live address with the live model (quote submitted after a 503 and a retry, both term sheets served). The custom domain waits for its DNS record |
+| H2: first deploy | closed on 2026-11-12 | the sequence below, run by the owner and the coordinator: bootstrap apply, secrets, tag `v0.1.2` (workflow `deploy.yml` green, `/health` answered), the three real cubes in Cloud Storage (`/api/v1/regions` answers `"synthetic": false`), and the happy path once on the live address with the live model (quote submitted after a 503 and a retry, both term sheets served). The custom domain `veranico.leohteixeira.com` answered on 2026-11-12 after tag `v0.1.3` (certificate issued in about 20 minutes) |
 | H3: the author's part | open | the interface finish review decision, the portfolio page |
 
 ### Deploy (human gate H2, run by the owner)
