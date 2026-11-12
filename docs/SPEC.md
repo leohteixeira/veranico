@@ -258,7 +258,7 @@ A visitor can create an API key for their workspace from the interface; the key 
 
 ### 10.3 Visitor allowance and spend ceiling
 
-* Per-visitor daily allowance for the live agent, keyed by a salted hash of the client IP: default 2 conversations and 15 messages per day. A code carried by the portfolio link (`?code=` on the application URL) enlarges the allowance (default 6 conversations and 60 messages); it is not required for anything. The interface keeps it for the session and sends it in the `Veranico-Allowance-Code` header. The allowance day and the spend day are UTC days.
+* Per-visitor daily allowance for the live agent, keyed by a salted hash of the client IP: default 3 conversations and 60 messages per day. A code carried by the portfolio link (`?code=` on the application URL) enlarges the allowance (default 6 conversations and 60 messages); it is not required for anything. The interface keeps it for the session and sends it in the `Veranico-Allowance-Code` header. The allowance day and the spend day are UTC days.
 * Spend ceiling in US dollars, computed from token usage with prices read from configuration: default US$ 10 per month and US$ 0.50 per day across all visitors. The check runs before each model call; the charge is recorded after it.
 * Maximum message length and a per-conversation token budget.
 * When the allowance or a ceiling is exhausted, `POST /chat` answers with a problem document that carries `replay_available`, and the interface offers the recorded replay. The map, history, quotes and the public API keep working.

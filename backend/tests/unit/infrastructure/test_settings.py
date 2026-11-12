@@ -66,7 +66,7 @@ def test_loads_prefixed_nested_and_aliased_variables(monkeypatch: pytest.MonkeyP
     assert settings.environment == "test"
     assert settings.frame_ancestors == ["http://127.0.0.1:3450"]
     assert settings.access.allowance_messages == 7
-    assert settings.access.allowance_conversations == 2
+    assert settings.access.allowance_conversations == 3
     assert settings.pricing.risk_load == 0.25
     assert settings.delivery.attempt_limit == 3
     assert settings.access.model_prices["claude-test-model"].cache_write == 4
@@ -79,8 +79,8 @@ def test_defaults_are_the_values_of_the_specification(monkeypatch: pytest.Monkey
 
     assert settings.agent_model == "claude-haiku-5-5"
     assert settings.frame_ancestors == []
-    assert (settings.access.workspace_ttl_days, settings.access.allowance_conversations) == (14, 2)
-    assert (settings.access.allowance_messages, settings.access.boosted_conversations) == (15, 6)
+    assert (settings.access.workspace_ttl_days, settings.access.allowance_conversations) == (14, 3)
+    assert (settings.access.allowance_messages, settings.access.boosted_conversations) == (60, 6)
     assert settings.access.boosted_messages == 60
     assert settings.access.day_ceiling_usd_micros == 500_000
     assert settings.access.month_ceiling_usd_micros == 10_000_000
@@ -122,7 +122,7 @@ def test_an_empty_variable_counts_as_unset(monkeypatch: pytest.MonkeyPatch) -> N
     settings = Settings()
 
     assert settings.agent_model == "claude-haiku-5-5"
-    assert settings.access.allowance_messages == 15
+    assert settings.access.allowance_messages == 60
 
 
 def test_an_empty_secret_does_not_satisfy_a_requirement(monkeypatch: pytest.MonkeyPatch) -> None:

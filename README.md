@@ -282,7 +282,7 @@ Configured values (their source in brackets):
 | What | Value |
 |---|---|
 | Spend ceiling of the live agent | US$ 0.50 per day and US$ 10 per month across all visitors, checked before every model call (`VERANICO_ACCESS__DAY_CEILING_USD_MICROS`, `…MONTH_CEILING_USD_MICROS`) |
-| Visitor allowance | 2 conversations and 15 messages per day per visitor; 6 and 60 with the code carried by the portfolio link (`VERANICO_ACCESS__ALLOWANCE_*`, `…BOOSTED_*`) |
+| Visitor allowance | 3 conversations and 60 messages per day per visitor; 6 conversations (and the same 60 messages) with the code carried by the portfolio link (`VERANICO_ACCESS__ALLOWANCE_*`, `…BOOSTED_*`) |
 | Cost per call | computed from token counts with prices in configuration (`AccessSettings.model_prices`) and recorded on each `llm.call` span |
 | Instances | two Cloud Run services, each from 0 to 2 instances; one CPU each, 1 GiB of memory for the API and 512 MiB for the carrier (`infra/terraform/services.tf`). Under the load campaign with the same limits the API process peaked at 958 MiB of 1,024 MiB with three regions decoded, so a fourth region needs a larger instance or a smaller `VERANICO_CLIMATE__CUBE_CACHE_SIZE` ([docs/verification.md](docs/verification.md), section 6) |
 | Images kept | the last 3 (`infra/terraform/foundation/main.tf`) |
