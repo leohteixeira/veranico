@@ -27,6 +27,7 @@ import { SeasonTimeline } from "./SeasonTimeline";
 import { pays } from "./TimelineBars";
 
 const BASEMAP = loadConfig({}).basemaps.relief;
+const PLACE_LABELS = loadConfig({}).placeLabels.light;
 const SERIES = seasonSeries();
 const PAYING = SERIES.seasons.filter((season) => (season.payout?.amount_cents ?? 0) > 0);
 /** The width the bars are drawn at when nothing measures the card (as in jsdom). */
@@ -70,6 +71,7 @@ function card({
         onSelect={onSelect}
         status={status}
         basemap={BASEMAP}
+        placeLabels={PLACE_LABELS}
         {...(onRetry === undefined ? {} : { onRetry })}
       />
     </I18nProvider>
@@ -224,6 +226,7 @@ function Screen() {
         }}
         status={series.status}
         basemap={BASEMAP}
+        placeLabels={PLACE_LABELS}
       />
       <output data-testid="map">
         {cells.data === undefined

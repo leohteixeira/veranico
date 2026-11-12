@@ -8,6 +8,12 @@ import { createMockState, handle, type MockState } from "../src/test/mocks/handl
 /** The one local tile every basemap request is answered with (see `fixtures/make-tile.mjs`). */
 const TILE = readFileSync(join(import.meta.dirname, "fixtures", "tile.png"));
 
+/** The transparent tile every place-name request is answered with, so it hides no risk cell. */
+const LABELS = readFileSync(join(import.meta.dirname, "fixtures", "labels.png"));
+
+/** The place-name layers of `src/config.ts`: the provider's `overlay` layers. */
+const PLACE_LABELS = /\/overlay[a-z_]*_3857\//;
+
 /** With `E2E_LIVE_TILES=1` the basemaps come from their real providers, for evidence only. */
 export const LIVE_TILES = process.env.E2E_LIVE_TILES === "1";
 
@@ -29,8 +35,9 @@ export interface MockedApi {
 /**
  * Answers the page's network in the test process. Every `/api/v1/**` request goes to the handlers
  * of the mock layer, so `POST /chat` is answered with the recorded stream fixture, one turn per
- * request. Every request that leaves the application's origin is answered with the local tile when
- * it asks for an image, and refused otherwise: the run needs no network.
+ * request. Every request that leaves the application's origin is answered with a local tile when
+ * it asks for an image (the transparent one for the place names), and refused otherwise: the run
+ * needs no network.
  */
 export async function mockNetwork(page: Page, baseURL: string): Promise<MockedApi> {
   const state = createMockState("happy");
@@ -45,7 +52,10 @@ export async function mockNetwork(page: Page, baseURL: string): Promise<MockedAp
       external.push(request.url());
       if (request.resourceType() !== "image") await route.abort();
       else if (LIVE_TILES) await route.continue();
-      else await route.fulfill({ status: 200, contentType: "image/png", body: TILE });
+      else {
+        const body = PLACE_LABELS.test(request.url()) ? LABELS : TILE;
+        await route.fulfill({ status: 200, contentType: "image/png", body });
+      }
     },
   );
 

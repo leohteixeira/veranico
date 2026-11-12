@@ -339,6 +339,7 @@ On narrow screens the same pieces stack: map, timeline, tabs, conversation. Lapt
 4. **Season view:** dragging the timeline recolours the layer by `season_anomaly`. The season view opens on the season most evenly split between dry and wet cells. Selecting a bar in the History chart moves the timeline, and the reverse.
 5. **Live link with the agent:** when the agent calls `resolve_location` or `backtest_index`, the map moves to the point and recolours. When a quote is priced, the region keeps that quote's index definition.
 6. Points outside the showcase regions show the marker and the single cell, with a note that the regional view exists for the three showcase regions.
+7. **Place names:** a transparent tile layer of place names and state borders (EOX Overlay in the light theme, EOX Overlay bright in the dark theme) drawn over the risk layer and under the markers. Its tile URLs live in configuration and its attribution is shown next to the map. A place-name tile that fails to load is not a failed basemap (ADR 0021).
 
 ### 12.3 Tabs
 

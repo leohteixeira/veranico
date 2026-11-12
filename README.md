@@ -317,6 +317,8 @@ interface shows.
 | Weather, region with a real cube | Weather: Copernicus Climate Change Service. ERA5-Land for the regional cubes; ERA5 through Open-Meteo for any other point. CC BY 4.0. | CC BY 4.0 |
 | Relief basemap | Terrain Light { Data © OpenStreetMap contributors and others, Rendering © EOX } (https://maps.eox.at/#data) | EOX::Maps, free to use with attribution |
 | Satellite basemap | EOxCloudless https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2025) | CC BY-NC-SA 4.0 |
+| Place names, light theme | Overlay { Data © OpenStreetMap contributors, Rendering © EOX and MapServer } (https://maps.eox.at/#data) | EOX::Maps, free to use with attribution |
+| Place names, dark theme | Overlay bright { Data © OpenStreetMap contributors, Rendering © EOX and MapServer } (https://maps.eox.at/#data) | EOX::Maps, free to use with attribution |
 
 **Why the demo is non-commercial.** The Sentinel-2 cloudless imagery after 2016 is licensed
 CC BY-NC-SA 4.0, which does not allow commercial use, so the demo is declared non-commercial
@@ -331,7 +333,7 @@ interface.
 ## 11. Decisions and verification
 
 * **Decisions.** Every material decision has a record of under a page:
-  [specs/adrs/README.md](specs/adrs/README.md) lists them (0001 to 0019; 0016, the cube
+  [specs/adrs/README.md](specs/adrs/README.md) lists them (0001 to 0021; 0016, the cube
   chunking, was measured on the real cubes). What was left out on purpose is in
   [docs/NEXT_STEPS.md](docs/NEXT_STEPS.md).
 * **Verification.** [docs/verification.md](docs/verification.md) records what was checked,
