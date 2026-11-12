@@ -37,7 +37,10 @@ test("happy path: example, quote, season view, approval, delivery [R-16.7-2] [R-
 
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/");
-  await expect(page.getByRole("combobox", { name: "Region" })).toHaveValue("sul-de-minas");
+  await expect(page.getByRole("combobox", { name: /^Region/ })).toHaveAttribute(
+    "data-value",
+    "sul-de-minas",
+  );
 
   // Turn 1: the first example, whose words are the recording's first request. The recorded stream
   // plays: location, history, backtest.

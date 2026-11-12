@@ -285,8 +285,11 @@ insured cell, drawn with mitred corners because they are data, not chrome.
 
 - **Composer:** a soft paper field with a 14px radius and a round send button; the field is
   read-only, not disabled, while the agent streams, so the draft stays readable.
-- **Region selector:** a native select drawn as a floating pill at the height of the switches, with
-  the icon set's chevron laid over it; the browser keeps its keyboard and list behaviour.
+- **Region selector:** a floating pill at the height of the switches with the icon set's chevron,
+  opening a list that is a card like the panels (paper, hairline, 16px radius, the shared shadow).
+  The option under the pointer or the arrow keys takes the soft ground; the region in view is
+  semibold with a teal check. It is a select-only combobox: the button keeps the focus, and arrows,
+  Home, End, Enter, Space, Escape and a typed letter work the list.
 - **Focus:** the shared ring; the composer rings its whole row.
 
 ### Navigation
@@ -314,20 +317,20 @@ History chart and the map share one selected season.
 
 ### States (SPEC 12.4) and where each is implemented
 
-| State | Where |
-| --- | --- |
-| First run with example requests | `components/conversation/Examples.tsx` |
-| Streaming with tool rows | `components/conversation/MessageList.tsx`, `ToolRow.tsx`, `ProgressBar.tsx` |
-| Flagged figure | `components/conversation/Figure.tsx`, `figures.ts` |
-| Allowance or ceiling reached, replay offered | `components/conversation/ReplayOffer.tsx` |
-| Replay playing | `components/conversation/ReplayBanner.tsx`, `useReplayPlayback.ts`; recorded quote in `components/tabs/quote/QuoteTab.tsx` |
-| Point outside the showcase regions | `map/RiskLayerView.tsx` (single cell and note), `components/topbar/RegionSelect.tsx`, `state/link.ts` |
-| Pending approval | `components/tabs/approvals/ApprovalItem.tsx`; the waiting note in `MessageList.tsx` |
-| Approved and delivering, delivered, delivery abandoned | `components/tabs/approvals/DeliveryProgress.tsx` |
-| Rejected | `components/tabs/approvals/ApprovalItem.tsx` |
-| Loading and failed data | `components/tabs/TabState.tsx`, `components/timeline/SeasonTimeline.tsx` |
-| Basemap that has not loaded | `map/MapStage.tsx` (the risk layer stays; retry offered) |
-| Turn that ended without an answer | `components/conversation/MessageList.tsx` |
+| State                                                  | Where                                                                                                                      |
+| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| First run with example requests                        | `components/conversation/Examples.tsx`                                                                                     |
+| Streaming with tool rows                               | `components/conversation/MessageList.tsx`, `ToolRow.tsx`, `ProgressBar.tsx`                                                |
+| Flagged figure                                         | `components/conversation/Figure.tsx`, `figures.ts`                                                                         |
+| Allowance or ceiling reached, replay offered           | `components/conversation/ReplayOffer.tsx`                                                                                  |
+| Replay playing                                         | `components/conversation/ReplayBanner.tsx`, `useReplayPlayback.ts`; recorded quote in `components/tabs/quote/QuoteTab.tsx` |
+| Point outside the showcase regions                     | `map/RiskLayerView.tsx` (single cell and note), `components/topbar/RegionSelect.tsx`, `state/link.ts`                      |
+| Pending approval                                       | `components/tabs/approvals/ApprovalItem.tsx`; the waiting note in `MessageList.tsx`                                        |
+| Approved and delivering, delivered, delivery abandoned | `components/tabs/approvals/DeliveryProgress.tsx`                                                                           |
+| Rejected                                               | `components/tabs/approvals/ApprovalItem.tsx`                                                                               |
+| Loading and failed data                                | `components/tabs/TabState.tsx`, `components/timeline/SeasonTimeline.tsx`                                                   |
+| Basemap that has not loaded                            | `map/MapStage.tsx` (the risk layer stays; retry offered)                                                                   |
+| Turn that ended without an answer                      | `components/conversation/MessageList.tsx`                                                                                  |
 
 ## Do's and Don'ts
 
@@ -355,18 +358,18 @@ History chart and the map share one selected season.
 The application ships no raster image. The built files contain the script, the style sheet and the
 font files below; the basemaps are fetched as tiles at run time.
 
-| Asset | Source | Licence |
-| --- | --- | --- |
-| Fraunces Variable (optical size axis) | `@fontsource-variable/fraunces` 5.3.0, self-hosted | SIL Open Font License 1.1 |
-| IBM Plex Sans 400, 500, 600 (Latin) | `@fontsource/ibm-plex-sans` 5.3.0, self-hosted | SIL Open Font License 1.1 |
-| IBM Plex Mono 400, 500 (Latin) | `@fontsource/ibm-plex-mono` 5.3.0, self-hosted | SIL Open Font License 1.1 |
-| Icons | Authored for this project, one stroke on a 16 by 16 grid (`components/common/Icon.tsx`) | MIT, with the source |
-| Wordmark | Authored for this project (`components/topbar/TopBar.tsx`) | MIT, with the source |
-| Relief basemap tiles | EOX Terrain Light, layer `terrain-light_3857`, fetched from `tiles.maps.eox.at` | Free to use with attribution (EOX::Maps) |
-| Satellite basemap tiles | EOX Sentinel-2 cloudless 2025, layer `s2cloudless-2025_3857`, fetched from `tiles.maps.eox.at` | CC BY-NC-SA 4.0 |
-| Place-name tiles | EOX Overlay, layer `overlay_3857` in the light theme and `overlay_bright_3857` in the dark theme, fetched from `tiles.maps.eox.at` | Free to use with attribution (EOX::Maps) |
-| `frontend/e2e/fixtures/tile.png` and `labels.png` (tests only, not shipped) | Generated by `frontend/e2e/fixtures/make-tile.mjs`: two flat colours, and a fully transparent tile for the place names; derived from no provider's imagery | MIT, with the source |
-| `frontend/design-reference/` (reference only, not shipped) | The approved planning preview; its stitched map images are by EOX, see its `NOTICE.md` | As stated in `NOTICE.md` |
+| Asset                                                                       | Source                                                                                                                                                     | Licence                                  |
+| --------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| Fraunces Variable (optical size axis)                                       | `@fontsource-variable/fraunces` 5.3.0, self-hosted                                                                                                         | SIL Open Font License 1.1                |
+| IBM Plex Sans 400, 500, 600 (Latin)                                         | `@fontsource/ibm-plex-sans` 5.3.0, self-hosted                                                                                                             | SIL Open Font License 1.1                |
+| IBM Plex Mono 400, 500 (Latin)                                              | `@fontsource/ibm-plex-mono` 5.3.0, self-hosted                                                                                                             | SIL Open Font License 1.1                |
+| Icons                                                                       | Authored for this project, one stroke on a 16 by 16 grid (`components/common/Icon.tsx`)                                                                    | MIT, with the source                     |
+| Wordmark                                                                    | Authored for this project (`components/topbar/TopBar.tsx`)                                                                                                 | MIT, with the source                     |
+| Relief basemap tiles                                                        | EOX Terrain Light, layer `terrain-light_3857`, fetched from `tiles.maps.eox.at`                                                                            | Free to use with attribution (EOX::Maps) |
+| Satellite basemap tiles                                                     | EOX Sentinel-2 cloudless 2025, layer `s2cloudless-2025_3857`, fetched from `tiles.maps.eox.at`                                                             | CC BY-NC-SA 4.0                          |
+| Place-name tiles                                                            | EOX Overlay, layer `overlay_3857` in the light theme and `overlay_bright_3857` in the dark theme, fetched from `tiles.maps.eox.at`                         | Free to use with attribution (EOX::Maps) |
+| `frontend/e2e/fixtures/tile.png` and `labels.png` (tests only, not shipped) | Generated by `frontend/e2e/fixtures/make-tile.mjs`: two flat colours, and a fully transparent tile for the place names; derived from no provider's imagery | MIT, with the source                     |
+| `frontend/design-reference/` (reference only, not shipped)                  | The approved planning preview; its stitched map images are by EOX, see its `NOTICE.md`                                                                     | As stated in `NOTICE.md`                 |
 
 Because Sentinel-2 cloudless is CC BY-NC-SA 4.0, the demo is declared non-commercial in the
 interface and in the README.

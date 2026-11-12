@@ -51,7 +51,7 @@ describe("top row [R-12.1-2]", () => {
     const names = tabStops().map((stop) => {
       if (stop instanceof HTMLAnchorElement) return `Link:${stop.getAttribute("aria-label") ?? ""}`;
       const group = stop.closest('[role="group"][aria-label]:not(.topbar__controls)');
-      const own = stop instanceof HTMLSelectElement ? "" : (stop.textContent ?? "");
+      const own = stop.getAttribute("role") === "combobox" ? "" : (stop.textContent ?? "");
       return `${group?.getAttribute("aria-label") ?? "Region"}:${own}`;
     });
     expect(names).toEqual([
@@ -67,8 +67,8 @@ describe("top row [R-12.1-2]", () => {
       "Theme:Dark",
     ]);
 
-    // Native controls: Enter and Space press a button, the arrow keys move a select.
-    expect(screen.getByRole("combobox", { name: "Region" }).tagName).toBe("SELECT");
+    // Native buttons: Enter and Space press them. The region selector is a button with a list.
+    expect(screen.getByRole("combobox", { name: /^Region/ }).tagName).toBe("BUTTON");
     expect(screen.getByRole("group", { name: "View settings" })).toBeInTheDocument();
   });
 
@@ -93,39 +93,86 @@ describe("top row [R-12.1-2]", () => {
 
   it("the region selector lists every region with its crop and reports a choice", () => {
     const calls = renderTop();
-    const select = screen.getByRole("combobox", { name: "Region" });
-    expect(select).toHaveValue("sul-de-minas");
-    expect(
-      within(select)
-        .getAllByRole("option")
-        .map((option) => option.textContent),
-    ).toEqual(["Sul de Minas · Coffee", "Sorriso · Soybean", "Ribeirão Preto · Sugarcane"]);
+    const select = screen.getByRole("combobox", { name: /^Region/ });
+    expect(select).toHaveTextContent("Sul de Minas · Coffee");
+    expect(select).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByRole("listbox")).toBeNull();
 
-    fireEvent.change(select, { target: { value: "sorriso" } });
+    fireEvent.click(select);
+    expect(select).toHaveAttribute("aria-expanded", "true");
+    const options = within(screen.getByRole("listbox", { name: "Region" })).getAllByRole("option");
+    expect(options.map((option) => option.textContent)).toEqual([
+      "Sul de Minas · Coffee",
+      "Sorriso · Soybean",
+      "Ribeirão Preto · Sugarcane",
+    ]);
+    expect(options.map((option) => option.getAttribute("aria-selected"))).toEqual([
+      "true",
+      "false",
+      "false",
+    ]);
+
+    fireEvent.click(options[1] as HTMLElement);
     expect(calls.onRegion).toHaveBeenCalledWith("sorriso");
+    expect(screen.queryByRole("listbox")).toBeNull();
+  });
+
+  it("the region list is worked from the keyboard, with the focus kept on the button", () => {
+    const calls = renderTop();
+    const select = screen.getByRole("combobox", { name: /^Region/ });
+    const active = (): string | null =>
+      document.getElementById(select.getAttribute("aria-activedescendant") ?? "")?.textContent ??
+      null;
+
+    fireEvent.keyDown(select, { key: "ArrowDown" });
+    expect(active()).toBe("Sul de Minas · Coffee"); // opens on the region in view
+    fireEvent.keyDown(select, { key: "ArrowDown" });
+    expect(active()).toBe("Sorriso · Soybean");
+    fireEvent.keyDown(select, { key: "End" });
+    fireEvent.keyDown(select, { key: "ArrowDown" });
+    expect(active()).toBe("Ribeirão Preto · Sugarcane"); // stops at the last one
+    fireEvent.keyDown(select, { key: "s" });
+    expect(active()).toBe("Sul de Minas · Coffee"); // a letter reaches the next match
+
+    fireEvent.keyDown(select, { key: "Escape" });
+    expect(screen.queryByRole("listbox")).toBeNull();
+    expect(calls.onRegion).not.toHaveBeenCalled();
+
+    fireEvent.keyDown(select, { key: "Enter" });
+    fireEvent.keyDown(select, { key: "ArrowDown" });
+    fireEvent.keyDown(select, { key: "Enter" });
+    expect(calls.onRegion).toHaveBeenCalledWith("sorriso");
+
+    // Choosing the region already in view reports nothing, and a press outside closes the list.
+    fireEvent.click(select);
+    fireEvent.pointerDown(document.body);
+    expect(screen.queryByRole("listbox")).toBeNull();
+    expect(calls.onRegion).toHaveBeenCalledTimes(1);
   });
 
   it("a point outside every region is named in the selector [R-12.4-6]", () => {
     renderTop({ regionId: null, outside: true });
-    const select = screen.getByRole("combobox", { name: "Region" });
-    expect(select).toHaveDisplayValue("Outside the showcase regions");
-    // It is a state, not a choice.
-    expect(
-      within(select).getByRole("option", { name: "Outside the showcase regions" }),
-    ).toBeDisabled();
+    const select = screen.getByRole("combobox", { name: /^Region/ });
+    expect(select).toHaveTextContent("Outside the showcase regions");
+    // It is a state, not a choice: the list offers the regions only, none of them selected.
+    fireEvent.click(select);
+    const options = screen.getAllByRole("option");
+    expect(options).toHaveLength(3);
+    expect(options.every((option) => option.getAttribute("aria-selected") === "false")).toBe(true);
   });
 
-  it("the region selector is the styled native control, with the chevron drawn beside it", () => {
+  it("the region selector is the application's own pill and list, with the icon set's marks", () => {
     renderTop();
-    const select = screen.getByRole("combobox", { name: "Region" });
+    const select = screen.getByRole("combobox", { name: /^Region/ });
     expect(select).toHaveClass("region-select__control");
-    const chevron = select.parentElement?.querySelector(".region-select__chevron");
-    expect(chevron).toHaveAttribute("aria-hidden", "true");
+    expect(select.querySelector(".region-select__chevron")).toHaveAttribute("aria-hidden", "true");
+    fireEvent.click(select);
+    expect(screen.getByRole("listbox")).toHaveClass("region-select__list");
   });
 
   it("the selector waits for the regions", () => {
     renderTop({ regions: [], regionId: null });
-    expect(screen.getByRole("combobox", { name: "Region" })).toBeDisabled();
+    expect(screen.getByRole("combobox", { name: /^Region/ })).toBeDisabled();
   });
 
   it.each([
