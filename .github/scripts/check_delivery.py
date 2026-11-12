@@ -20,9 +20,8 @@ Each command prints one line per finding and exits 1 when there is any, 0 otherw
 
 `terraform-keys` reads `infra/terraform/**/*.tf`: no service account key resource.
 
-`readme` reads `README.md`: the twelve sections of SPEC 19 exist as `## <n>. <title>`
-headings in order; sections 1 to 11 are not empty; section 12 holds only the author's
-placeholder, because that section is written by the author and never generated; and every
+`readme` reads `README.md`: the eleven sections of SPEC 19 exist as `## <n>. <title>`
+headings in order, with no other numbered section; every section is not empty; and every
 relative link resolves to a file of the repository.
 """
 
@@ -65,10 +64,9 @@ _IMAGE_REFERENCE = re.compile(r"\$\{?[A-Z0-9_]*IMAGE\}?")
 _KEY_RESOURCE = re.compile(r'^\s*resource\s+"google_service_account_key"')
 
 README = REPOSITORY / "README.md"
-README_SECTIONS = 12  # SPEC 19
-# Section 12 ("What I would change") is the author's. Until it is written it holds this
-# line and nothing else; once the author writes it, this check is changed with it.
-README_PLACEHOLDER = "_Written by the author after the build (human gate H3). Not generated._"
+# SPEC 19. The author's retrospective section is deferred by the owner (docs/NEXT_STEPS.md);
+# when it is written, this count is changed with it.
+README_SECTIONS = 11
 _SECTION_HEADING = re.compile(r"^## (\d+)\. \S.*$", re.MULTILINE)
 _LINK = re.compile(r"\]\(([^)\s]+)\)")
 
@@ -218,12 +216,8 @@ def check_readme_text(text: str, root: Path = REPOSITORY) -> list[str]:
     for position, (number, _, end) in enumerate(headings):
         following = headings[position + 1][1] if position + 1 < len(headings) else len(text)
         body = text[end:following].strip()
-        if number < README_SECTIONS and not body:
+        if not body:
             findings.append(f"README.md: section {number} is empty")
-        if number == README_SECTIONS and body != README_PLACEHOLDER:
-            findings.append(
-                f"README.md: section {README_SECTIONS} must hold only the author's placeholder"
-            )
     for target in sorted({found[1] for found in _LINK.finditer(text)}):
         if "://" in target or target.startswith(("#", "mailto:")):
             continue

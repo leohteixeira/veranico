@@ -222,15 +222,14 @@ def test_the_exit_status_follows_the_findings(capsys: pytest.CaptureFixture[str]
 
 
 def _readme(**changes: str) -> str:
-    """A README with the twelve sections; `changes` replaces the body of a section."""
+    """A README with the eleven sections; `changes` replaces or adds the body of a section."""
     bodies = {str(number): f"Text of section {number}." for number in range(1, 12)}
-    bodies["12"] = checker.README_PLACEHOLDER
     bodies.update(changes)
     sections = [f"## {number}. Title {number}\n\n{body}\n" for number, body in bodies.items()]
     return "# Project\n\n> A note near the top.\n\n" + "\n".join(sections)
 
 
-def test_a_readme_with_the_twelve_sections_and_the_placeholder_passes(tmp_path: Path) -> None:
+def test_a_readme_with_the_eleven_sections_passes(tmp_path: Path) -> None:
     assert checker.check_readme_text(_readme(), tmp_path) == []
 
 
@@ -252,18 +251,18 @@ def test_an_empty_section_is_reported(tmp_path: Path) -> None:
     ]
 
 
-@pytest.mark.parametrize(
-    "body",
-    [
-        "",
-        "I would change the cache.",
-        checker.README_PLACEHOLDER + "\n\nAnd I would also change the cache.",
-    ],
-)
-def test_section_twelve_holds_only_the_placeholder_of_the_author(body: str, tmp_path: Path) -> None:
-    assert checker.check_readme_text(_readme(**{"12": body}), tmp_path) == [
-        "README.md: section 12 must hold only the author's placeholder"
-    ]
+@pytest.mark.parametrize("body", ["", "I would change the cache."])
+def test_a_twelfth_section_is_reported(body: str, tmp_path: Path) -> None:
+    findings = checker.check_readme_text(_readme(**{"12": body}), tmp_path)
+
+    assert len(findings) == 1
+    assert "'## 1.' to '## 11.' in order" in findings[0]
+
+
+def test_a_missing_last_section_is_reported(tmp_path: Path) -> None:
+    without_eleven = _readme().replace("## 11. Title 11", "Title 11")
+
+    assert "in order" in checker.check_readme_text(without_eleven, tmp_path)[0]
 
 
 def test_a_relative_link_must_resolve_and_an_external_one_is_not_followed(tmp_path: Path) -> None:

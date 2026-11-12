@@ -18,6 +18,7 @@ What was deliberately left out of Veranico, with the reason. The scope is locked
 * **Reference evapotranspiration.** The brief ingested it next to precipitation; neither index uses it, so it is not ingested. It comes back with an index that needs it (for example a water-balance index).
 * **Custom domain mapping.** The address is the Cloud Run URL first; `veranico.leohteixeira.com` is an optional later mapping (SPEC section 17).
 * **Mobile-first layout.** The layout is laptop first; on narrow screens the same pieces stack and mobile is best effort (SPEC section 12.1).
+* **README section "What I would change".** Deferred by the owner's decision (2026-11-12); the author writes it from real experience after the build, never generated.
 * **Commercial tile licence.** Sentinel-2 cloudless imagery after 2016 is CC BY-NC-SA 4.0, so the demo is non-commercial; a commercial use needs another satellite layer or a licence (ADR 0011).
 
 ## Found during the build

@@ -482,7 +482,8 @@ Each milestone ends in a working state and has an executable gate, `make verify-
 9. Cost: what the demo costs to run and how the ceilings work.
 10. Licences and attribution for every data and tile source, and why the demo is non-commercial.
 11. Decisions (links to ADRs) and the verification record.
-12. What I would change. Written by the author after building it, from real experience. Not generated.
+
+The author's retrospective section ("What I would change") is deferred by the owner's decision (2026-11-12) and listed in `docs/NEXT_STEPS.md`.
 
 ## 20. Prerequisites and human gates
 

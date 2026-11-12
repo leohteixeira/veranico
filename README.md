@@ -217,7 +217,7 @@ Other commands: `make test`, `make test-integration`, `make test-failure`, `make
 |---|---|---|
 | H1: real weather cubes | closed on 2026-11-11 | the owner built the three ERA5-Land cubes from Google Earth Engine (1950-01-01 to 2025-12-31, 27,759 days, 20 by 20 cells at 0.1°; [ADR 0019](specs/adrs/0019-cubes-from-earth-engine-era5-land.md)); the chunking was measured on them ([ADR 0016](specs/adrs/0016-weather-cube-chunking.md)); the live consistency test passes in the three regions within the final limits of `climate/domain/consistency.py`; the example covers were re-tuned on them; the replays were recorded on them, so `tests/unit/assistant/test_replay_fixtures.py` runs and passes. To rebuild them on another machine: a Cloud project registered for Earth Engine (noncommercial) with the Earth Engine API enabled; `cd backend && uv run --group cube earthengine authenticate` once; `EARTHENGINE_PROJECT=<project-id>` in `.env`; `make build-cube REGION=sul-de-minas`, then `REGION=sorriso` and `REGION=ribeirao-preto`; `make build-cube REGION=<id> MEASURE=1` for the chunking numbers; `cd backend && uv run pytest tests/integration/climate/test_consistency_live.py -m live -q -s`. Re-recording the replays is paid: `make record-replay LOCALE=en` and `LOCALE=pt-BR` |
 | H2: first deploy | open | the sequence below, including the real cubes in Cloud Storage (step 7) |
-| H3: the author's part | open | section 12 of this file, the interface finish review decision, the portfolio page |
+| H3: the author's part | open | the interface finish review decision, the portfolio page |
 
 ### Deploy (human gate H2, run by the owner)
 
@@ -323,7 +323,3 @@ interface.
   the mutation proof of the pricing rules, the failure campaign, the load campaign with its
   oracle and the agent evaluation. Its measured blocks are generated from stored results and
   name the commit they measured; a failed run is shown as failed.
-
-## 12. What I would change
-
-_Written by the author after the build (human gate H3). Not generated._
