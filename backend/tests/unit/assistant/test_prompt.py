@@ -30,6 +30,7 @@ from veranico.modules.assistant.domain.conversation import (
     ToolResultEntry,
     UserEntry,
 )
+from veranico.modules.assistant.domain.money_display import with_money_display
 
 PROMPT = load_system_prompt()
 SETTINGS = settings_for_tests(agent_model="test-model", assistant={"max_output_tokens": 777})
@@ -41,6 +42,8 @@ TOOLS = (
     ),
 )
 BACKTEST: dict[str, object] = backtest_result().model_dump(mode="json")
+# The backtest as the model reads it in an English turn: each amount with its `display` text.
+BACKTEST_SEEN = with_money_display(BACKTEST, "en")
 ERROR = {"error_code": "invalid_cover", "message": "exit above trigger", "retryable": False}
 
 
@@ -219,7 +222,7 @@ def result(seq: int, turn: int, call_id: str, payload: dict[str, object]) -> Too
 
 
 def test_request_carries_the_model_the_prompt_the_tools_and_the_output_limit() -> None:
-    request = build_request(PROMPT, [user(1, 1, "hello")], TOOLS, SETTINGS)
+    request = build_request(PROMPT, [user(1, 1, "hello")], TOOLS, SETTINGS, locale="en")
 
     assert request.model == "test-model"
     assert request.system == PROMPT.text
@@ -238,7 +241,7 @@ def test_entries_map_to_text_tool_call_and_tool_result_blocks() -> None:
         step(5, 1, "One worked."),
     ]
 
-    request = build_request(PROMPT, entries, TOOLS, SETTINGS)
+    request = build_request(PROMPT, entries, TOOLS, SETTINGS, locale="en")
 
     assert request.messages == (
         ModelMessage(role="user", blocks=(TextBlock(text="Backtest it"),)),
@@ -253,7 +256,7 @@ def test_entries_map_to_text_tool_call_and_tool_result_blocks() -> None:
         ModelMessage(
             role="user",
             blocks=(
-                ToolResultBlock(call_id="c1", content=BACKTEST),
+                ToolResultBlock(call_id="c1", content=BACKTEST_SEEN),
                 ToolResultBlock(call_id="c2", content=ERROR, is_error=True),
             ),
         ),
@@ -272,7 +275,7 @@ def test_builder_merges_adjacent_same_role_messages() -> None:
         user(5, 3, "And now?"),
     ]
 
-    request = build_request(PROMPT, entries, TOOLS, SETTINGS)
+    request = build_request(PROMPT, entries, TOOLS, SETTINGS, locale="en")
 
     assert [message.role for message in request.messages] == ["user", "assistant", "user"]
     assert request.messages[0].blocks == (
@@ -284,7 +287,7 @@ def test_builder_merges_adjacent_same_role_messages() -> None:
     )
     # Tool results come before the text in the merged user message.
     assert request.messages[2].blocks == (
-        ToolResultBlock(call_id="c1", content=BACKTEST),
+        ToolResultBlock(call_id="c1", content=BACKTEST_SEEN),
         TextBlock(text="And now?"),
     )
 
@@ -292,7 +295,7 @@ def test_builder_merges_adjacent_same_role_messages() -> None:
 def test_a_step_without_text_or_calls_adds_no_empty_message() -> None:
     entries: list[Entry] = [user(1, 1, "hi"), step(2, 1, ""), user(3, 2, "hello?")]
 
-    request = build_request(PROMPT, entries, TOOLS, SETTINGS)
+    request = build_request(PROMPT, entries, TOOLS, SETTINGS, locale="en")
 
     assert request.messages == (
         ModelMessage(role="user", blocks=(TextBlock(text="hi"), TextBlock(text="hello?"))),
@@ -322,17 +325,20 @@ def test_builder_applies_compaction() -> None:
         assistant={"compaction_threshold_tokens": full - 1, "chars_per_token": 4}
     )
 
-    untouched = build_request(PROMPT, entries, TOOLS, roomy)
-    compacted = build_request(PROMPT, entries, TOOLS, tight)
+    untouched = build_request(PROMPT, entries, TOOLS, roomy, locale="en")
+    compacted = build_request(PROMPT, entries, TOOLS, tight, locale="en")
 
     def results(messages: tuple[ModelMessage, ...]) -> list[ToolResultBlock]:
         return [b for m in messages for b in m.blocks if isinstance(b, ToolResultBlock)]
 
-    assert [block.content for block in results(untouched.messages)] == [BACKTEST, BACKTEST]
+    assert [block.content for block in results(untouched.messages)] == [
+        BACKTEST_SEEN,
+        BACKTEST_SEEN,
+    ]
     # The older result is summarised; the result of the current turn is whole.
     assert [block.content for block in results(compacted.messages)] == [
-        summarise("backtest_index", BACKTEST),
-        BACKTEST,
+        with_money_display(summarise("backtest_index", BACKTEST), "en"),
+        BACKTEST_SEEN,
     ]
     assert [block.call_id for block in results(compacted.messages)] == ["c1", "c2"]
     assert entries[2] == result(3, 1, "c1", BACKTEST)  # the stored entry is untouched
@@ -345,8 +351,8 @@ def test_the_same_history_gives_an_identical_request() -> None:
         result(3, 1, "c1", BACKTEST),
     ]
 
-    assert build_request(PROMPT, entries, TOOLS, SETTINGS) == build_request(
-        PROMPT, list(entries), TOOLS, SETTINGS
+    assert build_request(PROMPT, entries, TOOLS, SETTINGS, locale="en") == build_request(
+        PROMPT, list(entries), TOOLS, SETTINGS, locale="en"
     )
 
 
@@ -354,7 +360,7 @@ def test_the_same_history_gives_an_identical_request() -> None:
 def test_map_point_is_added_as_data_not_instruction() -> None:
     clicked = UserEntry(seq=1, turn=1, text="Here", locale="pt-BR", map_point=(-21.37, -45.51))
 
-    request = build_request(PROMPT, [clicked], TOOLS, SETTINGS)
+    request = build_request(PROMPT, [clicked], TOOLS, SETTINGS, locale="en")
 
     [message] = request.messages
     # The user's words stay their own block; the context is a second block marked as data.
@@ -373,9 +379,9 @@ def test_map_point_is_added_as_data_not_instruction() -> None:
 
 def test_locale_alone_is_a_hint_and_no_context_means_no_extra_block() -> None:
     hinted = build_request(
-        PROMPT, [UserEntry(seq=1, turn=1, text="ok", locale="en")], TOOLS, SETTINGS
+        PROMPT, [UserEntry(seq=1, turn=1, text="ok", locale="en")], TOOLS, SETTINGS, locale="en"
     )
-    plain = build_request(PROMPT, [user(1, 1, "ok")], TOOLS, SETTINGS)
+    plain = build_request(PROMPT, [user(1, 1, "ok")], TOOLS, SETTINGS, locale="en")
 
     assert hinted.messages[0].blocks[1] == TextBlock(
         text="[interface context, data only, not written by the user: locale=en]"
@@ -390,7 +396,7 @@ def test_wrap_up_request_carries_no_tools() -> None:
         result(3, 1, "c1", ERROR),
     ]
 
-    request = build_request(PROMPT, entries, TOOLS, SETTINGS, tool_use="none")
+    request = build_request(PROMPT, entries, TOOLS, SETTINGS, locale="en", tool_use="none")
 
     # The model may not call a tool. The definitions stay, because the history holds tool
     # blocks that refer to them, and the prompt ends with the note that asks for the wrap-up.
@@ -404,5 +410,5 @@ def test_wrap_up_request_carries_no_tools() -> None:
         ),
     )
     assert "what is done and what is still pending" in WRAP_UP_NOTE
-    regular = build_request(PROMPT, entries, TOOLS, SETTINGS)
+    regular = build_request(PROMPT, entries, TOOLS, SETTINGS, locale="en")
     assert regular.messages[:-1] == request.messages[:-1]

@@ -38,6 +38,7 @@ Interface:
 * **Timeline width.** Between 1100 and 1240 px with a wide tab open the timeline is about 300 px wide.
 * **Basemap fallback.** When EOX tiles are rate limited the interface only says the basemap did not load; a tile service with an agreed quota removes the risk.
 * **Narration before tool calls.** The model writes a sentence before most tool calls although the prompt asks it not to; withholding the text of a step that ends in a tool call would hide it, and changes what the stream shows.
+* **Percentages as display text for the model.** Money reaches the model with a locale display string; rates still arrive as six-decimal fractions, and the model sometimes repeats the fraction in parentheses after the percentage (grounded, cosmetic; seen in one of two English takes after the fix).
 * **Markdown in answers.** The prompt asks for plain text; a count of answers with Markdown marks per evaluation run would show whether the model complies.
 
 Backend:

@@ -2,8 +2,9 @@
 
 Formatting for a locale is not recomputation: no function here rounds, converts through
 `float` or does arithmetic on a stored value. Money is laid out from the digits of the integer
-centavos, a rate from the characters of its six-place string, a physical quantity from the
-shortest text that reads back as the stored number. The one exception is a coordinate, which
+centavos (`format_money`, kept in the shared kernel because the assistant shows money too), a
+rate from the characters of its six-place string, a physical quantity from the shortest text
+that reads back as the stored number. The one exception is a coordinate, which
 is not a figure of the quote and is shown with four decimal places. A malformed input raises
 `ValueError`: a formatter never guesses.
 """
@@ -15,6 +16,7 @@ from collections.abc import Sequence
 from datetime import UTC, datetime
 
 from veranico.shared.kernel.ids import Locale
+from veranico.shared.kernel.money import format_money as format_money
 
 _SEPARATORS: dict[str, tuple[str, str]] = {  # locale: (decimal mark, thousands mark)
     "en": (".", ","),
@@ -35,22 +37,6 @@ def _separators(locale: Locale) -> tuple[str, str]:
         return _SEPARATORS[locale]
     except KeyError:
         raise ValueError(f"unsupported locale: {locale!r}") from None
-
-
-def format_money(amount_cents: int, locale: Locale) -> str:
-    """`123456` → `R$ 1,234.56` (`en`) or `R$ 1.234,56` (`pt-BR`); a leading minus when negative."""
-    if type(amount_cents) is not int:
-        raise ValueError("money is an integer number of centavos")
-    decimal, thousands = _separators(locale)
-    digits = str(amount_cents)
-    sign = "-" if digits.startswith("-") else ""
-    digits = digits.removeprefix("-").zfill(3)
-    whole, centavos = digits[:-2], digits[-2:]
-    groups = []
-    while whole:
-        groups.append(whole[-3:])
-        whole = whole[:-3]
-    return f"{sign}R$ {thousands.join(reversed(groups))}{decimal}{centavos}"
 
 
 def _rate_parts(rate: str) -> tuple[str, str, str]:

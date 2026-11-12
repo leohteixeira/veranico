@@ -17,8 +17,9 @@ DESCRIPTION = (
     "`trigger_frequency` "
     "(share of seasons that paid), `burn_cost` (average historical payout), the largest payout "
     "and its season, the trend of the index and warnings. Money is integer BRL centavos in "
-    "`amount_cents`: write it in reais, never in centavos (1234567 is R$ 12,345.67 in English "
-    "and R$ 12.345,67 in Portuguese); rates are fractions as strings: write them as a "
+    "`amount_cents`, with `display`, the amount already written in reais for the user's "
+    "language: copy `display` (or round it to whole reais), never write centavos and never "
+    "reformat the separators; rates are fractions as strings: write them as a "
     'percentage only ("0.125000" is 12.5%). It persists nothing and gives no price: use '
     "price_cover for a premium."
 )

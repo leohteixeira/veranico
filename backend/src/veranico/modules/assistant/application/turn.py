@@ -204,6 +204,7 @@ class Turn:
                         self._entries,
                         tools,
                         deps.settings,
+                        locale=self._locale,
                         tool_use="none" if wrap_up is not None else "auto",
                     )
                     call = _ModelCall()

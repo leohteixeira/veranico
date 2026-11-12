@@ -22,8 +22,9 @@ DESCRIPTION = (
     "only when the user gave or confirmed the location, the window and the limit. Returns the "
     "`quote_id` and `priced`: the backtest, the simulation (expected loss, standard deviation, "
     "probability of payout, 1-in-10 and 1-in-100 payouts), the premium with its rate on line, "
-    "and the assumptions. Money is integer BRL centavos in `amount_cents`: write it in reais "
-    "(R$ 12,345.67 in English, R$ 12.345,67 in Portuguese), never in centavos. Rates are "
+    "and the assumptions. Money is integer BRL centavos in `amount_cents`, with `display`, "
+    "the amount already written in reais for the user's language: copy `display` (or round it "
+    "to whole reais), never write centavos and never reformat the separators. Rates are "
     "fractions as strings: write them as a percentage only. Always cite the quote by its id "
     '("quote Q-7K3M9P", "cotação Q-7K3M9P") with any of these figures.'
 )

@@ -8,7 +8,9 @@ place.
 `build_request` is deterministic: the same history and settings give a byte-identical
 request, so the provider can reuse a cached prefix. The system prompt carries nothing that
 varies between requests. What the interface sent with a message (its locale, a clicked map
-point) is added after the user's text as a context line marked as data.
+point) is added after the user's text as a context line marked as data. Every amount of money
+in a tool result reaches the model with its text for the turn's locale (`display`), so the
+model copies it instead of formatting centavos (`domain/money_display.py`).
 """
 
 import hashlib
@@ -35,7 +37,9 @@ from veranico.modules.assistant.domain.conversation import (
     ToolResultEntry,
     UserEntry,
 )
+from veranico.modules.assistant.domain.money_display import with_money_display
 from veranico.shared.infrastructure.settings import Settings
+from veranico.shared.kernel.ids import Locale
 
 # SHA-256 of each prompt file. Add a line with a new version; never change an existing one.
 PROMPT_SHA256 = {
@@ -101,13 +105,15 @@ def build_request(
     tools: Sequence[ToolSpec],
     settings: Settings,
     *,
+    locale: Locale,
     tool_use: Literal["auto", "none"] = "auto",
 ) -> ModelRequest:
     """The request for the next model call of the turn the last entry belongs to.
 
     Compaction runs first (SPEC 9.2): results of earlier turns are summarised, oldest first,
-    while the estimate exceeds the threshold. `tool_use="none"` is the wrap-up call: the model
-    must answer in text.
+    while the estimate exceeds the threshold. Then every result, whole or summarised, gets the
+    `display` text of its money in the turn's `locale`. `tool_use="none"` is the wrap-up call:
+    the model must answer in text.
     """
     current_turn = max((entry.turn for entry in entries), default=0)
     compacted = compact(
@@ -121,7 +127,7 @@ def build_request(
             for tool in tools
         ],
     )
-    messages = _messages(compacted)
+    messages = _messages(compacted, locale)
     if tool_use == "none":
         messages = _with_note(messages, WRAP_UP_NOTE)
     return ModelRequest(
@@ -143,7 +149,7 @@ def _with_note(messages: tuple[ModelMessage, ...], note: str) -> tuple[ModelMess
     return (*messages, ModelMessage(role="user", blocks=(block,)))
 
 
-def _messages(entries: Sequence[Entry]) -> tuple[ModelMessage, ...]:
+def _messages(entries: Sequence[Entry], locale: Locale) -> tuple[ModelMessage, ...]:
     """Entries as messages, adjacent messages of one role merged into one.
 
     Tool results travel in user messages, so a step's results and the user's next message
@@ -152,7 +158,7 @@ def _messages(entries: Sequence[Entry]) -> tuple[ModelMessage, ...]:
     """
     merged: list[tuple[Literal["user", "assistant"], list[Block]]] = []
     for entry in entries:
-        role, blocks = _blocks(entry)
+        role, blocks = _blocks(entry, locale)
         if not blocks:
             continue
         if merged and merged[-1][0] == role:
@@ -162,7 +168,7 @@ def _messages(entries: Sequence[Entry]) -> tuple[ModelMessage, ...]:
     return tuple(ModelMessage(role=role, blocks=tuple(blocks)) for role, blocks in merged)
 
 
-def _blocks(entry: Entry) -> tuple[Literal["user", "assistant"], list[Block]]:
+def _blocks(entry: Entry, locale: Locale) -> tuple[Literal["user", "assistant"], list[Block]]:
     if isinstance(entry, UserEntry):
         blocks: list[Block] = [TextBlock(text=entry.text)]
         context = _context_line(entry)
@@ -176,12 +182,14 @@ def _blocks(entry: Entry) -> tuple[Literal["user", "assistant"], list[Block]]:
             for call in entry.tool_calls
         )
         return "assistant", blocks
-    return "user", [_result_block(entry)]
+    return "user", [_result_block(entry, locale)]
 
 
-def _result_block(entry: ToolResultEntry) -> ToolResultBlock:
+def _result_block(entry: ToolResultEntry, locale: Locale) -> ToolResultBlock:
     return ToolResultBlock(
-        call_id=entry.call_id, content=entry.result, is_error=entry.status == "error"
+        call_id=entry.call_id,
+        content=with_money_display(entry.result, locale),
+        is_error=entry.status == "error",
     )
 
 
