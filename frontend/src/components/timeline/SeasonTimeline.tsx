@@ -1,5 +1,5 @@
 import type { components } from "../../api/schema";
-import type { BasemapConfig } from "../../config";
+import type { BasemapConfig, PlaceLabelsConfig } from "../../config";
 import { useI18n } from "../../i18n";
 import { formatIndexValue, formatMoney, formatSeason } from "../../i18n/format";
 import { Attribution } from "../../map/Attribution";
@@ -26,6 +26,8 @@ interface SeasonTimelineProps {
   onRetry?: () => void;
   /** The basemap on screen: the card carries its attribution. */
   basemap: BasemapConfig;
+  /** The place-name layer on screen: the card carries its attribution too. */
+  placeLabels: PlaceLabelsConfig;
   /** The weather on screen is synthetic: the attribution says so instead of crediting ERA5-Land. */
   synthetic?: boolean;
   className?: string;
@@ -44,6 +46,7 @@ export function SeasonTimeline({
   status = "ready",
   onRetry,
   basemap,
+  placeLabels,
   synthetic = false,
   className,
 }: SeasonTimelineProps) {
@@ -161,7 +164,12 @@ export function SeasonTimeline({
           )}
         </div>
       )}
-      <Attribution basemap={basemap} synthetic={synthetic} className="timeline__attribution" />
+      <Attribution
+        basemap={basemap}
+        placeLabels={placeLabels}
+        synthetic={synthetic}
+        className="timeline__attribution"
+      />
     </Card>
   );
 }

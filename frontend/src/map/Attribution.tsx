@@ -1,10 +1,12 @@
-import type { BasemapConfig } from "../config";
+import type { BasemapConfig, PlaceLabelsConfig } from "../config";
 import { useI18n } from "../i18n";
 import "./map.css";
 
 interface AttributionProps {
   /** The basemap on screen: its provider's attribution and licence are the ones shown. */
   basemap: BasemapConfig;
+  /** The place-name layer on screen: its data and rendering are credited too. */
+  placeLabels: PlaceLabelsConfig;
   /**
    * The weather of the region on screen is synthetic (`Region.synthetic`, or a dataset source of
    * `synthetic`). The weather line then says so, and credits ERA5 only for what it still applies
@@ -25,10 +27,15 @@ function LinkOrText({ text, url }: { text: string; url: string | undefined }) {
 
 /**
  * The sources and licences that must stay legible next to the map: the active basemap's
- * attribution and licence, the weather data's, the non-commercial notice and the pricing
+ * attribution and licence, the place-name layer's attribution, the weather data's, the non-commercial notice and the pricing
  * disclaimer. The provider's attribution is its own wording and is not translated.
  */
-export function Attribution({ basemap, synthetic = false, className }: AttributionProps) {
+export function Attribution({
+  basemap,
+  placeLabels,
+  synthetic = false,
+  className,
+}: AttributionProps) {
   const { t } = useI18n();
   return (
     <p
@@ -45,6 +52,10 @@ export function Attribution({ basemap, synthetic = false, className }: Attributi
             {")"}
           </>
         )}
+      </span>
+      <span className="attribution__item">
+        {t("attribution.place_names")}{" "}
+        <LinkOrText text={placeLabels.attribution} url={placeLabels.attributionUrl} />
       </span>
       <span className="attribution__item" data-weather={synthetic ? "synthetic" : "reanalysis"}>
         {t(synthetic ? "app.weather_attribution_synthetic" : "app.weather_attribution")}

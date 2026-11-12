@@ -350,6 +350,7 @@ export function Shell() {
         status={outside || view.index === null ? "ready" : timeline.status}
         onRetry={timeline.retry}
         basemap={config.basemaps[basemap]}
+        placeLabels={config.placeLabels[theme]}
         synthetic={isSynthetic(region, datasetSource)}
       />
       <TabsCard

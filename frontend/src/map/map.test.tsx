@@ -9,12 +9,13 @@ import type { Theme } from "../design/theme";
 import { I18nProvider, translate } from "../i18n";
 import { REGIONS } from "../test/fixtures/bodies";
 import { Attribution } from "./Attribution";
-import { MapStage } from "./MapStage";
+import { MapStage, PLACE_LABELS_PANE } from "./MapStage";
 import { FIT_MARGIN, activeBasemap, fitPadding, regionBounds, veil, type Insets } from "./basemaps";
 
 const WIDTH = 1280;
 const HEIGHT = 800;
 const BASEMAPS = loadConfig({}).basemaps;
+const PLACE_LABELS = loadConfig({}).placeLabels;
 
 const [SUL_DE_MINAS, SORRISO] = REGIONS;
 if (SUL_DE_MINAS === undefined || SORRISO === undefined) throw new Error("fixture regions missing");
@@ -76,8 +77,19 @@ function stage({
   );
 }
 
+/** The tiles of the basemap: the place names are tiles too, in a pane of their own. */
 function tiles(container: HTMLElement): HTMLImageElement[] {
-  return [...container.querySelectorAll<HTMLImageElement>("img.leaflet-tile")];
+  return [...container.querySelectorAll<HTMLImageElement>(".leaflet-tile-pane img.leaflet-tile")];
+}
+
+function placeLabelsPane(container: HTMLElement): HTMLElement | null {
+  return container.querySelector<HTMLElement>(`.leaflet-${PLACE_LABELS_PANE}-pane`);
+}
+
+function labelTiles(container: HTMLElement): HTMLImageElement[] {
+  return [
+    ...(placeLabelsPane(container)?.querySelectorAll<HTMLImageElement>("img.leaflet-tile") ?? []),
+  ];
 }
 
 describe("basemaps [R-12.2-1] [R-16.7-1]", () => {
@@ -158,7 +170,7 @@ describe("attribution [R-12.2-1] [R-4.4-6] [R-12.6-2] [R-1-1]", () => {
   it("attribution_of_the_active_basemap_and_of_the_weather_data_is_visible", () => {
     const { rerender } = render(
       <I18nProvider locale="en">
-        <Attribution basemap={BASEMAPS.relief} />
+        <Attribution basemap={BASEMAPS.relief} placeLabels={PLACE_LABELS.light} />
       </I18nProvider>,
     );
 
@@ -177,7 +189,7 @@ describe("attribution [R-12.2-1] [R-4.4-6] [R-12.6-2] [R-1-1]", () => {
 
     rerender(
       <I18nProvider locale="en">
-        <Attribution basemap={BASEMAPS.satellite} />
+        <Attribution basemap={BASEMAPS.satellite} placeLabels={PLACE_LABELS.dark} />
       </I18nProvider>,
     );
 
@@ -198,7 +210,7 @@ describe("attribution [R-12.2-1] [R-4.4-6] [R-12.6-2] [R-1-1]", () => {
     (locale) => {
       const { rerender } = render(
         <I18nProvider locale={locale}>
-          <Attribution basemap={BASEMAPS.relief} synthetic />
+          <Attribution basemap={BASEMAPS.relief} placeLabels={PLACE_LABELS.light} synthetic />
         </I18nProvider>,
       );
 
@@ -213,7 +225,11 @@ describe("attribution [R-12.2-1] [R-4.4-6] [R-12.6-2] [R-1-1]", () => {
 
       rerender(
         <I18nProvider locale={locale}>
-          <Attribution basemap={BASEMAPS.relief} synthetic={false} />
+          <Attribution
+            basemap={BASEMAPS.relief}
+            placeLabels={PLACE_LABELS.light}
+            synthetic={false}
+          />
         </I18nProvider>,
       );
 
@@ -234,7 +250,7 @@ describe("attribution [R-12.2-1] [R-4.4-6] [R-12.6-2] [R-1-1]", () => {
   it("non_commercial_notice_is_shown", () => {
     render(
       <I18nProvider locale="pt-BR">
-        <Attribution basemap={BASEMAPS.satellite} />
+        <Attribution basemap={BASEMAPS.satellite} placeLabels={PLACE_LABELS.dark} />
       </I18nProvider>,
     );
 
@@ -242,6 +258,97 @@ describe("attribution [R-12.2-1] [R-4.4-6] [R-12.6-2] [R-1-1]", () => {
     // The pricing disclaimer travels with it, and the provider's wording is not translated.
     expect(screen.getByText(translate("pt-BR", "app.disclaimer"))).toBeVisible();
     expect(screen.getByText(/EOxCloudless/)).toBeVisible();
+  });
+});
+
+describe("place names [R-12.2-7]", () => {
+  it("place_names_are_a_tile_layer_over_the_risk_layer_and_follow_the_theme", () => {
+    const light = render(stage({ theme: "light" }));
+    // Over the risk canvas (350), under the vector layers (400), and transparent to the pointer.
+    expect(placeLabelsPane(light.container)?.style.zIndex).toBe("360");
+    expect(placeLabelsPane(light.container)?.style.pointerEvents).toBe("none");
+    expect(labelTiles(light.container).length).toBeGreaterThan(0);
+    expect(labelTiles(light.container).every((tile) => tile.src.includes("/overlay_3857/"))).toBe(
+      true,
+    );
+    light.unmount();
+
+    // The dark theme darkens either basemap, so it takes the bright lettering even on relief.
+    const dark = render(stage({ theme: "dark", choice: "relief" }));
+    expect(labelTiles(dark.container).length).toBeGreaterThan(0);
+    expect(
+      labelTiles(dark.container).every((tile) => tile.src.includes("/overlay_bright_3857/")),
+    ).toBe(true);
+    expect(tiles(dark.container).every((tile) => tile.src.includes("terrain-light_3857"))).toBe(
+      true,
+    );
+  });
+
+  it("both place-name layers come from configuration, over HTTPS, as transparent tiles", () => {
+    for (const theme of ["light", "dark"] as const) {
+      const labels = PLACE_LABELS[theme];
+      expect(labels.urlTemplate).toMatch(
+        /^https:\/\/tiles\.maps\.eox\.at\/wmts\/1\.0\.0\/[a-z0-9_-]+\/default\/g\/\{z\}\/\{y\}\/\{x\}\.png$/,
+      );
+      expect(labels.attribution).toContain("OpenStreetMap contributors");
+      expect(labels.attributionUrl).toMatch(/^https:\/\//);
+    }
+
+    const replaced = {
+      urlTemplate: "https://labels.test/{z}/{y}/{x}.png",
+      attribution: "Test labels",
+      attributionUrl: "https://labels.test/",
+    };
+    const { container } = render(
+      <I18nProvider locale="en">
+        <MapStage
+          region={SUL_DE_MINAS}
+          basemap="relief"
+          theme="light"
+          basemaps={BASEMAPS}
+          placeLabels={{ ...PLACE_LABELS, light: replaced }}
+        />
+      </I18nProvider>,
+    );
+    expect(labelTiles(container).every((tile) => tile.src.startsWith("https://labels.test/"))).toBe(
+      true,
+    );
+  });
+
+  it("a_place_name_tile_that_fails_is_not_a_failed_basemap", () => {
+    const { container } = render(stage());
+
+    for (const tile of labelTiles(container)) fireEvent.error(tile);
+
+    expect(screen.queryByRole("status")).toBeNull();
+  });
+
+  it("the_place_name_layer_is_credited_next_to_the_map_in_both_themes", () => {
+    const { rerender } = render(
+      <I18nProvider locale="pt-BR">
+        <Attribution basemap={BASEMAPS.relief} placeLabels={PLACE_LABELS.light} />
+      </I18nProvider>,
+    );
+
+    expect(screen.getByText(translate("pt-BR", "attribution.place_names"))).toBeVisible();
+    // The provider's wording is not translated.
+    expect(
+      screen.getByRole("link", {
+        name: "Overlay { Data © OpenStreetMap contributors, Rendering © EOX and MapServer }",
+      }),
+    ).toHaveAttribute("href", "https://maps.eox.at/#data");
+
+    rerender(
+      <I18nProvider locale="pt-BR">
+        <Attribution basemap={BASEMAPS.satellite} placeLabels={PLACE_LABELS.dark} />
+      </I18nProvider>,
+    );
+
+    expect(
+      screen.getByRole("link", {
+        name: "Overlay bright { Data © OpenStreetMap contributors, Rendering © EOX and MapServer }",
+      }),
+    ).toHaveAttribute("href", "https://maps.eox.at/#data");
   });
 });
 

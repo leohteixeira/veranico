@@ -6,7 +6,8 @@ type GridPoint = components["schemas"]["GridPoint"];
 
 /**
  * Build-time configuration. Agents and CI never read `.env` files, so every default lives here;
- * each entry can be replaced by one `VITE_` variable holding JSON (names in `env.example`).
+ * each entry but the place-name layers can be replaced by one `VITE_` variable holding JSON (names
+ * in `env.example`).
  * There is no synthetic-data flag: that label comes from the API (`Region.synthetic`).
  */
 
@@ -26,6 +27,16 @@ export interface BasemapConfig {
   maxZoom: number;
 }
 
+/** A transparent tile layer of place names and borders, drawn over the risk layer. */
+export interface PlaceLabelsConfig {
+  /** Leaflet tile URL template (`{z}`, `{x}`, `{y}`). */
+  urlTemplate: string;
+  /** The attribution text the provider requires, shown next to the map. */
+  attribution: string;
+  /** Where the attribution links to. */
+  attributionUrl: string;
+}
+
 /** The cover a showcase region opens with, before any conversation. */
 export interface ExampleCover {
   /** The insured point of the example. */
@@ -37,6 +48,11 @@ export interface ExampleCover {
 
 export interface AppConfig {
   basemaps: Record<BasemapId, BasemapConfig>;
+  /**
+   * Keyed by theme, not by basemap: the dark theme darkens either basemap, so it takes the bright
+   * lettering, and the light theme the dark one.
+   */
+  placeLabels: Record<"light" | "dark", PlaceLabelsConfig>;
   /** Keyed by `Region.region_id`. */
   exampleCovers: Record<string, ExampleCover>;
   /** The project's page on the owner's portfolio, per interface language; the wordmark links there. */
@@ -84,6 +100,26 @@ const DEFAULT_BASEMAPS: Record<BasemapId, BasemapConfig> = {
     licenceNote: "CC BY-NC-SA 4.0",
     licenceUrl: "https://creativecommons.org/licenses/by-nc-sa/4.0/",
     maxZoom: 13,
+  },
+};
+
+// Verified on 2026-11-12 in the same two EOX documents as the basemaps: the capabilities document
+// lists `overlay_3857` and `overlay_bright_3857` (PNG, tile matrix set `g`) with the attributions
+// below, and https://maps.eox.at/ describes the overlay as the layer of labels and line features
+// (borders, streets) made to be drawn over data laid on a background, in a dark and a bright
+// variant. Their data is OpenStreetMap's; the terms are those of EOX::Maps.
+const DEFAULT_PLACE_LABELS: AppConfig["placeLabels"] = {
+  light: {
+    urlTemplate: "https://tiles.maps.eox.at/wmts/1.0.0/overlay_3857/default/g/{z}/{y}/{x}.png",
+    attribution: "Overlay { Data © OpenStreetMap contributors, Rendering © EOX and MapServer }",
+    attributionUrl: "https://maps.eox.at/#data",
+  },
+  dark: {
+    urlTemplate:
+      "https://tiles.maps.eox.at/wmts/1.0.0/overlay_bright_3857/default/g/{z}/{y}/{x}.png",
+    attribution:
+      "Overlay bright { Data © OpenStreetMap contributors, Rendering © EOX and MapServer }",
+    attributionUrl: "https://maps.eox.at/#data",
   },
 };
 
@@ -238,6 +274,7 @@ export function loadConfig(env: Readonly<Record<string, unknown>>): AppConfig {
       relief: override(env, ENV_BASEMAP_RELIEF, isBasemap) ?? DEFAULT_BASEMAPS.relief,
       satellite: override(env, ENV_BASEMAP_SATELLITE, isBasemap) ?? DEFAULT_BASEMAPS.satellite,
     },
+    placeLabels: DEFAULT_PLACE_LABELS,
     exampleCovers: {
       ...DEFAULT_EXAMPLE_COVERS,
       ...override(env, ENV_EXAMPLE_COVERS, isExampleCovers),

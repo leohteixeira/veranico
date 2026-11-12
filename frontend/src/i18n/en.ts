@@ -59,6 +59,7 @@ export const en = {
   "basemap.satellite": "Satellite",
   "attribution.label": "Sources and licences",
   "attribution.basemap": "Basemap:",
+  "attribution.place_names": "Place names:",
 
   // Languages and themes
   "language.label": "Language",

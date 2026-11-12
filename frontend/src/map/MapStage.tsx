@@ -1,13 +1,13 @@
 import "leaflet/dist/leaflet.css";
 
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import { MapContainer, TileLayer, useMap } from "react-leaflet";
+import { MapContainer, Pane, TileLayer, useMap } from "react-leaflet";
 
 import type { components } from "../api/schema";
 import { Button } from "../components/common/Button";
 import { Icon } from "../components/common/Icon";
 import { Note } from "../components/common/Note";
-import { config, type BasemapConfig, type BasemapId } from "../config";
+import { config, type BasemapConfig, type BasemapId, type PlaceLabelsConfig } from "../config";
 import { MAP_PAINT, type Theme } from "../design/theme";
 import { useI18n } from "../i18n";
 import { NO_INSETS, fitPadding, regionBounds, veil, type Insets } from "./basemaps";
@@ -19,6 +19,9 @@ type Region = components["schemas"]["Region"];
 const INITIAL_CENTRE: [number, number] = [-15.5, -50.5];
 const INITIAL_ZOOM = 4;
 const MIN_ZOOM = 4;
+
+/** The pane of the place names: over the risk canvas (350), under the vector layers (400). */
+export const PLACE_LABELS_PANE = "place-labels";
 
 function prefersReducedMotion(): boolean {
   // No media queries (an old browser, a test): move without animation.
@@ -68,13 +71,17 @@ interface MapStageProps {
   insets?: Insets;
   /** The tile sources; the build-time configuration unless a test supplies its own. */
   basemaps?: Record<BasemapId, BasemapConfig>;
+  /** The place-name layers, by theme; the build-time configuration unless a test supplies its own. */
+  placeLabels?: Record<Theme, PlaceLabelsConfig>;
   /** Layers drawn over the basemap: the risk layer, the insured point, the hovered cell. */
   children?: ReactNode;
 }
 
 /**
  * The stage: a Leaflet map filling its parent, with one of the two configured basemaps under the
- * veil of the theme. Layers are passed as children, so they stay when the basemap fails to load.
+ * veil of the theme and the place names of the theme over the risk layer. Layers are passed as
+ * children, so they stay when the basemap fails to load. A place-name tile that fails is only a
+ * missing label: it does not count towards the basemap notice.
  * The attribution is not drawn here: `Attribution` shows it in the timeline card.
  */
 export function MapStage({
@@ -83,6 +90,7 @@ export function MapStage({
   theme,
   insets = NO_INSETS,
   basemaps = config.basemaps,
+  placeLabels = config.placeLabels,
   children,
 }: MapStageProps) {
   const { t } = useI18n();
@@ -141,6 +149,9 @@ export function MapStage({
             },
           }}
         />
+        <Pane name={PLACE_LABELS_PANE} style={{ zIndex: 360, pointerEvents: "none" }}>
+          <TileLayer key={theme} url={placeLabels[theme].urlTemplate} maxZoom={source.maxZoom} />
+        </Pane>
         <FitRegion region={region} insets={insets} />
         {children}
       </MapContainer>

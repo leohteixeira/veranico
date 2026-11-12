@@ -118,6 +118,7 @@ function EmbedView({ regionId, theme: forced }: EmbedViewProps) {
         status={index === null ? "ready" : timeline.status}
         onRetry={timeline.retry}
         basemap={config.basemaps[basemap]}
+        placeLabels={config.placeLabels[theme]}
         synthetic={region?.synthetic === true}
       />
     </main>

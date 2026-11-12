@@ -53,6 +53,7 @@ export const ptBR: Messages = {
   "basemap.satellite": "Satélite",
   "attribution.label": "Fontes e licenças",
   "attribution.basemap": "Mapa de base:",
+  "attribution.place_names": "Nomes de lugares:",
 
   // Languages and themes
   "language.label": "Idioma",
