@@ -216,7 +216,7 @@ Other commands: `make test`, `make test-integration`, `make test-failure`, `make
 | Gate | State | Closed by |
 |---|---|---|
 | H1: real weather cubes | closed on 2026-11-11 | the owner built the three ERA5-Land cubes from Google Earth Engine (1950-01-01 to 2025-12-31, 27,759 days, 20 by 20 cells at 0.1°; [ADR 0019](specs/adrs/0019-cubes-from-earth-engine-era5-land.md)); the chunking was measured on them ([ADR 0016](specs/adrs/0016-weather-cube-chunking.md)); the live consistency test passes in the three regions within the final limits of `climate/domain/consistency.py`; the example covers were re-tuned on them; the replays were recorded on them, so `tests/unit/assistant/test_replay_fixtures.py` runs and passes. To rebuild them on another machine: a Cloud project registered for Earth Engine (noncommercial) with the Earth Engine API enabled; `cd backend && uv run --group cube earthengine authenticate` once; `EARTHENGINE_PROJECT=<project-id>` in `.env`; `make build-cube REGION=sul-de-minas`, then `REGION=sorriso` and `REGION=ribeirao-preto`; `make build-cube REGION=<id> MEASURE=1` for the chunking numbers; `cd backend && uv run pytest tests/integration/climate/test_consistency_live.py -m live -q -s`. Re-recording the replays is paid: `make record-replay LOCALE=en` and `LOCALE=pt-BR` |
-| H2: first deploy | open | the sequence below, including the real cubes in Cloud Storage (step 7) |
+| H2: first deploy | open | the sequence below, including the real cubes in Cloud Storage (step 8) |
 | H3: the author's part | open | the interface finish review decision, the portfolio page |
 
 ### Deploy (human gate H2, run by the owner)
@@ -230,21 +230,31 @@ validated and tested without credentials. The sequence:
 2. `terraform -chdir=infra/terraform init -backend-config="bucket=<state bucket>"`.
 3. The one bootstrap apply, with a variables file that is not committed:
    `terraform -chdir=infra/terraform apply -target=module.foundation -var-file=<owner file>`.
-4. Add a version to each of the five secrets, reading the value from standard input:
+   The owner file sets `project_id`, `billing_account`, `budget_amount`, `budget_currency`,
+   `alert_email`, `github_repository` and `frame_ancestors` (optionally
+   `github_repository_id` and `custom_domain`), plus `image_tag` with any placeholder such
+   as `"bootstrap"`: even a targeted apply needs every root variable, and `image_tag` has
+   no default (the deploy workflow sets the real tag). `budget_currency` must be the
+   billing account's currency,
+   `gcloud billing accounts describe <billing account> --format='value(currencyCode)'`:
+   a budget in another currency is refused.
+4. Create the five secret entries, still empty, which otherwise only the full apply creates:
+   `terraform -chdir=infra/terraform apply -target=google_secret_manager_secret.this -var-file=<owner file>`.
+5. Add a version to each of the five secrets, reading the value from standard input:
    `printf '%s' "<value>" | gcloud secrets versions add <name> --data-file=-` for
    `veranico-anthropic-api-key`, `veranico-webhook-signing-secret`,
    `veranico-cookie-signing-secret`, `veranico-allowance-code` and `veranico-ip-hash-salt`.
-5. Store the repository variables the deploy workflow reads, each with
+6. Store the repository variables the deploy workflow reads, each with
    `gh variable set <NAME> --body "<value>"`: `GCP_WORKLOAD_IDENTITY_PROVIDER` and
    `GCP_DEPLOYER_SERVICE_ACCOUNT` (Terraform outputs `federation_provider` and `deployer`),
    `GCP_PROJECT_ID`, `TF_STATE_BUCKET`, `GCP_BILLING_ACCOUNT`, `BUDGET_AMOUNT`,
    `BUDGET_CURRENCY`, `ALERT_EMAIL`, `FRAME_ANCESTORS` (a JSON list), and optionally
    `REPOSITORY_ID` and `CUSTOM_DOMAIN`.
-6. `git tag v0.1.0 && git push origin v0.1.0`, then watch
+7. `git tag v0.1.0 && git push origin v0.1.0`, then watch
    [deploy.yml](.github/workflows/deploy.yml). It authenticates through Workload Identity
    Federation (there is no key file), builds and pushes the image, applies Terraform with
    the new tag and requests `/healthz`.
-7. Put the real cubes in the data bucket, `<project>-veranico`, which the apply of step 6
+8. Put the real cubes in the data bucket, `<project>-veranico`, which the apply of step 7
    creates. The API reads them from there (`VERANICO_CLIMATE__STORE_BACKEND=gcs`) and never
    calls Earth Engine; until they are written the three regions answer `synthetic: true`.
    No command copies `backend/.data/weather` to the bucket. The route that exists is the
@@ -255,7 +265,7 @@ validated and tested without credentials. The sequence:
    per region (`sul-de-minas`, `sorriso`, `ribeirao-preto`):
    `make build-cube REGION=<id> VERANICO_CLIMATE__STORE_BACKEND=gcs VERANICO_STORAGE_BUCKET=<project>-veranico VERANICO_FIRESTORE_PROJECT=<project>`.
    This path is tested against the Cloud Storage emulator, not yet against a real bucket.
-8. Check: `curl -fsS <API URL>/healthz`; `GET <API URL>/api/v1/regions` answers
+9. Check: `curl -fsS <API URL>/healthz`; `GET <API URL>/api/v1/regions` answers
    `"synthetic": false` for the three regions; the happy path once in the browser; the
    uptime check and the budget in the console; one trace in Cloud Trace.
 

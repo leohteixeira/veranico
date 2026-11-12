@@ -22,6 +22,7 @@ locals {
   services = [
     "artifactregistry.googleapis.com",     # the image registry
     "billingbudgets.googleapis.com",       # the budget
+    "cloudbilling.googleapis.com",         # IAM policy of the billing account (deployer_budgets)
     "cloudresourcemanager.googleapis.com", # project IAM, read by Terraform
     "cloudscheduler.googleapis.com",       # the outbox sweep
     "cloudtasks.googleapis.com",           # webhook delivery
@@ -168,4 +169,7 @@ resource "google_billing_account_iam_member" "deployer_budgets" {
   billing_account_id = var.billing_account
   role               = "roles/billing.costsManager"
   member             = google_service_account.deployer.member
+
+  # Reading and writing a billing account's IAM policy goes through the Cloud Billing API.
+  depends_on = [google_project_service.enabled]
 }
