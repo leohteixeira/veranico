@@ -81,6 +81,9 @@ resource "google_cloud_run_v2_service" "api" {
   location = var.region
   ingress  = "INGRESS_TRAFFIC_ALL"
 
+  # Public without an IAM binding; see the note on public access below.
+  invoker_iam_disabled = true
+
   # The service holds no data; the configuration may replace or remove it.
   deletion_protection = false
 
@@ -157,6 +160,9 @@ resource "google_cloud_run_v2_service" "carrier" {
   location = var.region
   ingress  = "INGRESS_TRAFFIC_ALL"
 
+  # Public without an IAM binding; see the note on public access below.
+  invoker_iam_disabled = true
+
   deletion_protection = false
 
   template {
@@ -222,23 +228,24 @@ resource "google_cloud_run_v2_service" "carrier" {
   ]
 }
 
-# Both services answer the public internet. The product is public by design (SPEC 10: no
-# login). The mock carrier is reached by the API service over HTTPS like a real carrier
-# would be, and is protected by what protects a real webhook: the signature and the
+# Public access. Both services answer the public internet. The product is public by design
+# (SPEC 10: no login). The mock carrier is reached by the API service over HTTPS like a real
+# carrier would be, and is protected by what protects a real webhook: the signature and the
 # timestamp of every request (SPEC 7). The internal routes of the API are protected in the
-# application by the identity token check, not by this binding.
-resource "google_cloud_run_v2_service_iam_member" "public" {
-  for_each = {
-    api     = google_cloud_run_v2_service.api
-    carrier = google_cloud_run_v2_service.carrier
-  }
-
-  project  = each.value.project
-  location = each.value.location
-  name     = each.value.name
-  role     = "roles/run.invoker"
-  member   = "allUsers"
-}
+# application by the identity token check (VERANICO_DELIVERY__INTERNAL_AUTH=oidc), not by
+# Cloud Run IAM.
+#
+# Public access comes from `invoker_iam_disabled = true` on each service, not from a
+# `roles/run.invoker` binding for `allUsers`. The first deploy showed why: the project's
+# organization enforces domain restricted sharing (`iam.allowedPolicyMemberDomains`), which
+# refuses `allUsers` in any IAM policy (Error 400, "do not belong to a permitted customer").
+# Cloud Run documents disabling the invoker IAM check as the recommended way to make a
+# service public, and as the way to do it under that constraint
+# (https://cloud.google.com/run/docs/securing/managing-access). Setting it needs
+# run.services.setIamPolicy, which the deployer holds through roles/run.admin; an
+# organization can forbid it with `constraints/run.managed.requireInvokerIam` (not enforced
+# by default). The former `google_cloud_run_v2_service_iam_member.public` was never
+# created, because its apply failed, so it is removed without a `removed` block.
 
 # Optional custom domain for the API service (SPEC 17: the Cloud Run address comes first).
 resource "google_cloud_run_domain_mapping" "api" {

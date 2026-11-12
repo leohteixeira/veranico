@@ -171,6 +171,20 @@ run "another_region_is_rejected" {
   expect_failures = [var.region]
 }
 
+# Public through the disabled invoker check, never through an `allUsers` binding: the
+# organization's domain restricted sharing refuses `allUsers` (see services.tf).
+run "services_are_public_without_an_all_users_binding" {
+  command = plan
+
+  assert {
+    condition = alltrue([
+      for service in [google_cloud_run_v2_service.api, google_cloud_run_v2_service.carrier] :
+      service.invoker_iam_disabled == true
+    ])
+    error_message = "Both services must be public through invoker_iam_disabled = true."
+  }
+}
+
 run "bucket_is_private" {
   command = plan
 

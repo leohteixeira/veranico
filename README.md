@@ -222,7 +222,10 @@ Other commands: `make test`, `make test-integration`, `make test-failure`, `make
 ### Deploy (human gate H2, run by the owner)
 
 Nothing has been deployed. The configuration in [infra/terraform](infra/terraform) is
-validated and tested without credentials. The sequence:
+validated and tested without credentials. Both services are public through Cloud Run's
+disabled invoker IAM check rather than an `allUsers` binding, which an organization with
+domain restricted sharing refuses; an organization that enforces
+`constraints/run.managed.requireInvokerIam` would block that too. The sequence:
 
 1. Authenticate and create the state bucket:
    `gcloud auth login`, then
