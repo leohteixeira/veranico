@@ -58,8 +58,9 @@ async def test_no_address_and_no_secret_in_any_log_record_or_document(
     visitor_v6 = facade.visitor(ADDRESS_V6, "a-wrong-code")
     await facade.allowance(visitor)
     await facade.allowance(visitor_v6)
-    admissions = [await facade.admit_message(visitor, new_conversation=False) for _ in range(61)]
-    assert [admission.allowed for admission in admissions] == [True] * 60 + [False]
+    # Conversations run out first: the code raises them, while the 60 messages are the same.
+    admissions = [await facade.admit_message(visitor, new_conversation=True) for _ in range(4)]
+    assert [admission.allowed for admission in admissions] == [True] * 3 + [False]
     assert (await facade.admit_message(boosted, new_conversation=True)).allowed
     assert (await facade.admit_message(visitor_v6, new_conversation=True)).allowed
     await facade.record_spend(
