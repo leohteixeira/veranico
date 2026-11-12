@@ -144,7 +144,10 @@ def test_each_figure_is_the_value_object_of_the_quote_unchanged(build: Any) -> N
     assert found["created_at"] == DateFigure(quote.created_at)
     assert found["quote_id"] == TextFigure(quote.quote_id)
     assert found["location"] == TextFigure(quote.location.label)
-    assert found["dataset_id"] == TextFigure(quote.dataset_id)
+    # The dataset by its kind in words, as the Quote tab names it, never the raw id.
+    kind = quote.dataset_id.split(":", 1)[0]
+    assert kind in {"cube", "point"}
+    assert found["dataset_id"] == CodedFigure(Coded(code=f"dataset.{kind}"))
     assert found["index_type"] == CodedFigure(Coded(code=f"index_type.{index.index_type}"))
     assert found["method"] == CodedFigure(Coded(code=f"method.{simulation.method}"))
 
@@ -235,7 +238,7 @@ def test_a_quote_priced_on_synthetic_data_carries_the_synthetic_notice() -> None
 @pytest.mark.parametrize("build", [rainfall_quote, dry_spell_quote])
 def test_the_content_holds_no_translated_text_and_no_formatted_number(build: Any) -> None:
     quote: QuoteView = build()
-    literal = {quote.quote_id, quote.location.label, quote.dataset_id, quote.location.admin_region}
+    literal = {quote.quote_id, quote.location.label, quote.location.admin_region}
     window = {quote.cover.index.window.start, quote.cover.index.window.end}
     rates = {
         quote.priced.backtest.trigger_frequency,

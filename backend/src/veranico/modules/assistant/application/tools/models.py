@@ -30,7 +30,10 @@ _DEFAULT_SIMULATION = SimulationOptions()
 
 MonthDay = Annotated[
     str,
-    Field(pattern=r"^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$", description="Month and day, MM-DD."),
+    Field(
+        pattern=r"^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$",
+        description="Month and day, MM-DD. Write it for the user as a date in words.",
+    ),
 ]
 Latitude = Annotated[float, Field(ge=-90, le=90, description="Latitude in decimal degrees.")]
 Longitude = Annotated[float, Field(ge=-180, le=180, description="Longitude in decimal degrees.")]
@@ -39,7 +42,8 @@ LimitCents = Annotated[
     Field(
         gt=0,
         description=(
-            "Cover limit in integer BRL centavos: R$ 300,000 is 30000000. "
+            "Cover limit in integer BRL centavos: R$ 300,000 is 30000000. Centavos are for this "
+            "argument only: write the limit to the user in reais, never in centavos. "
             "Only a limit the user stated, never a placeholder: without one, ask the user "
             "instead of calling the tool."
         ),

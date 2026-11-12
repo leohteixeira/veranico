@@ -222,6 +222,39 @@ const AUDIT_REQUESTED: Schemas["AuditEntry"] = {
   action: { code: "audit.submission_requested", params: { carrier_id: CARRIER_ID } },
 };
 
+/**
+ * What the webhook relay adds to the audit trail for a delivery state: the carrier answers the
+ * first attempt with 503 and the second with 200 and its receipt, as the local carrier does.
+ */
+export function webhookAudit(status: DeliveryStatus): Schemas["AuditEntry"][] {
+  const attempt = (number: number, statusCode: number, at: string): Schemas["AuditEntry"] => ({
+    at,
+    actor: "system",
+    action: {
+      code: "audit.webhook_attempt",
+      params: { attempt: number, status_code: statusCode, duration_ms: 12 },
+    },
+  });
+  const first = attempt(1, 503, "2026-11-11T23:00:01Z");
+  switch (status) {
+    case "not_started":
+      return [];
+    case "delivering":
+    case "abandoned":
+      return [first];
+    case "delivered":
+      return [
+        first,
+        attempt(2, 200, "2026-11-11T23:00:03Z"),
+        {
+          at: "2026-11-11T23:00:03Z",
+          actor: "carrier",
+          action: { code: "audit.receipt_recorded", params: { receipt_id: RECEIPT_ID } },
+        },
+      ];
+  }
+}
+
 export function submission(
   status: DeliveryStatus = "not_started",
   decided = false,

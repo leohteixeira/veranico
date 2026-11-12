@@ -127,6 +127,11 @@ test("happy path: example, quote, season view, approval, delivery [R-16.7-2] [R-
   await expect(approved).toBeVisible();
   await expect(approved.locator('[data-actor="human"]')).toHaveText("You");
   await expect(approved).toContainText(DECISION_NOTE);
+  // The delivery is in the same trail without a reload: the failed attempt, the retry, the receipt.
+  await expect(page.locator('.audit__entry[data-action="audit.webhook_attempt"]')).toHaveCount(2);
+  await expect(page.locator('.audit__entry[data-action="audit.receipt_recorded"]')).toContainText(
+    RECEIPT_ID,
+  );
   await approved.scrollIntoViewIfNeeded();
 
   // The weather is the recording's ERA5-Land cube: no synthetic label, and the reanalysis is credited.

@@ -14,6 +14,7 @@ import {
   quoteView,
   seasonSeries,
   submission,
+  webhookAudit,
   type DeliveryStatus,
 } from "../fixtures/bodies";
 import {
@@ -162,7 +163,10 @@ function deliveryStatus(state: MockState): DeliveryStatus {
   return state.deliveryReads === 2 ? "delivering" : "delivered";
 }
 
-/** The audit trail once a human decided: the pending trail, then the decision with its note. */
+/**
+ * The audit trail once a human decided: the pending trail, the decision with its note, then the
+ * webhook attempts the delivery has made so far.
+ */
 function decidedAudit(state: MockState, approved: boolean): Schemas["AuditEntry"][] {
   return [
     ...pendingQuote(state.locale).audit,
@@ -172,6 +176,7 @@ function decidedAudit(state: MockState, approved: boolean): Schemas["AuditEntry"
       action: { code: approved ? "audit.approved" : "audit.rejected", params: {} },
       note: state.decisionNote,
     },
+    ...(approved ? webhookAudit(deliveryStatus(state)) : []),
   ];
 }
 

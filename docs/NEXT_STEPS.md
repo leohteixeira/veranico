@@ -53,6 +53,7 @@ Backend:
 * **Plain-language answers from the scripted model client.** `make dev` without a key still writes the source code, the simulation method value and the submission id; only the live model's prompt (v4) was tightened.
 * **A provenance label that names the download path.** The frozen source value `era5-land/cds` predates ADR 0019 (cubes from Google Earth Engine); a new value needs a contract change.
 * **401 on the internal routes.** A missing or wrong service token still answers 403 `forbidden`; only the public API distinguishes 401 from 403.
+* **Grid point coordinates on the term sheet.** The stored quote carries the dataset id but not the grid point, so the term sheet names the dataset kind only; printing the coordinates needs the grid point on `QuoteView` (a contract change).
 * **The term sheet in the compose smoke test.** The clean-copy smoke test checks health only; rendering a term sheet would have caught the unwritable data root.
 
 ## Not in this list

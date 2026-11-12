@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { ApiClientProvider, createApiClient } from "../../api/client";
 import type { components } from "../../api/schema";
 import { DELIVERY_POLL_MS } from "../../hooks/useApprovals";
+import { useQuote } from "../../hooks/useQuote";
 import { I18nProvider } from "../../i18n";
 import { formatMoney, formatRate } from "../../i18n/format";
 import { createMockState, handle, type MockState } from "../../test/mocks/handlers";
@@ -92,6 +93,24 @@ function renderWithApi(children: ReactNode, transport?: (state: MockState) => Tr
 
 function field(name: string, root: ParentNode = document): string {
   return plain(root.querySelector(`[data-field="${name}"] dd`)?.textContent);
+}
+
+function attemptLines(): string[] {
+  return [...document.querySelectorAll('[data-field="attempt"]')].map((item) =>
+    plain(item.textContent),
+  );
+}
+
+/** What the Quote tab reads of the quote: its status and the codes of its audit trail. */
+function QuoteProbe() {
+  const quote = useQuote(QUOTE_ID);
+  return (
+    <output data-testid="quote">
+      {quote.data === undefined
+        ? ""
+        : [quote.data.status, ...quote.data.audit.map((entry) => entry.action.code)].join(" ")}
+    </output>
+  );
 }
 
 function count(calls: readonly string[], call: string): number {
@@ -445,9 +464,14 @@ describe("approvals tab [R-12.3-4]", () => {
     });
     await waitFor(() => {
       expect(document.querySelector('[data-delivery="delivered"]')).toHaveTextContent(
-        `Delivered. The carrier's receipt is ${RECEIPT_ID}.`,
+        `Delivered on attempt 2. The carrier's receipt is ${RECEIPT_ID}.`,
       );
     });
+    // The attempt history stays on the card after the delivery ends: the 503, then the retry.
+    expect(attemptLines()).toEqual([
+      "Webhook attempt 1: the carrier answered 503",
+      "Webhook attempt 2: the carrier answered 200",
+    ]);
     expect(screen.getByText("Delivered")).toBeVisible();
     expect(state.stage).toBe("approved");
     // Delivered is final: the polling stops.
@@ -456,6 +480,82 @@ describe("approvals tab [R-12.3-4]", () => {
       await vi.advanceTimersByTimeAsync(DELIVERY_POLL_MS * 3);
     });
     expect(state.deliveryReads).toBe(reads);
+  });
+
+  it("delivery_progress_refreshes_the_quote_in_the_same_session [R-12.3-3] [R-12.4-9]", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    renderWithApi(
+      <>
+        <ApprovalsTab onOpenQuote={vi.fn()} />
+        <QuoteProbe />
+      </>,
+      (mock) => {
+        mock.stage = "pending";
+        return (request) => handle(request, mock);
+      },
+    );
+    const quote = () => screen.getByTestId("quote").textContent ?? "";
+    await waitFor(() => {
+      expect(quote()).toMatch(/^pending_approval /);
+    });
+    fireEvent.click(await screen.findByRole("button", { name: "Approve" }));
+    await waitFor(() => {
+      expect(quote()).toMatch(/^approved .*audit\.approved$/);
+    });
+
+    // The first attempt fails: the quote's audit trail shows it while the delivery goes on, and
+    // the card lists it under the progress line.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(DELIVERY_POLL_MS + 50);
+    });
+    await waitFor(() => {
+      expect(quote()).toMatch(/^approved .*audit\.webhook_attempt$/);
+    });
+    await waitFor(() => {
+      expect(attemptLines()).toEqual(["Webhook attempt 1: the carrier answered 503"]);
+    });
+
+    // The receipt: the quote is submitted, with the retry and the receipt in its audit trail,
+    // without a reload.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(DELIVERY_POLL_MS + 50);
+    });
+    await waitFor(() => {
+      expect(quote()).toBe(
+        [
+          "submitted",
+          "audit.quote_created",
+          "audit.term_sheet_rendered",
+          "audit.submission_requested",
+          "audit.approved",
+          "audit.webhook_attempt",
+          "audit.webhook_attempt",
+          "audit.receipt_recorded",
+        ].join(" "),
+      );
+    });
+    expect(document.querySelector('[data-delivery="delivered"]')).not.toBeNull();
+  });
+
+  it("a_card_opened_after_delivery_shows_the_attempt_history [R-12.4-9]", async () => {
+    const { state } = renderWithApi(<ApprovalsTab onOpenQuote={vi.fn()} />, (mock) => {
+      mock.stage = "approved";
+      mock.deliveryReads = 2; // the next read of the queue finds the delivery done
+      return (request) => handle(request, mock);
+    });
+    expect(state.stage).toBe("approved");
+    await waitFor(() => {
+      expect(document.querySelector('[data-delivery="delivered"]')).not.toBeNull();
+    });
+    await waitFor(() => {
+      expect(attemptLines()).toEqual([
+        "Webhook attempt 1: the carrier answered 503",
+        "Webhook attempt 2: the carrier answered 200",
+      ]);
+    });
+    expect(document.querySelector('[data-delivery="delivered"]')).toHaveTextContent(
+      `Delivered on attempt 2. The carrier's receipt is ${RECEIPT_ID}.`,
+    );
   });
 
   it("rejected_closes_the_item [R-12.4-10]", async () => {
@@ -479,6 +579,9 @@ describe("approvals tab [R-12.3-4]", () => {
       if (is(request, "POST", `/api/v1/approvals/${SUBMISSION_ID}/redeliver`)) {
         redelivered = true;
         return Promise.resolve(json(approvalView("approved", "delivered")));
+      }
+      if (!is(request, "GET", "/api/v1/approvals")) {
+        return Promise.resolve(json(problem("not_found", 404), 404));
       }
       return Promise.resolve(
         json([approvalView("approved", redelivered ? "delivered" : "abandoned")]),
@@ -505,6 +608,9 @@ describe("approvals tab [R-12.3-4]", () => {
         // Another tab decided first.
         decided = true;
         return Promise.resolve(json(problem("invalid_state", 409), 409));
+      }
+      if (!is(request, "GET", "/api/v1/approvals")) {
+        return Promise.resolve(json(problem("not_found", 404), 404));
       }
       return Promise.resolve(
         json([decided ? approvalView("approved", "delivered") : approvalView()]),

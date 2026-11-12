@@ -312,7 +312,8 @@ describe("conversation card [R-12.1-3]", () => {
 
     fireEvent.click(
       screen.getByRole("button", {
-        name: `${formatRate(pricedCover().premium.rate_on_line, "en")}: show its source in the Quote tab`,
+        // The recorded answer writes the rate at two decimals (prompt v5); the linker accepts 0 to 2.
+        name: `${formatRate(pricedCover().premium.rate_on_line, "en", 2)}: show its source in the Quote tab`,
       }),
     );
     expect(props.onOpen).toHaveBeenLastCalledWith("quote", "rate_on_line");
@@ -502,6 +503,79 @@ describe("conversation card [R-12.1-3]", () => {
     rerender({ session: cut });
     expect(note()).toHaveTextContent(
       "The connection closed before the answer finished. Completed before the interruption: Resolve the location, Load the weather history.",
+    );
+  });
+
+  it("restored_conversation_ending_with_the_visitors_message_says_the_answer_was_cut [R-12.4-2]", () => {
+    // A reload while the agent was answering: the server stored the message, and no part of the
+    // cut answer (by design), so the restored conversation ends with the visitor's message.
+    const lost = reduce([
+      {
+        type: "restored",
+        conversation: {
+          conversation_id: "cv-reloaded",
+          messages: [
+            {
+              message_id: "m-0001",
+              role: "user",
+              created_at: "2026-11-10T14:05:00Z",
+              text: "Coffee farm near Três Pontas, MG.",
+              tools: [],
+              flagged: [],
+            },
+          ],
+        },
+      },
+    ]);
+    const note = () => document.querySelector('[data-note="answer-lost"]');
+    const { rerender } = renderCard({ session: lost });
+    expect(note()).toHaveTextContent("The answer was interrupted. Send the message again.");
+    expect(note()).toHaveAttribute("role", "status");
+    expect(userTexts()).toEqual(["Coffee farm near Três Pontas, MG."]);
+    // The composer stays usable, so the visitor can send the message again.
+    const input = screen.getByRole("textbox", { name: "Message to the agent" });
+    expect(input).not.toHaveAttribute("readonly");
+    fireEvent.change(input, { target: { value: "Coffee farm near Três Pontas, MG." } });
+    expect(screen.getByRole("button", { name: "Send" })).toBeEnabled();
+
+    // Sending again replaces the notice with the turn in progress, and an answer ends it.
+    rerender({ session: sessionReducer(lost, { type: "user_sent", text: "Again" }) });
+    expect(note()).toBeNull();
+    rerender({ session: liveSession(1) });
+    expect(note()).toBeNull();
+    // A replay never shows it, even between a recorded request and its answer.
+    rerender({
+      session: reduce([{ type: "user_message", data: { text: "Recorded request" } }], "replay"),
+    });
+    expect(note()).toBeNull();
+  });
+
+  it("restored_answer_cut_notice_is_in_portuguese [R-13-1]", () => {
+    renderCard(
+      {
+        session: reduce([
+          {
+            type: "restored",
+            conversation: {
+              conversation_id: "cv-reloaded",
+              messages: [
+                {
+                  message_id: "m-0001",
+                  role: "user",
+                  created_at: "2026-11-10T14:05:00Z",
+                  text: "Fazenda de café perto de Três Pontas, MG.",
+                  tools: [],
+                  flagged: [],
+                },
+              ],
+            },
+          },
+        ]),
+      },
+      "pt-BR",
+    );
+    expect(document.querySelector('[data-note="answer-lost"]')).toHaveTextContent(
+      "A resposta foi interrompida. Envie a mensagem de novo.",
     );
   });
 

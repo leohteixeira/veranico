@@ -68,7 +68,7 @@ def test_prompt_has_the_seven_numbered_rules() -> None:
     assert numbered[2].startswith(
         "Never state a number that did not come from a tool result in this conversation."
     )
-    assert "Always reference the `quote_id` when presenting prices." in numbered[2]
+    assert "Always reference the quote by its id when presenting prices" in numbered[2]
     assert numbered[3].startswith("Never claim a submission was approved or sent.")
     assert "only request it" in numbered[3]
     assert numbered[4].startswith("State the main assumptions behind each quote")
@@ -89,7 +89,7 @@ def test_prompt_keeps_internal_identifiers_codes_and_paths_out_of_the_answer() -
     # The pre-deploy campaign found dataset ids, carrier ids, index-type values and API paths
     # in the recorded answers. The quote id stays: rule 2 asks for it.
     text = PROMPT.text
-    assert "The `quote_id` is the only identifier you write" in text
+    assert "The quote id (Q-7K3M9P) is the only identifier you write" in text
     for kind in ("a dataset id", "a carrier id", "a URL or an API path"):
         assert kind in text
     assert "Describe an index type in words" in text
@@ -103,7 +103,7 @@ def test_prompt_never_lets_synthetic_figures_pass_as_real_history() -> None:
 
 @pytest.mark.req("R-9.3-8")
 def test_version_comes_from_the_file_name() -> None:
-    assert PROMPT.version == "v4"
+    assert PROMPT.version == "v5"
     assert PROMPT.text.startswith("You are the cover structuring agent of Veranico.")
 
 
@@ -132,7 +132,7 @@ def test_a_directory_without_a_prompt_fails_loudly(tmp_path: Path) -> None:
 def test_prompt_text_matches_the_checksum_recorded_for_its_version() -> None:
     # An edit without a new version fails here: add `system.v<N+1>.md` and its checksum instead.
     assert PROMPT.sha256 == PROMPT_SHA256[PROMPT.version]
-    assert set(PROMPT_SHA256) == {"v1", "v2", "v3", "v4"}
+    assert set(PROMPT_SHA256) == {"v1", "v2", "v3", "v4", "v5"}
 
 
 @pytest.mark.req("R-9.3-8")
@@ -170,6 +170,32 @@ def test_the_prompt_closes_what_the_full_runs_on_v2_showed() -> None:
     assert "run through `backtest_index` in the same turn" in PROMPT.text
     # The state the user gave was dropped from the place name, which made it ambiguous.
     assert "with the state when the user gave one" in numbered[6]
+
+
+@pytest.mark.req("R-9.3-2", "R-9.3-7")
+def test_the_prompt_closes_what_the_second_pre_deploy_campaign_showed() -> None:
+    numbered = rules()
+    text = PROMPT.text
+
+    # "quote_id Q-P6PR06": the field name was written next to the id.
+    assert '"quote Q-7K3M9P" in English and "cotação Q-7K3M9P" in Portuguese' in numbered[2]
+    assert "never write the field name `quote_id`" in numbered[2]
+    # Brazilian money in English answers; raw centavos; "R$ 150 mm".
+    assert "in an English answer 1234567 is R$ 12,345.67" in text
+    assert "in a Portuguese answer it is R$ 12.345,67" in text
+    assert "Never write the raw centavo number or the word centavos" in text
+    assert "R$ is for money only, never for millimetres or days." in text
+    # Raw fractions in brackets next to a percentage, and raw p-values.
+    assert "Never write the fraction itself, not even in brackets" in text
+    assert "Describe the trend in words" in text
+    assert "round it to three decimal places" in text
+    # Windows written as "09-01 to 10-31".
+    assert "Never write a window in the MM-DD form." in text
+    assert "1 September to 31 October" in text
+    # "aba Quote" and "aba Approvals" in Portuguese answers: the PT interface names the tabs
+    # Cotação and Aprovações (frontend/src/i18n/pt-BR.ts, tab.quote and tab.approvals).
+    assert "the aba Cotação and the aba Aprovações in Portuguese" in text
+    assert "the Aprovações tab in Portuguese" in numbered[3]
 
 
 def user(seq: int, turn: int, text: str) -> UserEntry:

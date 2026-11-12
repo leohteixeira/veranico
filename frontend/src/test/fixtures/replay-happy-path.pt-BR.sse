@@ -1,14 +1,14 @@
 event: started
-data: {"conversation_id":"ec943dc3155f4d5ab197d043a0070550","message_id":"217335cde851469e83193cc81d1faf84"}
+data: {"conversation_id":"79ac997497314555b0ff118071184b3f","message_id":"0d04ebe5ad7e4395a80e9f9a7dec3364"}
 
 event: user_message
 data: {"text":"Fazenda perto de Três Pontas, MG. O cliente teme pouca chuva de 1 de set. a 31 de out.. Pagar quando a chuva ficar abaixo de 105,0 mm, integral em 70,0 mm. Limite de R$ 300.000,00."}
 
 event: text_delta
-data: {"text":"Vou"}
+data: {"text":"V"}
 
 event: text_delta
-data: {"text":" local"}
+data: {"text":"ou local"}
 
 event: text_delta
 data: {"text":"izar a fazenda prim"}
@@ -17,196 +17,136 @@ event: text_delta
 data: {"text":"eiro."}
 
 event: tool_started
-data: {"call_id":"toolu_01PgsatBEsPm6KTRAfMbCiWB","tool":"resolve_location","arguments":{"query":"Três Pontas, MG"}}
+data: {"call_id":"toolu_013JaW6z9MQbF5tC8AFzpmgP","tool":"resolve_location","arguments":{"query":"Três Pontas, MG"}}
 
 event: tool_finished
-data: {"call_id":"toolu_01PgsatBEsPm6KTRAfMbCiWB","tool":"resolve_location","status":"ok","duration_ms":0,"summary":{"code":"tool.resolve_location","params":{"label":"Três Pontas, MG","lat":-21.36667,"lon":-45.5125}},"result":{"label":"Três Pontas, MG","lat":-21.36667,"lon":-45.5125,"h3_cell":"86a8a8887ffffff","admin_region":"Minas Gerais","country_code":"BR"},"error":null}
-
-event: text_delta
-data: {"text":"\n\n"}
-
-event: text_delta
-data: {"text":"Local"}
-
-event: text_delta
-data: {"text":"izei"}
-
-event: text_delta
-data: {"text":" Três Pontas, MG"}
-
-event: text_delta
-data: {"text":". Agora v"}
-
-event: text_delta
-data: {"text":"ou carregar o"}
-
-event: text_delta
-data: {"text":" histórico de ch"}
-
-event: text_delta
-data: {"text":"uva do"}
-
-event: text_delta
-data: {"text":" ponto."}
+data: {"call_id":"toolu_013JaW6z9MQbF5tC8AFzpmgP","tool":"resolve_location","status":"ok","duration_ms":0,"summary":{"code":"tool.resolve_location","params":{"label":"Três Pontas, MG","lat":-21.36667,"lon":-45.5125}},"result":{"label":"Três Pontas, MG","lat":-21.36667,"lon":-45.5125,"h3_cell":"86a8a8887ffffff","admin_region":"Minas Gerais","country_code":"BR"},"error":null}
 
 event: tool_started
-data: {"call_id":"toolu_01QswG8mZZagqbyxTutZGF3W","tool":"get_weather_history","arguments":{"lat":-21.36667,"lon":-45.5125}}
+data: {"call_id":"toolu_01NjtiCDuivHxQTXKHMV4Ccj","tool":"get_weather_history","arguments":{"lat":-21.36667,"lon":-45.5125}}
 
 event: tool_finished
-data: {"call_id":"toolu_01QswG8mZZagqbyxTutZGF3W","tool":"get_weather_history","status":"ok","duration_ms":0,"summary":{"code":"tool.get_weather_history","params":{"dataset_id":"cube:sul-de-minas:9:10","first_year":1950,"last_year":2025,"source":"era5-land/cds"}},"result":{"dataset_id":"cube:sul-de-minas:9:10","kind":"cube","region_id":"sul-de-minas","grid_point":{"lat":-21.4,"lon":-45.5},"first_year":1950,"last_year":2025,"days":27759,"missing_days":0,"source":"era5-land/cds"},"error":null}
-
-event: text_delta
-data: {"text":"\n\n"}
-
-event: text_delta
-data: {"text":"Os"}
-
-event: text_delta
-data: {"text":" dados são "}
-
-event: text_delta
-data: {"text":"ERA5-Land ("}
-
-event: text_delta
-data: {"text":"re"}
-
-event: text_delta
-data: {"text":"an"}
-
-event: text_delta
-data: {"text":"álise real), de"}
-
-event: text_delta
-data: {"text":" 1950 a 2025"}
-
-event: text_delta
-data: {"text":", sem dias faltant"}
-
-event: text_delta
-data: {"text":"es. Agora r"}
-
-event: text_delta
-data: {"text":"odo o backtest com a"}
-
-event: text_delta
-data: {"text":" est"}
-
-event: text_delta
-data: {"text":"rutura inform"}
-
-event: text_delta
-data: {"text":"ada:"}
-
-event: text_delta
-data: {"text":" ch"}
-
-event: text_delta
-data: {"text":"uva abaixo de "}
-
-event: text_delta
-data: {"text":"105,0 mm, p"}
-
-event: text_delta
-data: {"text":"agamento integral em 70"}
-
-event: text_delta
-data: {"text":",0 mm, jan"}
-
-event: text_delta
-data: {"text":"ela de 09"}
-
-event: text_delta
-data: {"text":"-"}
-
-event: text_delta
-data: {"text":"01"}
-
-event: text_delta
-data: {"text":" a 10"}
-
-event: text_delta
-data: {"text":"-31 "}
-
-event: text_delta
-data: {"text":"e limite de R$ "}
-
-event: text_delta
-data: {"text":"300.000,00."}
+data: {"call_id":"toolu_01NjtiCDuivHxQTXKHMV4Ccj","tool":"get_weather_history","status":"ok","duration_ms":0,"summary":{"code":"tool.get_weather_history","params":{"dataset_id":"cube:sul-de-minas:9:10","first_year":1950,"last_year":2025,"source":"era5-land/cds"}},"result":{"dataset_id":"cube:sul-de-minas:9:10","kind":"cube","region_id":"sul-de-minas","grid_point":{"lat":-21.4,"lon":-45.5},"first_year":1950,"last_year":2025,"days":27759,"missing_days":0,"source":"era5-land/cds"},"error":null}
 
 event: tool_started
-data: {"call_id":"toolu_01XmSctRHgsFSs9tVBygHjrr","tool":"backtest_index","arguments":{"index_type":"rainfall_below","window_start":"09-01","window_end":"10-31","trigger":105,"exit":70,"dataset_id":"cube:sul-de-minas:9:10","limit_cents":30000000}}
+data: {"call_id":"toolu_01VFgrmGosiroQknCeg8qZsm","tool":"backtest_index","arguments":{"index_type":"rainfall_below","window_start":"09-01","window_end":"10-31","trigger":105,"exit":70,"dataset_id":"cube:sul-de-minas:9:10","limit_cents":30000000}}
 
 event: tool_finished
-data: {"call_id":"toolu_01XmSctRHgsFSs9tVBygHjrr","tool":"backtest_index","status":"ok","duration_ms":68,"summary":{"code":"tool.backtest_index","params":{"seasons_used":76,"trigger_frequency_rate":"0.144737"}},"result":{"dataset_id":"cube:sul-de-minas:9:10","cover":{"index":{"index_type":"rainfall_below","window":{"start":"09-01","end":"10-31"},"trigger":105,"exit":70},"limit":{"amount_cents":30000000,"currency":"BRL"}},"seasons":[{"season":1950,"index_value":291,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1951,"index_value":169.1,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1952,"index_value":206.7,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1953,"index_value":363.7,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1954,"index_value":256.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1955,"index_value":154,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1956,"index_value":173.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1957,"index_value":183.3,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1958,"index_value":117.3,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1959,"index_value":100.3,"payout":{"amount_cents":4001934,"currency":"BRL"}},{"season":1960,"index_value":69.2,"payout":{"amount_cents":30000000,"currency":"BRL"}},{"season":1961,"index_value":41.1,"payout":{"amount_cents":30000000,"currency":"BRL"}},{"season":1962,"index_value":323.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1963,"index_value":109.4,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1964,"index_value":240.2,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1965,"index_value":234.4,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1966,"index_value":230.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1967,"index_value":138.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1968,"index_value":115.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1969,"index_value":160.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1970,"index_value":171.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1971,"index_value":203.3,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1972,"index_value":185.3,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1973,"index_value":316.7,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1974,"index_value":126.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1975,"index_value":158,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1976,"index_value":291.1,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1977,"index_value":205.7,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1978,"index_value":239.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1979,"index_value":255.4,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1980,"index_value":137.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1981,"index_value":245.1,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1982,"index_value":276.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1983,"index_value":473.1,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1984,"index_value":177.3,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1985,"index_value":222.7,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1986,"index_value":94.3,"payout":{"amount_cents":9147791,"currency":"BRL"}},{"season":1987,"index_value":233.3,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1988,"index_value":225.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1989,"index_value":199.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1990,"index_value":181.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1991,"index_value":223.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1992,"index_value":316.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1993,"index_value":211.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1994,"index_value":134.4,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1995,"index_value":304.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1996,"index_value":340.4,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1997,"index_value":206.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1998,"index_value":200.1,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1999,"index_value":80.6,"payout":{"amount_cents":20951944,"currency":"BRL"}},{"season":2000,"index_value":196.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2001,"index_value":177.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2002,"index_value":171.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2003,"index_value":141.1,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2004,"index_value":194.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2005,"index_value":200.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2006,"index_value":197.3,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2007,"index_value":93.5,"payout":{"amount_cents":9864969,"currency":"BRL"}},{"season":2008,"index_value":193.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2009,"index_value":274,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2010,"index_value":185.5,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2011,"index_value":163.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2012,"index_value":91.6,"payout":{"amount_cents":11513957,"currency":"BRL"}},{"season":2013,"index_value":170.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2014,"index_value":63.9,"payout":{"amount_cents":30000000,"currency":"BRL"}},{"season":2015,"index_value":217.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2016,"index_value":155.5,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2017,"index_value":100.8,"payout":{"amount_cents":3624239,"currency":"BRL"}},{"season":2018,"index_value":212.1,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2019,"index_value":116.3,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2020,"index_value":82.3,"payout":{"amount_cents":19426977,"currency":"BRL"}},{"season":2021,"index_value":218.4,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2022,"index_value":173.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2023,"index_value":172.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2024,"index_value":162.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2025,"index_value":104,"payout":{"amount_cents":857161,"currency":"BRL"}}],"seasons_used":76,"seasons_excluded":[],"trigger_frequency":"0.144737","burn_cost":{"amount_cents":2228802,"currency":"BRL"},"max_payout":{"amount_cents":30000000,"currency":"BRL"},"max_payout_season":1960,"trend":{"slope_per_decade":-6.1,"p_value":"0.125913","significant":false},"warnings":[]},"error":null}
+data: {"call_id":"toolu_01VFgrmGosiroQknCeg8qZsm","tool":"backtest_index","status":"ok","duration_ms":63,"summary":{"code":"tool.backtest_index","params":{"seasons_used":76,"trigger_frequency_rate":"0.144737"}},"result":{"dataset_id":"cube:sul-de-minas:9:10","cover":{"index":{"index_type":"rainfall_below","window":{"start":"09-01","end":"10-31"},"trigger":105,"exit":70},"limit":{"amount_cents":30000000,"currency":"BRL"}},"seasons":[{"season":1950,"index_value":291,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1951,"index_value":169.1,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1952,"index_value":206.7,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1953,"index_value":363.7,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1954,"index_value":256.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1955,"index_value":154,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1956,"index_value":173.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1957,"index_value":183.3,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1958,"index_value":117.3,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1959,"index_value":100.3,"payout":{"amount_cents":4001934,"currency":"BRL"}},{"season":1960,"index_value":69.2,"payout":{"amount_cents":30000000,"currency":"BRL"}},{"season":1961,"index_value":41.1,"payout":{"amount_cents":30000000,"currency":"BRL"}},{"season":1962,"index_value":323.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1963,"index_value":109.4,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1964,"index_value":240.2,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1965,"index_value":234.4,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1966,"index_value":230.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1967,"index_value":138.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1968,"index_value":115.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1969,"index_value":160.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1970,"index_value":171.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1971,"index_value":203.3,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1972,"index_value":185.3,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1973,"index_value":316.7,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1974,"index_value":126.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1975,"index_value":158,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1976,"index_value":291.1,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1977,"index_value":205.7,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1978,"index_value":239.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1979,"index_value":255.4,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1980,"index_value":137.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1981,"index_value":245.1,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1982,"index_value":276.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1983,"index_value":473.1,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1984,"index_value":177.3,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1985,"index_value":222.7,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1986,"index_value":94.3,"payout":{"amount_cents":9147791,"currency":"BRL"}},{"season":1987,"index_value":233.3,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1988,"index_value":225.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1989,"index_value":199.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1990,"index_value":181.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1991,"index_value":223.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1992,"index_value":316.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1993,"index_value":211.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1994,"index_value":134.4,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1995,"index_value":304.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1996,"index_value":340.4,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1997,"index_value":206.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1998,"index_value":200.1,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1999,"index_value":80.6,"payout":{"amount_cents":20951944,"currency":"BRL"}},{"season":2000,"index_value":196.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2001,"index_value":177.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2002,"index_value":171.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2003,"index_value":141.1,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2004,"index_value":194.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2005,"index_value":200.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2006,"index_value":197.3,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2007,"index_value":93.5,"payout":{"amount_cents":9864969,"currency":"BRL"}},{"season":2008,"index_value":193.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2009,"index_value":274,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2010,"index_value":185.5,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2011,"index_value":163.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2012,"index_value":91.6,"payout":{"amount_cents":11513957,"currency":"BRL"}},{"season":2013,"index_value":170.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2014,"index_value":63.9,"payout":{"amount_cents":30000000,"currency":"BRL"}},{"season":2015,"index_value":217.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2016,"index_value":155.5,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2017,"index_value":100.8,"payout":{"amount_cents":3624239,"currency":"BRL"}},{"season":2018,"index_value":212.1,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2019,"index_value":116.3,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2020,"index_value":82.3,"payout":{"amount_cents":19426977,"currency":"BRL"}},{"season":2021,"index_value":218.4,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2022,"index_value":173.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2023,"index_value":172.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2024,"index_value":162.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2025,"index_value":104,"payout":{"amount_cents":857161,"currency":"BRL"}}],"seasons_used":76,"seasons_excluded":[],"trigger_frequency":"0.144737","burn_cost":{"amount_cents":2228802,"currency":"BRL"},"max_payout":{"amount_cents":30000000,"currency":"BRL"},"max_payout_season":1960,"trend":{"slope_per_decade":-6.1,"p_value":"0.125913","significant":false},"warnings":[]},"error":null}
 
 event: text_delta
 data: {"text":"\n\n"}
 
 event: text_delta
-data: {"text":"Com"}
+data: {"text":"Sim"}
 
 event: text_delta
-data: {"text":" a est"}
+data: {"text":"ulei"}
 
 event: text_delta
-data: {"text":"rutura inform"}
+data: {"text":" o g"}
 
 event: text_delta
-data: {"text":"ada,"}
+data: {"text":"at"}
+
+event: text_delta
+data: {"text":"ilho de"}
+
+event: text_delta
+data: {"text":" "}
+
+event: text_delta
+data: {"text":"105,"}
+
+event: text_delta
+data: {"text":"0 mm com"}
+
+event: text_delta
+data: {"text":" pag"}
+
+event: text_delta
+data: {"text":"amento integ"}
+
+event: text_delta
+data: {"text":"ral em 70,0 m"}
+
+event: text_delta
+data: {"text":"m e"}
+
+event: text_delta
+data: {"text":" limite de R$ 300"}
+
+event: text_delta
+data: {"text":".000,00 s"}
+
+event: text_delta
+data: {"text":"obre a jan"}
+
+event: text_delta
+data: {"text":"ela de 1º"}
+
+event: text_delta
+data: {"text":" de setembro a 31 "}
+
+event: text_delta
+data: {"text":"de outubro. Nos"}
+
+event: text_delta
+data: {"text":" 76 an"}
+
+event: text_delta
+data: {"text":"os de histórico us"}
+
+event: text_delta
+data: {"text":"ados,"}
 
 event: text_delta
 data: {"text":" o índ"}
 
 event: text_delta
-data: {"text":"ice te"}
+data: {"text":"ice teria pago"}
 
 event: text_delta
-data: {"text":"ria pagado em 11"}
+data: {"text":" em 14,47"}
 
 event: text_delta
-data: {"text":" de 76 saf"}
+data: {"text":"% dos an"}
 
 event: text_delta
-data: {"text":"ras (1"}
+data: {"text":"os (11"}
 
 event: text_delta
-data: {"text":"950 a 2025), u"}
+data: {"text":" de 76"}
 
 event: text_delta
-data: {"text":"ma frequência de g"}
+data: {"text":"), e"}
 
 event: text_delta
-data: {"text":"atilho de 14,47"}
+data: {"text":" o custo médio hist"}
 
 event: text_delta
-data: {"text":"%."}
+data: {"text":"órico se"}
 
 event: text_delta
-data: {"text":" O"}
+data: {"text":"ria de R$ 22"}
 
 event: text_delta
-data: {"text":" custo médio hist"}
+data: {"text":".288"}
 
 event: text_delta
-data: {"text":"órico (burn cost)"}
+data: {"text":",02"}
 
 event: text_delta
-data: {"text":" é"}
+data: {"text":" "}
 
 event: text_delta
-data: {"text":" de"}
+data: {"text":"por saf"}
 
 event: text_delta
-data: {"text":" R$ 22"}
+data: {"text":"ra. O"}
 
 event: text_delta
-data: {"text":".288,02"}
-
-event: text_delta
-data: {"text":","}
-
-event: text_delta
-data: {"text":" e o ma"}
+data: {"text":" ma"}
 
 event: text_delta
 data: {"text":"ior pag"}
@@ -218,310 +158,349 @@ event: text_delta
 data: {"text":" 300.000,00,"}
 
 event: text_delta
-data: {"text":" integ"}
+data: {"text":" na"}
 
 event: text_delta
-data: {"text":"ral, n"}
+data: {"text":" safra de 1960, e"}
 
 event: text_delta
-data: {"text":"as safras de"}
+data: {"text":" os"}
 
 event: text_delta
-data: {"text":" 1960,"}
+data: {"text":" an"}
 
 event: text_delta
-data: {"text":" 1961 e 2014"}
+data: {"text":"os de"}
 
 event: text_delta
-data: {"text":".\n\nOs dados são "}
+data: {"text":" 1961 e 2"}
 
 event: text_delta
-data: {"text":"ERA5-Land,"}
+data: {"text":"014 também p"}
 
 event: text_delta
-data: {"text":" reanálise real de"}
+data: {"text":"agari"}
 
 event: text_delta
-data: {"text":" chuva, não"}
+data: {"text":"am o"}
 
 event: text_delta
-data: {"text":" d"}
+data: {"text":" limite integral.\n\nPrem"}
 
 event: text_delta
-data: {"text":"ados s"}
+data: {"text":"issas:"}
 
 event: text_delta
-data: {"text":"intéticos. A"}
+data: {"text":" o"}
 
 event: text_delta
-data: {"text":" tendência da"}
+data: {"text":" índice é a"}
 
 event: text_delta
-data: {"text":" série não"}
+data: {"text":" chuva total na"}
 
 event: text_delta
-data: {"text":" é est"}
+data: {"text":" janela (p"}
 
 event: text_delta
-data: {"text":"atisticamente significativa"}
+data: {"text":"agam"}
 
 event: text_delta
-data: {"text":" (p ="}
+data: {"text":"ento quando f"}
 
 event: text_delta
-data: {"text":" 0,125913,"}
+data: {"text":"ica abaixo do gat"}
 
 event: text_delta
-data: {"text":" in"}
+data: {"text":"ilho);"}
 
 event: text_delta
-data: {"text":"clinação de -6,1"}
+data: {"text":" os dados são"}
 
 event: text_delta
-data: {"text":" mm por década"}
+data: {"text":" de reanálise "}
 
 event: text_delta
-data: {"text":")"}
+data: {"text":"ERA5"}
 
 event: text_delta
-data: {"text":" e o"}
+data: {"text":"-Land (ECMW"}
 
 event: text_delta
-data: {"text":" backtest não tr"}
+data: {"text":"F), no"}
 
 event: text_delta
-data: {"text":"ouxe al"}
+data: {"text":" ponto de"}
 
 event: text_delta
-data: {"text":"ertas.\n\nQu"}
+data: {"text":" grade"}
+
+event: text_delta
+data: {"text":" m"}
+
+event: text_delta
+data: {"text":"ais próximo de Três"}
+
+event: text_delta
+data: {"text":" Pontas"}
+
+event: text_delta
+data: {"text":"; não"}
+
+event: text_delta
+data: {"text":" há a"}
+
+event: text_delta
+data: {"text":"viso de t"}
+
+event: text_delta
+data: {"text":"endência significativa ("}
+
+event: text_delta
+data: {"text":"a"}
+
+event: text_delta
+data: {"text":" tendência é de"}
+
+event: text_delta
+data: {"text":" le"}
+
+event: text_delta
+data: {"text":"ve queda, s"}
+
+event: text_delta
+data: {"text":"em signific"}
+
+event: text_delta
+data: {"text":"ância estatística). Is"}
+
+event: text_delta
+data: {"text":"to"}
+
+event: text_delta
+data: {"text":" é u"}
+
+event: text_delta
+data: {"text":"ma "}
+
+event: text_delta
+data: {"text":"ilustração e"}
+
+event: text_delta
+data: {"text":" não é a"}
+
+event: text_delta
+data: {"text":"conselhamento at"}
+
+event: text_delta
+data: {"text":"uarial ou de se"}
+
+event: text_delta
+data: {"text":"guro.\n\nQu"}
 
 event: text_delta
 data: {"text":"er que"}
 
 event: text_delta
-data: {"text":" eu precif"}
+data: {"text":" eu prec"}
 
 event: text_delta
-data: {"text":"ique es"}
+data: {"text":"if"}
 
 event: text_delta
-data: {"text":"ta cobertura? Se"}
+data: {"text":"ique ess"}
 
 event: text_delta
-data: {"text":" s"}
+data: {"text":"a cobertura e"}
 
 event: text_delta
-data: {"text":"im, preciso que conf"}
+data: {"text":" gere a"}
 
 event: text_delta
-data: {"text":"irme que"}
-
-event: text_delta
-data: {"text":" a"}
-
-event: text_delta
-data: {"text":" est"}
-
-event: text_delta
-data: {"text":"rutura está"}
-
-event: text_delta
-data: {"text":" correta (janela de 01"}
-
-event: text_delta
-data: {"text":"/09 a 31/10"}
-
-event: text_delta
-data: {"text":", g"}
-
-event: text_delta
-data: {"text":"atilho de 105,0"}
-
-event: text_delta
-data: {"text":" mm, sa"}
-
-event: text_delta
-data: {"text":"ída de 70,0 m"}
-
-event: text_delta
-data: {"text":"m e limite de R$"}
-
-event: text_delta
-data: {"text":" 300.000,00)."}
+data: {"text":" cotação?"}
 
 event: done
-data: {"conversation_id":"ec943dc3155f4d5ab197d043a0070550","message_id":"217335cde851469e83193cc81d1faf84","stop_reason":"end_turn","prompt_version":"v3"}
+data: {"conversation_id":"79ac997497314555b0ff118071184b3f","message_id":"0d04ebe5ad7e4395a80e9f9a7dec3364","stop_reason":"end_turn","prompt_version":"v5"}
 
 event: started
-data: {"conversation_id":"ec943dc3155f4d5ab197d043a0070550","message_id":"7ba4590b6366431c93a9a6c86ded09df"}
+data: {"conversation_id":"79ac997497314555b0ff118071184b3f","message_id":"9747d82de76d45948e726158e854c46d"}
 
 event: user_message
 data: {"text":"Pode precificar."}
 
 event: tool_started
-data: {"call_id":"toolu_01DjCYs6d4wWxdp2u9MZf8qT","tool":"price_cover","arguments":{"index_type":"rainfall_below","window_start":"09-01","window_end":"10-31","trigger":105,"exit":70,"lat":-21.36667,"lon":-45.5125,"limit_cents":30000000,"label":"Três Pontas, MG","admin_region":"Minas Gerais"}}
+data: {"call_id":"toolu_01QTeTjT8UX2YaUiYvV4JtDJ","tool":"price_cover","arguments":{"index_type":"rainfall_below","window_start":"09-01","window_end":"10-31","trigger":105,"exit":70,"lat":-21.36667,"lon":-45.5125,"limit_cents":30000000,"label":"Três Pontas, MG","admin_region":"Minas Gerais"}}
 
 event: tool_finished
-data: {"call_id":"toolu_01DjCYs6d4wWxdp2u9MZf8qT","tool":"price_cover","status":"ok","duration_ms":74,"summary":{"code":"tool.price_cover","params":{"quote_id":"Q-K39VTZ","premium_cents":4063788}},"result":{"quote_id":"Q-K39VTZ","priced":{"backtest":{"dataset_id":"cube:sul-de-minas:9:10","cover":{"index":{"index_type":"rainfall_below","window":{"start":"09-01","end":"10-31"},"trigger":105,"exit":70},"limit":{"amount_cents":30000000,"currency":"BRL"}},"seasons":[{"season":1950,"index_value":291,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1951,"index_value":169.1,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1952,"index_value":206.7,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1953,"index_value":363.7,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1954,"index_value":256.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1955,"index_value":154,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1956,"index_value":173.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1957,"index_value":183.3,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1958,"index_value":117.3,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1959,"index_value":100.3,"payout":{"amount_cents":4001934,"currency":"BRL"}},{"season":1960,"index_value":69.2,"payout":{"amount_cents":30000000,"currency":"BRL"}},{"season":1961,"index_value":41.1,"payout":{"amount_cents":30000000,"currency":"BRL"}},{"season":1962,"index_value":323.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1963,"index_value":109.4,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1964,"index_value":240.2,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1965,"index_value":234.4,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1966,"index_value":230.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1967,"index_value":138.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1968,"index_value":115.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1969,"index_value":160.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1970,"index_value":171.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1971,"index_value":203.3,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1972,"index_value":185.3,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1973,"index_value":316.7,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1974,"index_value":126.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1975,"index_value":158,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1976,"index_value":291.1,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1977,"index_value":205.7,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1978,"index_value":239.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1979,"index_value":255.4,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1980,"index_value":137.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1981,"index_value":245.1,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1982,"index_value":276.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1983,"index_value":473.1,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1984,"index_value":177.3,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1985,"index_value":222.7,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1986,"index_value":94.3,"payout":{"amount_cents":9147791,"currency":"BRL"}},{"season":1987,"index_value":233.3,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1988,"index_value":225.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1989,"index_value":199.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1990,"index_value":181.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1991,"index_value":223.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1992,"index_value":316.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1993,"index_value":211.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1994,"index_value":134.4,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1995,"index_value":304.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1996,"index_value":340.4,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1997,"index_value":206.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1998,"index_value":200.1,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1999,"index_value":80.6,"payout":{"amount_cents":20951944,"currency":"BRL"}},{"season":2000,"index_value":196.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2001,"index_value":177.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2002,"index_value":171.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2003,"index_value":141.1,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2004,"index_value":194.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2005,"index_value":200.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2006,"index_value":197.3,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2007,"index_value":93.5,"payout":{"amount_cents":9864969,"currency":"BRL"}},{"season":2008,"index_value":193.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2009,"index_value":274,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2010,"index_value":185.5,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2011,"index_value":163.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2012,"index_value":91.6,"payout":{"amount_cents":11513957,"currency":"BRL"}},{"season":2013,"index_value":170.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2014,"index_value":63.9,"payout":{"amount_cents":30000000,"currency":"BRL"}},{"season":2015,"index_value":217.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2016,"index_value":155.5,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2017,"index_value":100.8,"payout":{"amount_cents":3624239,"currency":"BRL"}},{"season":2018,"index_value":212.1,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2019,"index_value":116.3,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2020,"index_value":82.3,"payout":{"amount_cents":19426977,"currency":"BRL"}},{"season":2021,"index_value":218.4,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2022,"index_value":173.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2023,"index_value":172.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2024,"index_value":162.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2025,"index_value":104,"payout":{"amount_cents":857161,"currency":"BRL"}}],"seasons_used":76,"seasons_excluded":[],"trigger_frequency":"0.144737","burn_cost":{"amount_cents":2228802,"currency":"BRL"},"max_payout":{"amount_cents":30000000,"currency":"BRL"},"max_payout_season":1960,"trend":{"slope_per_decade":-6.1,"p_value":"0.125913","significant":false},"warnings":[]},"simulation":{"method":"gamma_mle","n":100000,"seed":42,"expected_loss":{"amount_cents":1893386,"currency":"BRL"},"std_dev":{"amount_cents":6287982,"currency":"BRL"},"probability_of_payout":"0.115110","payout_1_in_10":{"amount_cents":3611580,"currency":"BRL"},"payout_1_in_100":{"amount_cents":30000000,"currency":"BRL"},"gap_to_burn_cost":{"amount_cents":-335416,"currency":"BRL"}},"premium":{"premium":{"amount_cents":4063788,"currency":"BRL"},"rate_on_line":"0.135460","risk_load":"0.300000","expense_load":"0.150000"},"assumptions":[{"code":"assumption.index_type","params":{"index_type":"rainfall_below"}},{"code":"assumption.window","params":{"start":"09-01","end":"10-31"}},{"code":"assumption.seasons_used","params":{"seasons_used":76,"first_season":1950,"last_season":2025}},{"code":"assumption.simulation_method","params":{"method":"gamma_mle","n":100000,"seed":42}},{"code":"assumption.loads","params":{"risk_load_rate":"0.300000","expense_load_rate":"0.150000"}},{"code":"assumption.data_source","params":{"source":"era5-land/cds"}}]}},"error":null}
+data: {"call_id":"toolu_01QTeTjT8UX2YaUiYvV4JtDJ","tool":"price_cover","status":"ok","duration_ms":75,"summary":{"code":"tool.price_cover","params":{"quote_id":"Q-DH18ZD","premium_cents":4063788}},"result":{"quote_id":"Q-DH18ZD","priced":{"backtest":{"dataset_id":"cube:sul-de-minas:9:10","cover":{"index":{"index_type":"rainfall_below","window":{"start":"09-01","end":"10-31"},"trigger":105,"exit":70},"limit":{"amount_cents":30000000,"currency":"BRL"}},"seasons":[{"season":1950,"index_value":291,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1951,"index_value":169.1,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1952,"index_value":206.7,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1953,"index_value":363.7,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1954,"index_value":256.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1955,"index_value":154,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1956,"index_value":173.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1957,"index_value":183.3,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1958,"index_value":117.3,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1959,"index_value":100.3,"payout":{"amount_cents":4001934,"currency":"BRL"}},{"season":1960,"index_value":69.2,"payout":{"amount_cents":30000000,"currency":"BRL"}},{"season":1961,"index_value":41.1,"payout":{"amount_cents":30000000,"currency":"BRL"}},{"season":1962,"index_value":323.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1963,"index_value":109.4,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1964,"index_value":240.2,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1965,"index_value":234.4,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1966,"index_value":230.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1967,"index_value":138.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1968,"index_value":115.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1969,"index_value":160.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1970,"index_value":171.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1971,"index_value":203.3,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1972,"index_value":185.3,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1973,"index_value":316.7,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1974,"index_value":126.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1975,"index_value":158,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1976,"index_value":291.1,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1977,"index_value":205.7,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1978,"index_value":239.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1979,"index_value":255.4,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1980,"index_value":137.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1981,"index_value":245.1,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1982,"index_value":276.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1983,"index_value":473.1,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1984,"index_value":177.3,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1985,"index_value":222.7,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1986,"index_value":94.3,"payout":{"amount_cents":9147791,"currency":"BRL"}},{"season":1987,"index_value":233.3,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1988,"index_value":225.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1989,"index_value":199.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1990,"index_value":181.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1991,"index_value":223.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1992,"index_value":316.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1993,"index_value":211.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1994,"index_value":134.4,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1995,"index_value":304.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1996,"index_value":340.4,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1997,"index_value":206.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1998,"index_value":200.1,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":1999,"index_value":80.6,"payout":{"amount_cents":20951944,"currency":"BRL"}},{"season":2000,"index_value":196.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2001,"index_value":177.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2002,"index_value":171.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2003,"index_value":141.1,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2004,"index_value":194.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2005,"index_value":200.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2006,"index_value":197.3,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2007,"index_value":93.5,"payout":{"amount_cents":9864969,"currency":"BRL"}},{"season":2008,"index_value":193.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2009,"index_value":274,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2010,"index_value":185.5,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2011,"index_value":163.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2012,"index_value":91.6,"payout":{"amount_cents":11513957,"currency":"BRL"}},{"season":2013,"index_value":170.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2014,"index_value":63.9,"payout":{"amount_cents":30000000,"currency":"BRL"}},{"season":2015,"index_value":217.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2016,"index_value":155.5,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2017,"index_value":100.8,"payout":{"amount_cents":3624239,"currency":"BRL"}},{"season":2018,"index_value":212.1,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2019,"index_value":116.3,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2020,"index_value":82.3,"payout":{"amount_cents":19426977,"currency":"BRL"}},{"season":2021,"index_value":218.4,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2022,"index_value":173.6,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2023,"index_value":172.9,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2024,"index_value":162.8,"payout":{"amount_cents":0,"currency":"BRL"}},{"season":2025,"index_value":104,"payout":{"amount_cents":857161,"currency":"BRL"}}],"seasons_used":76,"seasons_excluded":[],"trigger_frequency":"0.144737","burn_cost":{"amount_cents":2228802,"currency":"BRL"},"max_payout":{"amount_cents":30000000,"currency":"BRL"},"max_payout_season":1960,"trend":{"slope_per_decade":-6.1,"p_value":"0.125913","significant":false},"warnings":[]},"simulation":{"method":"gamma_mle","n":100000,"seed":42,"expected_loss":{"amount_cents":1893386,"currency":"BRL"},"std_dev":{"amount_cents":6287982,"currency":"BRL"},"probability_of_payout":"0.115110","payout_1_in_10":{"amount_cents":3611580,"currency":"BRL"},"payout_1_in_100":{"amount_cents":30000000,"currency":"BRL"},"gap_to_burn_cost":{"amount_cents":-335416,"currency":"BRL"}},"premium":{"premium":{"amount_cents":4063788,"currency":"BRL"},"rate_on_line":"0.135460","risk_load":"0.300000","expense_load":"0.150000"},"assumptions":[{"code":"assumption.index_type","params":{"index_type":"rainfall_below"}},{"code":"assumption.window","params":{"start":"09-01","end":"10-31"}},{"code":"assumption.seasons_used","params":{"seasons_used":76,"first_season":1950,"last_season":2025}},{"code":"assumption.simulation_method","params":{"method":"gamma_mle","n":100000,"seed":42}},{"code":"assumption.loads","params":{"risk_load_rate":"0.300000","expense_load_rate":"0.150000"}},{"code":"assumption.data_source","params":{"source":"era5-land/cds"}}]}},"error":null}
 
 event: text_delta
 data: {"text":"A"}
 
 event: text_delta
-data: {"text":" cotação está"}
+data: {"text":" cotação é"}
 
 event: text_delta
-data: {"text":" p"}
+data: {"text":" Q-DH18Z"}
 
 event: text_delta
-data: {"text":"ronta: quote_id"}
+data: {"text":"D. O prêmio cal"}
 
 event: text_delta
-data: {"text":" Q-K39VTZ"}
+data: {"text":"culado é de"}
 
 event: text_delta
-data: {"text":".\n\nO"}
+data: {"text":" R$ 40.637"}
 
 event: text_delta
-data: {"text":" prêmio é de R$"}
+data: {"text":",88, com taxa s"}
 
 event: text_delta
-data: {"text":" 40"}
+data: {"text":"obre o limite de "}
 
 event: text_delta
-data: {"text":".637"}
+data: {"text":"13,55"}
 
 event: text_delta
-data: {"text":",88, com ta"}
+data: {"text":"%."}
 
 event: text_delta
-data: {"text":"xa s"}
+data: {"text":" Essa ta"}
 
 event: text_delta
-data: {"text":"obre o"}
+data: {"text":"xa v"}
 
 event: text_delta
-data: {"text":" limite (rate on line)"}
+data: {"text":"em do"}
 
 event: text_delta
-data: {"text":" de 13,546"}
+data: {"text":" pró"}
 
 event: text_delta
-data: {"text":"%. A"}
+data: {"text":"prio resultado da "}
 
 event: text_delta
-data: {"text":" per"}
+data: {"text":"ferramenta.\n\nP"}
 
 event: text_delta
-data: {"text":"da esperada sim"}
+data: {"text":"ela simulação, a"}
 
 event: text_delta
-data: {"text":"ulada é de R$ "}
+data: {"text":" probabilidade de pag"}
 
 event: text_delta
-data: {"text":"18"}
+data: {"text":"amento é de 11,51"}
+
+event: text_delta
+data: {"text":"%, a"}
+
+event: text_delta
+data: {"text":" perda esperada é"}
+
+event: text_delta
+data: {"text":" de R$ 18"}
 
 event: text_delta
 data: {"text":".933"}
 
 event: text_delta
-data: {"text":",86, com des"}
+data: {"text":",86 "}
 
 event: text_delta
-data: {"text":"vio padrão de R$"}
+data: {"text":"e o desvio padrão"}
 
 event: text_delta
-data: {"text":" 62.879"}
+data: {"text":" é de R$ 62"}
+
+event: text_delta
+data: {"text":".879"}
 
 event: text_delta
 data: {"text":",82"}
 
 event: text_delta
-data: {"text":" e probabilidade de"}
+data: {"text":". Um pagamento de"}
 
 event: text_delta
-data: {"text":" pagamento de 11,"}
+data: {"text":" 1 em c"}
 
 event: text_delta
-data: {"text":"511"}
+data: {"text":"ada 10 saf"}
 
 event: text_delta
-data: {"text":"%. O pagamento sim"}
+data: {"text":"ras se"}
 
 event: text_delta
-data: {"text":"ulado de 1 em"}
-
-event: text_delta
-data: {"text":" 10 an"}
-
-event: text_delta
-data: {"text":"os é de R$ 36"}
+data: {"text":"ria de R$ 36"}
 
 event: text_delta
 data: {"text":".115"}
 
 event: text_delta
-data: {"text":",80"}
+data: {"text":",80, e"}
 
 event: text_delta
-data: {"text":" e o de"}
+data: {"text":" o"}
 
 event: text_delta
-data: {"text":" 1 em 100 an"}
+data: {"text":" p"}
 
 event: text_delta
-data: {"text":"os é o"}
+data: {"text":"agamento de 1 em"}
 
 event: text_delta
-data: {"text":" limite integral de"}
+data: {"text":" cada 100 safras se"}
+
+event: text_delta
+data: {"text":"ria o limite integral de"}
 
 event: text_delta
 data: {"text":" R$ 300.000,"}
 
 event: text_delta
-data: {"text":"00.\n\nPrem"}
+data: {"text":"00.\n\nPremissas da"}
 
 event: text_delta
-data: {"text":"issas: índ"}
+data: {"text":" cotação Q-DH"}
 
 event: text_delta
-data: {"text":"ice de ch"}
+data: {"text":"18ZD: índice de"}
 
 event: text_delta
-data: {"text":"uva abaixo do"}
+data: {"text":" chuva total de"}
 
 event: text_delta
-data: {"text":" gatilho ("}
+data: {"text":" 1º de setembro a"}
 
 event: text_delta
-data: {"text":"chuva total"}
+data: {"text":" 31 de outubro,"}
 
 event: text_delta
-data: {"text":" de"}
+data: {"text":" pagando"}
 
 event: text_delta
-data: {"text":" 01/09 a 31"}
+data: {"text":" integ"}
 
 event: text_delta
-data: {"text":"/10 "}
+data: {"text":"ralmente em"}
 
 event: text_delta
-data: {"text":"abaixo de 105,"}
+data: {"text":" 70,0 mm e"}
 
 event: text_delta
-data: {"text":"0 mm, com pag"}
+data: {"text":" i"}
 
 event: text_delta
-data: {"text":"amento integral em 70,"}
+data: {"text":"niciando o"}
 
 event: text_delta
-data: {"text":"0 mm), lim"}
+data: {"text":" pagamento ab"}
 
 event: text_delta
-data: {"text":"ite de R$ 300."}
+data: {"text":"aixo de 105,0"}
 
 event: text_delta
-data: {"text":"000,00, 76 saf"}
+data: {"text":" mm; 76 saf"}
 
 event: text_delta
 data: {"text":"ras us"}
@@ -530,422 +509,341 @@ event: text_delta
 data: {"text":"adas (1950 a "}
 
 event: text_delta
-data: {"text":"2025), d"}
+data: {"text":"2025); d"}
 
 event: text_delta
-data: {"text":"ados "}
+data: {"text":"ados de reanálise ER"}
 
 event: text_delta
-data: {"text":"ERA5"}
+data: {"text":"A5-Land (EC"}
 
 event: text_delta
-data: {"text":"-Land re"}
+data: {"text":"MWF); simulação g"}
 
 event: text_delta
-data: {"text":"ais,"}
+data: {"text":"ama com "}
 
 event: text_delta
-data: {"text":" sem alertas de"}
+data: {"text":"100.000 c"}
 
 event: text_delta
-data: {"text":" tendência. A"}
+data: {"text":"enários;"}
 
 event: text_delta
-data: {"text":" prec"}
+data: {"text":" carregament"}
 
 event: text_delta
-data: {"text":"ificação usa distribuição"}
+data: {"text":"os de "}
 
 event: text_delta
-data: {"text":" gama, com"}
+data: {"text":"15% de despesas"}
 
 event: text_delta
-data: {"text":" carregamento de desp"}
+data: {"text":" e 30% de risco."}
 
 event: text_delta
-data: {"text":"esas"}
+data: {"text":" Não"}
 
 event: text_delta
-data: {"text":" de 15% e car"}
+data: {"text":" há aviso de tendência"}
 
 event: text_delta
-data: {"text":"regamento de risco de "}
+data: {"text":" significativa. Isto"}
 
 event: text_delta
-data: {"text":"30%. O cust"}
+data: {"text":" é uma ilustração e"}
 
 event: text_delta
-data: {"text":"o médio histórico é de"}
+data: {"text":" não é aconselhamento"}
 
 event: text_delta
-data: {"text":" R$ 22.288,"}
+data: {"text":" atuarial ou de se"}
 
 event: text_delta
-data: {"text":"02, e a"}
+data: {"text":"guro.\n\nQuer que"}
 
 event: text_delta
-data: {"text":" sim"}
+data: {"text":" eu gere a"}
 
 event: text_delta
-data: {"text":"ulação não tra"}
+data: {"text":" minuta do"}
 
 event: text_delta
-data: {"text":"z alertas.\n\nEs"}
+data: {"text":" termo ("}
 
 event: text_delta
-data: {"text":"ta é"}
+data: {"text":"P"}
 
 event: text_delta
-data: {"text":" u"}
-
-event: text_delta
-data: {"text":"ma cotação "}
-
-event: text_delta
-data: {"text":"ilustrativa, não a"}
-
-event: text_delta
-data: {"text":"conselhamento at"}
-
-event: text_delta
-data: {"text":"uarial n"}
-
-event: text_delta
-data: {"text":"em gar"}
-
-event: text_delta
-data: {"text":"antia de p"}
-
-event: text_delta
-data: {"text":"agamento. Qu"}
-
-event: text_delta
-data: {"text":"er que eu g"}
-
-event: text_delta
-data: {"text":"ere o termo ("}
-
-event: text_delta
-data: {"text":"term"}
-
-event: text_delta
-data: {"text":" sheet) em"}
+data: {"text":"DF em"}
 
 event: text_delta
 data: {"text":" português e in"}
 
 event: text_delta
-data: {"text":"glês para o"}
+data: {"text":"glês) para"}
 
 event: text_delta
-data: {"text":" Q-K39VTZ"}
+data: {"text":" a c"}
 
 event: text_delta
-data: {"text":"?"}
+data: {"text":"otação Q-DH18"}
+
+event: text_delta
+data: {"text":"ZD?"}
 
 event: done
-data: {"conversation_id":"ec943dc3155f4d5ab197d043a0070550","message_id":"7ba4590b6366431c93a9a6c86ded09df","stop_reason":"end_turn","prompt_version":"v3"}
+data: {"conversation_id":"79ac997497314555b0ff118071184b3f","message_id":"9747d82de76d45948e726158e854c46d","stop_reason":"end_turn","prompt_version":"v5"}
 
 event: started
-data: {"conversation_id":"ec943dc3155f4d5ab197d043a0070550","message_id":"3df5081c53e54502a70457a8256f1348"}
+data: {"conversation_id":"79ac997497314555b0ff118071184b3f","message_id":"4d1295ac4c2c4ed09645e2b90b6ccb9b"}
 
 event: user_message
 data: {"text":"Gere o term sheet."}
 
 event: tool_started
-data: {"call_id":"toolu_01WyYGN5NB5iwqXZSrKjuyib","tool":"draft_term_sheet","arguments":{"quote_id":"Q-K39VTZ"}}
+data: {"call_id":"toolu_01958ADj9sAhAnfpM5kLpkiH","tool":"draft_term_sheet","arguments":{"quote_id":"Q-DH18ZD"}}
 
 event: tool_finished
-data: {"call_id":"toolu_01WyYGN5NB5iwqXZSrKjuyib","tool":"draft_term_sheet","status":"ok","duration_ms":34,"summary":{"code":"tool.draft_term_sheet","params":{}},"result":{"documents":[{"quote_id":"Q-K39VTZ","kind":"term_sheet","locale":"en","content_type":"application/pdf","size_bytes":4421,"path":"/api/v1/quotes/Q-K39VTZ/term-sheet.pdf?lang=en"},{"quote_id":"Q-K39VTZ","kind":"term_sheet","locale":"pt-BR","content_type":"application/pdf","size_bytes":4632,"path":"/api/v1/quotes/Q-K39VTZ/term-sheet.pdf?lang=pt-BR"}]},"error":null}
+data: {"call_id":"toolu_01958ADj9sAhAnfpM5kLpkiH","tool":"draft_term_sheet","status":"ok","duration_ms":28,"summary":{"code":"tool.draft_term_sheet","params":{}},"result":{"documents":[{"quote_id":"Q-DH18ZD","kind":"term_sheet","locale":"en","content_type":"application/pdf","size_bytes":4423,"path":"/api/v1/quotes/Q-DH18ZD/term-sheet.pdf?lang=en"},{"quote_id":"Q-DH18ZD","kind":"term_sheet","locale":"pt-BR","content_type":"application/pdf","size_bytes":4642,"path":"/api/v1/quotes/Q-DH18ZD/term-sheet.pdf?lang=pt-BR"}]},"error":null}
 
 event: text_delta
-data: {"text":"O term sheet da cot"}
+data: {"text":"G"}
 
 event: text_delta
-data: {"text":"ação Q-K39VT"}
+data: {"text":"erei a minuta do term"}
 
 event: text_delta
-data: {"text":"Z foi gerado em"}
+data: {"text":"o para"}
 
 event: text_delta
-data: {"text":" português"}
+data: {"text":" a cotação Q-D"}
 
 event: text_delta
-data: {"text":" e em"}
+data: {"text":"H18ZD, em português"}
 
 event: text_delta
-data: {"text":" inglês. Você"}
+data: {"text":" e em in"}
 
 event: text_delta
-data: {"text":" pode baixar as"}
+data: {"text":"glês. Os downloads"}
 
 event: text_delta
-data: {"text":" versões p"}
+data: {"text":" estão na aba Cot"}
 
 event: text_delta
-data: {"text":"ela a"}
+data: {"text":"ação."}
 
 event: text_delta
-data: {"text":"ba Quote,"}
+data: {"text":"\n\nO"}
 
 event: text_delta
-data: {"text":" n"}
+data: {"text":" termo c"}
 
 event: text_delta
-data: {"text":"os caminhos /"}
+data: {"text":"ob"}
 
 event: text_delta
-data: {"text":"api/v1/quotes"}
+data: {"text":"re a"}
 
 event: text_delta
-data: {"text":"/Q-K39VT"}
+data: {"text":" chuva total de 1º"}
 
 event: text_delta
-data: {"text":"Z/term-sheet"}
+data: {"text":" de setembro a 31 "}
 
 event: text_delta
-data: {"text":".pdf?"}
+data: {"text":"de outubro, com"}
 
 event: text_delta
-data: {"text":"lang=pt-BR"}
+data: {"text":" pagamento que"}
 
 event: text_delta
-data: {"text":" e"}
+data: {"text":" começa ab"}
 
 event: text_delta
-data: {"text":" ?lang=en."}
+data: {"text":"aixo de 105,0"}
 
 event: text_delta
-data: {"text":"\n\nO docum"}
+data: {"text":" mm e integ"}
 
 event: text_delta
-data: {"text":"ento re"}
+data: {"text":"ral em 70,0 m"}
 
 event: text_delta
-data: {"text":"flete a"}
+data: {"text":"m, até"}
 
 event: text_delta
-data: {"text":" cotação: r"}
+data: {"text":" o limite de R$ "}
 
 event: text_delta
-data: {"text":"ain"}
+data: {"text":"300.000,00. Os"}
 
 event: text_delta
-data: {"text":" below de"}
+data: {"text":" dados são"}
 
 event: text_delta
-data: {"text":" 105,0 mm,"}
+data: {"text":" de reanálise ERA"}
 
 event: text_delta
-data: {"text":" pagamento integral em"}
+data: {"text":"5-Land (ECM"}
 
 event: text_delta
-data: {"text":" 70,0 mm,"}
+data: {"text":"WF)."}
 
 event: text_delta
-data: {"text":" jan"}
+data: {"text":" Isto é uma il"}
 
 event: text_delta
-data: {"text":"ela de 01/09 a"}
+data: {"text":"ustração e não é aconsel"}
 
 event: text_delta
-data: {"text":" 31/10, limite de"}
+data: {"text":"hamento atuarial "}
 
 event: text_delta
-data: {"text":" R$ 300.000,"}
+data: {"text":"ou de seguro."}
 
 event: text_delta
-data: {"text":"00 e prêmio de"}
+data: {"text":"\n\nQuer que"}
 
 event: text_delta
-data: {"text":" R$ 40.637,"}
+data: {"text":" eu env"}
 
 event: text_delta
-data: {"text":"88. Ele é uma"}
+data: {"text":"ie a cotação"}
 
 event: text_delta
-data: {"text":" min"}
-
-event: text_delta
-data: {"text":"uta ilustrativa"}
-
-event: text_delta
-data: {"text":", não a"}
-
-event: text_delta
-data: {"text":"conselhamento de"}
-
-event: text_delta
-data: {"text":" se"}
-
-event: text_delta
-data: {"text":"guro n"}
-
-event: text_delta
-data: {"text":"em garantia de pagam"}
-
-event: text_delta
-data: {"text":"ento.\n\nQuer que e"}
-
-event: text_delta
-data: {"text":"u envie a"}
-
-event: text_delta
-data: {"text":" cotação para u"}
-
-event: text_delta
-data: {"text":"ma seguradora?"}
-
-event: text_delta
-data: {"text":" Há"}
-
-event: text_delta
-data: {"text":" duas dis"}
-
-event: text_delta
-data: {"text":"poníveis: Segu"}
-
-event: text_delta
-data: {"text":"radora Jatob"}
-
-event: text_delta
-data: {"text":"á (m"}
-
-event: text_delta
-data: {"text":"ock),"}
-
-event: text_delta
-data: {"text":" carrier-1, e"}
-
-event: text_delta
-data: {"text":" Ipê Amarelo"}
-
-event: text_delta
-data: {"text":" Re ("}
-
-event: text_delta
-data: {"text":"mock), carrier-2"}
-
-event: text_delta
-data: {"text":". A"}
-
-event: text_delta
-data: {"text":" submissão f"}
-
-event: text_delta
-data: {"text":"ica pendente até"}
-
-event: text_delta
-data: {"text":" uma p"}
-
-event: text_delta
-data: {"text":"essoa aprová"}
-
-event: text_delta
-data: {"text":"-la na"}
+data: {"text":" Q-DH18ZD"}
 
 event: text_delta
 data: {"text":" a"}
 
 event: text_delta
-data: {"text":"ba Approvals."}
+data: {"text":" uma das"}
+
+event: text_delta
+data: {"text":" seguradoras para"}
+
+event: text_delta
+data: {"text":" a"}
+
+event: text_delta
+data: {"text":"provação? N"}
+
+event: text_delta
+data: {"text":"esse ca"}
+
+event: text_delta
+data: {"text":"so,"}
+
+event: text_delta
+data: {"text":" diga q"}
+
+event: text_delta
+data: {"text":"ual:"}
+
+event: text_delta
+data: {"text":" Seguradora Jat"}
+
+event: text_delta
+data: {"text":"obá ou Ipê"}
+
+event: text_delta
+data: {"text":" Amarelo Re."}
+
+event: text_delta
+data: {"text":" A"}
+
+event: text_delta
+data: {"text":" aprovação final"}
+
+event: text_delta
+data: {"text":" é feita por"}
+
+event: text_delta
+data: {"text":" u"}
+
+event: text_delta
+data: {"text":"ma pessoa na aba"}
+
+event: text_delta
+data: {"text":" Aprovações."}
 
 event: done
-data: {"conversation_id":"ec943dc3155f4d5ab197d043a0070550","message_id":"3df5081c53e54502a70457a8256f1348","stop_reason":"end_turn","prompt_version":"v3"}
+data: {"conversation_id":"79ac997497314555b0ff118071184b3f","message_id":"4d1295ac4c2c4ed09645e2b90b6ccb9b","stop_reason":"end_turn","prompt_version":"v5"}
 
 event: started
-data: {"conversation_id":"ec943dc3155f4d5ab197d043a0070550","message_id":"f04a9f52daf240d18b4a0a3635a9587e"}
+data: {"conversation_id":"79ac997497314555b0ff118071184b3f","message_id":"d9cef1fc007f4128a9e11febae480604"}
 
 event: user_message
 data: {"text":"Solicite o envio para a Seguradora Jatobá."}
 
 event: tool_started
-data: {"call_id":"toolu_01UrvNYWTxD8F4f9bc3Bwxj6","tool":"request_submission","arguments":{"quote_id":"Q-K39VTZ","carrier_id":"carrier-1"}}
+data: {"call_id":"toolu_016kpPSyvspiTttSspcpKi6w","tool":"request_submission","arguments":{"quote_id":"Q-DH18ZD","carrier_id":"carrier-1"}}
 
 event: tool_finished
-data: {"call_id":"toolu_01UrvNYWTxD8F4f9bc3Bwxj6","tool":"request_submission","status":"ok","duration_ms":13,"summary":{"code":"tool.request_submission","params":{"submission_id":"S-QMPECS","carrier_id":"carrier-1"}},"result":{"submission_id":"S-QMPECS","carrier_id":"carrier-1","requested_at":"2026-11-11T22:58:59.973903Z","decided_at":null,"decision_note":null,"delivery":{"status":"not_started","attempts":0,"receipt_id":null,"last_error_code":null}},"error":null}
+data: {"call_id":"toolu_016kpPSyvspiTttSspcpKi6w","tool":"request_submission","status":"ok","duration_ms":12,"summary":{"code":"tool.request_submission","params":{"submission_id":"S-29C3K7","carrier_id":"carrier-1"}},"result":{"submission_id":"S-29C3K7","carrier_id":"carrier-1","requested_at":"2026-11-12T02:02:35.543330Z","decided_at":null,"decision_note":null,"delivery":{"status":"not_started","attempts":0,"receipt_id":null,"last_error_code":null}},"error":null}
 
 event: approval_required
-data: {"approval_id":"S-QMPECS","quote_id":"Q-K39VTZ"}
+data: {"approval_id":"S-29C3K7","quote_id":"Q-DH18ZD"}
 
 event: text_delta
-data: {"text":"A solicitação de envio"}
+data: {"text":"A solicitação de"}
 
 event: text_delta
-data: {"text":" da"}
+data: {"text":" envio da"}
 
 event: text_delta
-data: {"text":" cotação Q-K39"}
+data: {"text":" cotação Q-DH"}
 
 event: text_delta
-data: {"text":"VTZ para"}
+data: {"text":"18ZD à"}
 
 event: text_delta
-data: {"text":" a Seguradora J"}
+data: {"text":" Seguradora Jat"}
 
 event: text_delta
-data: {"text":"atobá (mock) fo"}
+data: {"text":"obá foi criada e"}
 
 event: text_delta
-data: {"text":"i criada com"}
+data: {"text":" está pendente."}
 
 event: text_delta
-data: {"text":" o número S"}
+data: {"text":" Ainda não fo"}
 
 event: text_delta
-data: {"text":"-QMPECS."}
+data: {"text":"i a"}
 
 event: text_delta
-data: {"text":" Ela está pendente de a"}
+data: {"text":"provada n"}
 
 event: text_delta
-data: {"text":"provação e "}
+data: {"text":"em enviada: u"}
 
 event: text_delta
-data: {"text":"ainda não foi en"}
+data: {"text":"ma pessoa prec"}
 
 event: text_delta
-data: {"text":"viada à"}
+data: {"text":"isa a"}
 
 event: text_delta
-data: {"text":" seguradora: a ent"}
+data: {"text":"prová"}
 
 event: text_delta
-data: {"text":"rega ainda não começou"}
+data: {"text":"-la na aba Apr"}
 
 event: text_delta
-data: {"text":". Qu"}
+data: {"text":"ovações,"}
 
 event: text_delta
-data: {"text":"em aprova"}
+data: {"text":" e só"}
 
 event: text_delta
-data: {"text":" ou rejeita é"}
+data: {"text":" depois o"}
 
 event: text_delta
-data: {"text":" uma pessoa,"}
-
-event: text_delta
-data: {"text":" na aba Approvals;"}
-
-event: text_delta
-data: {"text":" eu não t"}
-
-event: text_delta
-data: {"text":"enho como"}
-
-event: text_delta
-data: {"text":" dec"}
-
-event: text_delta
-data: {"text":"idir ess"}
-
-event: text_delta
-data: {"text":"a et"}
-
-event: text_delta
-data: {"text":"apa."}
+data: {"text":" envio será feito."}
 
 event: done
-data: {"conversation_id":"ec943dc3155f4d5ab197d043a0070550","message_id":"f04a9f52daf240d18b4a0a3635a9587e","stop_reason":"end_turn","prompt_version":"v3"}
+data: {"conversation_id":"79ac997497314555b0ff118071184b3f","message_id":"d9cef1fc007f4128a9e11febae480604","stop_reason":"end_turn","prompt_version":"v5"}
 

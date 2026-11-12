@@ -88,7 +88,7 @@ def test_a_recording_of_the_scripted_flow_passes_the_checks_of_the_fixtures(
     metadata, events = parse_recording(output.read_text(encoding="utf-8"))
     assert recording_problems(metadata, events, load_prompts("en"), "en") == []
     assert "placeholder" not in metadata
-    assert metadata["prompt_version"] == "v4"
+    assert metadata["prompt_version"] == "v5"
     # Labelled for what it is, so the fixture test would reject it as a real recording.
     assert metadata["data_source"] == "synthetic"
     assert metadata["synthetic"] is True

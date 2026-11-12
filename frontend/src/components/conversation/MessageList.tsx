@@ -72,6 +72,16 @@ export function MessageList({ session, onOpen, empty }: MessageListProps) {
     !broken &&
     last !== undefined &&
     (isBlank(last) || (last.role === "user" && session.stopReason === "end_turn"));
+  // A restored conversation that ends with the visitor's message: the answer was cut by a reload
+  // or a lost connection, and the server keeps no part of a cut answer. Nothing is streaming, so
+  // the visitor is told to send the message again.
+  const answerLost =
+    session.mode === "live" &&
+    !session.streaming &&
+    !broken &&
+    session.stopReason === null &&
+    last !== undefined &&
+    last.role === "user";
   const completed = broken ? completedTools(session) : [];
   const limit =
     session.stopReason === "tool_limit" || session.stopReason === "budget"
@@ -111,6 +121,11 @@ export function MessageList({ session, onOpen, empty }: MessageListProps) {
         <p className="msg__unanswered" data-note="no-answer">
           {translate(locale, "chat.no_answer")}
         </p>
+      )}
+      {answerLost && (
+        <Note tone="warn" icon={<Icon name="warn" />} role="status" data-note="answer-lost">
+          {translate(locale, "chat.answer_lost")}
+        </Note>
       )}
       {working && (
         <p className="msg__working">

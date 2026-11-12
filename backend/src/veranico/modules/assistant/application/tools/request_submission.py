@@ -19,7 +19,8 @@ from veranico.shared.kernel.principal import Principal
 
 DESCRIPTION = (
     "Request submission of a quote to a carrier. This only creates a pending approval: a "
-    "person approves or rejects it in the Approvals tab, and you cannot. Never say the "
+    "person approves or rejects it in the Approvals tab (the aba Aprovações in Portuguese), "
+    "and you cannot. Never say the "
     "submission was approved or sent. Calling it again for the same quote returns the same "
     "submission. Carriers in the directory: {carriers}. Pass the id; name the carrier to the "
     "user by its name only."

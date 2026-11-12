@@ -62,6 +62,8 @@ CATALOGUE: Final[dict[str, str]] = {
     "unit.days": "{value} days",
     "unit.mm_per_decade": "{value} mm per decade",
     "unit.days_per_decade": "{value} days per decade",
+    "dataset.cube": "Grid cell of the regional cube (0.1°)",
+    "dataset.point": "History of the point",
     "value.not_available": "Not available",
     # Month names
     "month.01": "January",

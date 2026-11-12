@@ -56,6 +56,19 @@ def test_every_figure_is_on_the_page_next_to_its_label(
     assert missing == []
 
 
+@pytest.mark.parametrize("build", [fixtures.rainfall_quote, fixtures.dry_spell_quote])
+@pytest.mark.parametrize("locale", LOCALES)
+def test_the_dataset_is_named_in_words_never_by_its_id(
+    build: Callable[[], QuoteView], locale: Locale
+) -> None:
+    quote = build()
+    text = rendered_text(quote, locale)
+
+    assert quote.dataset_id not in text
+    assert "cube:" not in text
+    assert "point:" not in text
+
+
 @pytest.mark.req("R-8-2")
 @pytest.mark.parametrize(("build", "rows", "texts"), CASES)
 @pytest.mark.parametrize("locale", LOCALES)

@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import type { components } from "../../../api/schema";
-import { useApprovals } from "../../../hooks/useApprovals";
+import { useApprovals, useDeliveryAttempts } from "../../../hooks/useApprovals";
 import { useDecision } from "../../../hooks/useDecision";
 import { useRedeliver } from "../../../hooks/useRedeliver";
 import { translate, useI18n } from "../../../i18n";
@@ -29,6 +29,7 @@ interface ApprovalsTabProps {
 export function ApprovalsTab({ onOpenQuote }: ApprovalsTabProps) {
   const { locale } = useI18n();
   const approvals = useApprovals();
+  const attempts = useDeliveryAttempts(approvals.data);
   const decision = useDecision();
   const redelivery = useRedeliver();
   // The item the last action was on, so its problem is shown on that item only.
@@ -57,6 +58,7 @@ export function ApprovalsTab({ onOpenQuote }: ApprovalsTabProps) {
           <ApprovalItem
             key={id}
             approval={approval}
+            attempts={attempts.get(approval.quote_id)}
             busy={acted === id && (decision.isPending || redelivery.isPending)}
             problem={acted === id ? problem : null}
             onOpenQuote={onOpenQuote}

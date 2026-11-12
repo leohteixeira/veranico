@@ -53,6 +53,8 @@ CATALOGUE: Final[dict[str, str]] = {
     "unit.days": "{value} dias",
     "unit.mm_per_decade": "{value} mm por década",
     "unit.days_per_decade": "{value} dias por década",
+    "dataset.cube": "Célula da grade do cubo regional (0,1°)",
+    "dataset.point": "Histórico do ponto",
     "value.not_available": "Não disponível",
     # Month names
     "month.01": "janeiro",

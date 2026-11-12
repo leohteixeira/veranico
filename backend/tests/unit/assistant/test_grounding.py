@@ -135,6 +135,42 @@ def test_percent_matches_rate_times_hundred(answer: str, locale: Locale) -> None
     assert [(figure.kind, figure.grounded) for figure in report.figures] == [("percent", True)]
 
 
+# The forms prompt v5 asks for, with figures of the 2026-11-11 campaign: money with the
+# separators of the answer's language, whole reais allowed, and a rounded percentage alone.
+CAMPAIGN = [
+    {
+        "premium": {"premium": {"amount_cents": 4_063_788}},
+        "cover": {"limit": {"amount_cents": 30_000_000}},
+        "backtest": {"trigger_frequency": "0.144737"},
+    }
+]
+
+
+@pytest.mark.parametrize(
+    ("answer", "locale"),
+    [
+        ("The premium is R$ 40,637.88 for quote Q-P6PR06.", "en"),
+        ("The premium is R$ 40,638.", "en"),
+        ("The limit is R$ 300,000.", "en"),
+        ("The limit is R$ 300,000.00.", "en"),
+        ("It would have paid in 14.5% of seasons.", "en"),
+        ("It would have paid in 14.47% of seasons.", "en"),
+        ("It would have paid in 14% of seasons.", "en"),
+        ("O prêmio da cotação Q-P6PR06 é R$ 40.637,88.", "pt-BR"),
+        ("O prêmio é R$ 40.638.", "pt-BR"),
+        ("O limite é R$ 300.000,00.", "pt-BR"),
+        ("O limite é R$ 300.000.", "pt-BR"),
+        ("Teria pago em 14,5% das safras.", "pt-BR"),
+        ("Teria pago em 14,47% das safras.", "pt-BR"),
+    ],
+)
+def test_the_forms_the_prompt_asks_for_are_grounded(answer: str, locale: Locale) -> None:
+    report = check(answer, CAMPAIGN, locale)
+
+    assert len(report.figures) == 1, report
+    assert report.ungrounded == ()
+
+
 def test_rates_inside_lists_are_sources() -> None:
     results = [{"seasons": [{"season": 1999, "share": "0.250000"}]}]
 

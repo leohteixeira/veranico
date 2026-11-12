@@ -212,7 +212,8 @@ export const ptBR: Messages = {
   "approvals.attempts.one": "{count} tentativa até agora.",
   "approvals.attempts.other": "{count} tentativas até agora.",
   "approvals.last_error": "Último erro: {code}.",
-  "approvals.delivered": "Entregue. O recibo da seguradora é {receipt_id}.",
+  "approvals.delivered": "Entregue na tentativa {count}. O recibo da seguradora é {receipt_id}.",
+  "approvals.attempts.label": "Tentativas de webhook",
   "approvals.rejected": "Rejeitada. Nada foi enviado à seguradora.",
   "approvals.abandoned": "A entrega foi abandonada após {count} tentativas.",
   "approvals.redeliver": "Entregar de novo",
@@ -232,6 +233,7 @@ export const ptBR: Messages = {
   "chat.you": "Você",
   "chat.working": "O agente está trabalhando",
   "chat.no_answer": "O agente encerrou o turno sem resposta.",
+  "chat.answer_lost": "A resposta foi interrompida. Envie a mensagem de novo.",
   "chat.first.title": "Descreva uma exposição ou comece por um destes exemplos",
   "chat.first.body":
     "O agente pergunta o que for essencial e estiver faltando; depois faz o backtest e precifica a cobertura com as ferramentas listadas em cada passo.",

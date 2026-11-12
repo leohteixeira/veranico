@@ -53,6 +53,12 @@ PROMPT_SHA256 = {
     # identifier but the quote id, no code or enumerated value, no URL or API path; index
     # types described in words, the carrier and the weather source named.
     "v4": "33087441d94e01bfbf78116353686dc5f9418d5780d036f6d27e27deda41269a",
+    # v5, after the recheck of that campaign on v4: the quote named "quote Q-…" or "cotação Q-…",
+    # never with the field name; money with the separators of the answer's language, never as
+    # raw centavos, and R$ for money only; percentages without the raw fraction beside them;
+    # the trend in words; windows as dates in words; the tabs named as the interface names
+    # them in each language.
+    "v5": "bc72a112c2cee71ac7a275897fbd5c237b563f9a6ff2d3c055948e9a14ff8c80",
 }
 
 _PROMPT_FILE = re.compile(r"^system\.v(\d+)\.md$")

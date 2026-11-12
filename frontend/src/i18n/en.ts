@@ -217,7 +217,8 @@ export const en = {
   "approvals.attempts.one": "{count} attempt so far.",
   "approvals.attempts.other": "{count} attempts so far.",
   "approvals.last_error": "Last error: {code}.",
-  "approvals.delivered": "Delivered. The carrier's receipt is {receipt_id}.",
+  "approvals.delivered": "Delivered on attempt {count}. The carrier's receipt is {receipt_id}.",
+  "approvals.attempts.label": "Webhook attempts",
   "approvals.rejected": "Rejected. Nothing was sent to the carrier.",
   "approvals.abandoned": "The delivery was abandoned after {count} attempts.",
   "approvals.redeliver": "Deliver again",
@@ -237,6 +238,7 @@ export const en = {
   "chat.you": "You",
   "chat.working": "The agent is working",
   "chat.no_answer": "The agent ended the turn without an answer.",
+  "chat.answer_lost": "The answer was interrupted. Send the message again.",
   "chat.first.title": "Describe an exposure, or start from one of these",
   "chat.first.body":
     "The agent asks for anything essential that is missing, then backtests and prices the cover with the tools listed in each step.",

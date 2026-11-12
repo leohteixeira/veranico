@@ -11,6 +11,7 @@ from datetime import UTC, datetime
 
 from veranico.modules.quoting.contracts import QuoteView
 from veranico.shared.kernel.coded import Coded
+from veranico.shared.kernel.ids import CubeDataset, parse_dataset_id
 from veranico.shared.kernel.money import Money
 
 SYNTHETIC_SOURCE = "synthetic"
@@ -120,6 +121,12 @@ def _text_or_not_available(value: str | None) -> Figure:
     return TextFigure(value) if value else CodedFigure(_NOT_AVAILABLE)
 
 
+def _dataset(dataset_id: str) -> Figure:
+    """The kind of dataset in words, as the Quote tab names it, never the raw id."""
+    kind = "cube" if isinstance(parse_dataset_id(dataset_id), CubeDataset) else "point"
+    return CodedFigure(Coded(code=f"dataset.{kind}"))
+
+
 def _is_synthetic(quote: QuoteView) -> bool:
     """The source the quote was priced on, as `pricing` recorded it in the assumptions."""
     return any(
@@ -149,7 +156,7 @@ def build_content(quote: QuoteView) -> TermSheetContent:
             _row("latitude", CoordinateFigure(quote.location.lat)),
             _row("longitude", CoordinateFigure(quote.location.lon)),
             _row("admin_region", _text_or_not_available(quote.location.admin_region)),
-            _row("dataset_id", TextFigure(quote.dataset_id)),
+            _row("dataset_id", _dataset(quote.dataset_id)),
         ),
         _section(
             "cover",

@@ -1,5 +1,5 @@
 event: started
-data: {"conversation_id":"ffdb8adc3bee4da48377959b4799d87e","message_id":"m-0002"}
+data: {"conversation_id":"2a849cb4d33b4c0ab3c880afe847f915","message_id":"m-0002"}
 
 event: tool_started
 data: {"call_id":"call-1","tool":"resolve_location","arguments":{"query":"Três Pontas, MG"}}
@@ -17,5 +17,5 @@ event: error
 data: {"code":"model_unavailable","completed":["resolve_location"]}
 
 event: done
-data: {"conversation_id":"ffdb8adc3bee4da48377959b4799d87e","message_id":"m-0002","stop_reason":"error","prompt_version":"v3"}
+data: {"conversation_id":"2a849cb4d33b4c0ab3c880afe847f915","message_id":"m-0002","stop_reason":"error","prompt_version":"v5"}
 

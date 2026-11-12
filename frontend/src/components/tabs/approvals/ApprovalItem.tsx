@@ -25,6 +25,8 @@ interface ApprovalItemProps {
   onDecide: (approve: boolean, note: string | null) => void;
   onRedeliver: () => void;
   onOpenQuote: (quoteId: string) => void;
+  /** The webhook attempts from the quote's audit trail, oldest first. */
+  attempts?: readonly components["schemas"]["AuditEntry"][];
 }
 
 type Display = { key: Parameters<typeof translate>[1]; tone: StateTone };
@@ -53,6 +55,7 @@ export function ApprovalItem({
   onDecide,
   onRedeliver,
   onOpenQuote,
+  attempts = [],
 }: ApprovalItemProps) {
   const { locale } = useI18n();
   const [note, setNote] = useState("");
@@ -177,7 +180,12 @@ export function ApprovalItem({
       )}
 
       {approval.status === "approved" && (
-        <DeliveryProgress delivery={approval.delivery} onRedeliver={onRedeliver} busy={busy} />
+        <DeliveryProgress
+          delivery={approval.delivery}
+          attempts={attempts}
+          onRedeliver={onRedeliver}
+          busy={busy}
+        />
       )}
 
       {approval.status === "rejected" && (
