@@ -38,8 +38,8 @@ class ModelPrice(BaseModel, frozen=True):
 
 class AccessSettings(BaseModel, frozen=True):
     workspace_ttl_days: int = Field(default=14, gt=0)
-    allowance_conversations: int = Field(default=2, ge=0)
-    allowance_messages: int = Field(default=15, ge=0)
+    allowance_conversations: int = Field(default=3, ge=0)
+    allowance_messages: int = Field(default=60, ge=0)
     boosted_conversations: int = Field(default=6, ge=0)
     boosted_messages: int = Field(default=60, ge=0)
     allowance_code: SecretStr | None = None
