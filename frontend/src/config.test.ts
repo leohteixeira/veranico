@@ -4,6 +4,7 @@ import {
   ENV_BASEMAP_RELIEF,
   ENV_BASEMAP_SATELLITE,
   ENV_EXAMPLE_COVERS,
+  ENV_LANDING_URLS,
   loadConfig,
   type BasemapConfig,
   type ExampleCover,
@@ -21,6 +22,23 @@ describe("build-time configuration", () => {
       expect(example.cover.index.exit).toBeLessThan(example.cover.index.trigger);
       expect(Number.isInteger(example.cover.limit.amount_cents)).toBe(true);
     }
+  });
+
+  it("links the wordmark to the portfolio page of each language by default", () => {
+    expect(loadConfig({}).landingUrls).toEqual({
+      en: "https://leohteixeira.com/en/projects/veranico",
+      "pt-BR": "https://leohteixeira.com/pt/projects/veranico",
+    });
+  });
+
+  it("replaces the landing pages from VITE_LANDING_URLS and refuses a non-https address", () => {
+    const urls = { en: "https://example.test/en", "pt-BR": "https://example.test/pt" };
+    expect(loadConfig({ [ENV_LANDING_URLS]: JSON.stringify(urls) }).landingUrls).toEqual(urls);
+
+    const unsafe = { en: "javascript:alert(1)", "pt-BR": "https://example.test/pt" };
+    expect(() => loadConfig({ [ENV_LANDING_URLS]: JSON.stringify(unsafe) })).toThrow(
+      ENV_LANDING_URLS,
+    );
   });
 
   it("replaces a basemap from its VITE_ variable and leaves the other alone", () => {

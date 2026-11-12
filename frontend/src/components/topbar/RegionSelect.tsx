@@ -3,6 +3,7 @@ import { useId } from "react";
 import type { components } from "../../api/schema";
 import { translate, useI18n } from "../../i18n";
 import { translateValue } from "../../i18n/coded";
+import { Icon } from "../common/Icon";
 
 type Region = components["schemas"]["Region"];
 
@@ -28,6 +29,7 @@ export function RegionSelect({ regions, regionId, outside, onChange }: RegionSel
       </label>
       <select
         id={id}
+        className="region-select__control"
         value={regionId ?? OUTSIDE}
         disabled={regions.length === 0}
         onChange={(event) => {
@@ -48,6 +50,8 @@ export function RegionSelect({ regions, regionId, outside, onChange }: RegionSel
           </option>
         ))}
       </select>
+      {/* Drawn over the native control, which keeps its own keyboard and list behaviour. */}
+      <Icon name="chevron" className="region-select__chevron" />
     </div>
   );
 }

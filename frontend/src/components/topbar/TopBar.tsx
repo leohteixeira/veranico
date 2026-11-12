@@ -1,5 +1,5 @@
 import type { components } from "../../api/schema";
-import type { BasemapId } from "../../config";
+import { config, type BasemapId } from "../../config";
 import type { Theme } from "../../design/theme";
 import { translate, useI18n } from "../../i18n";
 import type { RenderMode } from "../../state/view";
@@ -46,7 +46,13 @@ export function TopBar({
   const { locale } = useI18n();
   return (
     <header className={className === undefined ? "topbar" : `topbar ${className}`}>
-      <h1 className="topbar__brand">
+      {/* The wordmark leads to the project's page on the portfolio, in the active language. The
+          heading stays inside the link so its name is the product's name alone. */}
+      <a
+        className="topbar__brand"
+        href={config.landingUrls[locale]}
+        aria-label={translate(locale, "app.about")}
+      >
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="1.6" />
           <path
@@ -54,8 +60,8 @@ export function TopBar({
             fill="var(--accent)"
           />
         </svg>
-        {translate(locale, "app.name")}
-      </h1>
+        <h1 className="topbar__name">{translate(locale, "app.name")}</h1>
+      </a>
       <RegionSelect regions={regions} regionId={regionId} outside={outside} onChange={onRegion} />
       <span className="topbar__space" />
       <div className="topbar__controls" role="group" aria-label={translate(locale, "top.label")}>

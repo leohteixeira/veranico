@@ -285,11 +285,15 @@ insured cell, drawn with mitred corners because they are data, not chrome.
 
 - **Composer:** a soft paper field with a 14px radius and a round send button; the field is
   read-only, not disabled, while the agent streams, so the draft stays readable.
-- **Region selector:** a native select drawn as a floating pill.
+- **Region selector:** a native select drawn as a floating pill at the height of the switches, with
+  the icon set's chevron laid over it; the browser keeps its keyboard and list behaviour.
 - **Focus:** the shared ring; the composer rings its whole row.
 
 ### Navigation
 
+- **Wordmark:** a link, in the same tab, to the project's page on the portfolio in the active
+  language (`VITE_LANDING_URLS`); on hover its rule darkens and the name takes a hairline
+  underline. The embed has no wordmark.
 - **Tabs:** an ARIA tab list with arrow, Home and End keys; the open tab has a 2px Deep Teal
   underline; a count badge on Approvals says how many wait.
 

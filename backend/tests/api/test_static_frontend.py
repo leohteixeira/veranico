@@ -43,6 +43,28 @@ async def test_built_frontend_is_served_at_the_root(dist: Path) -> None:
     assert asset.text == "console.log('veranico')"
 
 
+@pytest.mark.parametrize(
+    ("name", "media_type"),
+    [
+        ("favicon.svg", "image/svg+xml"),
+        ("favicon.ico", "image/"),
+        ("apple-touch-icon.png", "image/png"),
+    ],
+)
+@pytest.mark.req("R-17-1")
+async def test_icons_at_the_root_are_served_as_files_not_the_index(
+    dist: Path, name: str, media_type: str
+) -> None:
+    # Vite copies `frontend/public/` to the root of `dist/`; the index fallback must not answer.
+    (dist / name).write_bytes(b"icon:" + name.encode())
+    async with client(dist, []) as http:
+        icon = await http.get(f"/{name}")
+
+    assert icon.status_code == 200
+    assert icon.headers["content-type"].startswith(media_type)
+    assert icon.content == b"icon:" + name.encode()
+
+
 @pytest.mark.req("R-12.5-2")
 async def test_embed_route_falls_back_to_index_and_names_the_configured_origins(dist: Path) -> None:
     origins = ["http://127.0.0.1:3450", "https://leohteixeira.com"]

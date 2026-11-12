@@ -9,6 +9,7 @@
 export const en = {
   // Product
   "app.name": "Veranico",
+  "app.about": "Veranico, about the project",
   "app.disclaimer": "Pricing is illustrative. It is not actuarial or insurance advice.",
   "app.non_commercial": "Non-commercial demo.",
   "app.weather_attribution":

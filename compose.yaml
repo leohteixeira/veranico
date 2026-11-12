@@ -201,6 +201,7 @@ services:
     volumes:
       - ./frontend/src:/web/src:ro
       - ./frontend/index.html:/web/index.html:ro
+      - ./frontend/public:/web/public:ro
     environment:
       # In this container the API is the service `api` on its container port.
       - VERANICO_API_PROXY_TARGET=http://api:8080
@@ -208,6 +209,7 @@ services:
       - VITE_BASEMAP_RELIEF
       - VITE_BASEMAP_SATELLITE
       - VITE_EXAMPLE_COVERS
+      - VITE_LANDING_URLS
     ports:
       - "${WEB_PORT:-3500}:3500"
     healthcheck:

@@ -4,6 +4,7 @@ import type { Messages } from "./en";
 export const ptBR: Messages = {
   // Product
   "app.name": "Veranico",
+  "app.about": "Veranico, sobre o projeto",
   "app.disclaimer": "O preço é ilustrativo. Não é cálculo atuarial nem recomendação de seguro.",
   "app.non_commercial": "Demonstração sem fins comerciais.",
   "app.weather_attribution":

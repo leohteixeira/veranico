@@ -49,11 +49,13 @@ describe("top row [R-12.1-2]", () => {
     expect(screen.getByRole("heading", { level: 1, name: "Veranico" })).toBeInTheDocument();
 
     const names = tabStops().map((stop) => {
+      if (stop instanceof HTMLAnchorElement) return `Link:${stop.getAttribute("aria-label") ?? ""}`;
       const group = stop.closest('[role="group"][aria-label]:not(.topbar__controls)');
       const own = stop instanceof HTMLSelectElement ? "" : (stop.textContent ?? "");
       return `${group?.getAttribute("aria-label") ?? "Region"}:${own}`;
     });
     expect(names).toEqual([
+      "Link:Veranico, about the project",
       "Region:",
       "Basemap:Relief",
       "Basemap:Satellite",
@@ -113,9 +115,41 @@ describe("top row [R-12.1-2]", () => {
     ).toBeDisabled();
   });
 
+  it("the region selector is the styled native control, with the chevron drawn beside it", () => {
+    renderTop();
+    const select = screen.getByRole("combobox", { name: "Region" });
+    expect(select).toHaveClass("region-select__control");
+    const chevron = select.parentElement?.querySelector(".region-select__chevron");
+    expect(chevron).toHaveAttribute("aria-hidden", "true");
+  });
+
   it("the selector waits for the regions", () => {
     renderTop({ regions: [], regionId: null });
     expect(screen.getByRole("combobox", { name: "Region" })).toBeDisabled();
+  });
+
+  it.each([
+    ["en", "Veranico, about the project", "https://leohteixeira.com/en/projects/veranico"],
+    ["pt-BR", "Veranico, sobre o projeto", "https://leohteixeira.com/pt/projects/veranico"],
+  ] as const)(
+    "the wordmark links to the project page in the active language (%s)",
+    (locale, name, href) => {
+      renderTop({}, locale);
+      const link = screen.getByRole("link", { name });
+      expect(link).toHaveAttribute("href", href);
+      // Same tab: the visitor goes to the presentation page, not to a second window.
+      expect(link).not.toHaveAttribute("target");
+      expect(within(link).getByRole("heading", { level: 1, name: "Veranico" })).toBeVisible();
+    },
+  );
+
+  it("the wordmark follows a change of language", () => {
+    renderTop();
+    fireEvent.click(screen.getByRole("button", { name: /Português/ }));
+    expect(screen.getByRole("link", { name: "Veranico, sobre o projeto" })).toHaveAttribute(
+      "href",
+      "https://leohteixeira.com/pt/projects/veranico",
+    );
   });
 
   it("the language switch names each language in its own language", () => {

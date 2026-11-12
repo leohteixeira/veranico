@@ -1,4 +1,5 @@
 import type { components } from "./api/schema";
+import type { Locale } from "./i18n";
 
 type CoverDefinition = components["schemas"]["CoverDefinition"];
 type GridPoint = components["schemas"]["GridPoint"];
@@ -38,11 +39,20 @@ export interface AppConfig {
   basemaps: Record<BasemapId, BasemapConfig>;
   /** Keyed by `Region.region_id`. */
   exampleCovers: Record<string, ExampleCover>;
+  /** The project's page on the owner's portfolio, per interface language; the wordmark links there. */
+  landingUrls: Record<Locale, string>;
 }
 
 export const ENV_BASEMAP_RELIEF = "VITE_BASEMAP_RELIEF";
 export const ENV_BASEMAP_SATELLITE = "VITE_BASEMAP_SATELLITE";
 export const ENV_EXAMPLE_COVERS = "VITE_EXAMPLE_COVERS";
+export const ENV_LANDING_URLS = "VITE_LANDING_URLS";
+
+// The landing page lives in the portfolio repository (PRODUCT.md), one page per language.
+const DEFAULT_LANDING_URLS: Record<Locale, string> = {
+  en: "https://leohteixeira.com/en/projects/veranico",
+  "pt-BR": "https://leohteixeira.com/pt/projects/veranico",
+};
 
 // Verified on 2026-11-11 in EOX's own documents, not stated from memory:
 // - https://tiles.maps.eox.at/wmts/1.0.0/WMTSCapabilities.xml: the layer identifiers
@@ -188,6 +198,16 @@ function isExampleCover(value: unknown): value is ExampleCover {
   );
 }
 
+function isLandingUrls(value: unknown): value is Record<Locale, string> {
+  return (
+    isObject(value) &&
+    typeof value.en === "string" &&
+    value.en.startsWith("https://") &&
+    typeof value["pt-BR"] === "string" &&
+    value["pt-BR"].startsWith("https://")
+  );
+}
+
 function isExampleCovers(value: unknown): value is Record<string, ExampleCover> {
   return isObject(value) && Object.values(value).every(isExampleCover);
 }
@@ -222,6 +242,7 @@ export function loadConfig(env: Readonly<Record<string, unknown>>): AppConfig {
       ...DEFAULT_EXAMPLE_COVERS,
       ...override(env, ENV_EXAMPLE_COVERS, isExampleCovers),
     },
+    landingUrls: override(env, ENV_LANDING_URLS, isLandingUrls) ?? DEFAULT_LANDING_URLS,
   };
 }
 

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <!-- The wordmark's mark (src/components/topbar/TopBar.tsx) on a card disc, light and dark. -->
+  <style>
+    .disc { fill: #fffdf8; }
+    .ring { fill: none; stroke: #1b2428; }
+    .drop { fill: #0f5e63; }
+    @media (prefers-color-scheme: dark) {
+      .disc { fill: #121821; }
+      .ring { stroke: #eef2f6; }
+      .drop { fill: #5cc8c4; }
+    }
+  </style>
+  <circle class="disc" cx="12" cy="12" r="11.5"/>
+  <circle class="ring" cx="12" cy="12" r="10" stroke-width="2"/>
+  <path class="drop" d="M12 5.4c2.9 3.3 4.4 5.5 4.4 7.6a4.4 4.4 0 0 1-8.8 0c0-2.1 1.5-4.3 4.4-7.6Z"/>
+</svg>
