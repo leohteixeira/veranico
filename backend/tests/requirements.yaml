@@ -797,6 +797,10 @@ requirements:
   section: '12.2'
   text: a point outside the showcase regions shows the marker, the single cell and a note
   plan: 08
+- id: R-12.2-7
+  section: '12.2'
+  text: 'place names are a configured tile layer over the risk layer, per theme, credited next to the map; a failed place-name tile is not a failed basemap'
+  plan: 08
 - id: R-12.3-1
   section: '12.3'
   text: 'Risk tab: cell figure, range of the eight neighbours, legend, three-by-three neighbourhood, one-sentence reading'

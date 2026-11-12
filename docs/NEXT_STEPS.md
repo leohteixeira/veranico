@@ -27,7 +27,8 @@ Each item was noticed while building or reviewing and is outside the locked scop
 
 Interface:
 
-* **Place names and a label on the cube frame.** The finish review asked for them; the approved direction draws the map without labels.
+* **A label on the cube frame.** The finish review asked for it. Place names, asked for in the same finding, are now a tile layer (ADR 0021).
+* **Place names in the application's own type.** The names come from the provider's overlay tiles, so their typeface, their selection and their position are the provider's, and a name can sit under the farm's label. A curated list per region, drawn by the application as in the planning preview, would fix that; it needs a sourced list of coordinates.
 * **A jump to the conversation in the stacked layout.** At 390 px the conversation sits far below the map; the specification fixes that order.
 * **One authored moment of motion on the risk surface.** The review asked for it; the specification asks for none.
 * **Map notes on narrow screens.** At 390 px the notes card covers the lower part of the fitted region.
