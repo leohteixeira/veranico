@@ -173,7 +173,7 @@ check "api: /embed/map may be framed by the configured origin only" \
   header_is "$api/embed/map" content-security-policy "frame-ancestors $EMBED_ORIGIN"
 check "api: every other page refuses to be framed" \
   header_is "$api/" content-security-policy "frame-ancestors 'none'"
-check "api: a public API route exists (not 404)" status 403 --request POST "$api/api/v1/quotes"
+check "api: a public API route exists (not 404)" status 401 --request POST "$api/api/v1/quotes"
 check "api: the carrier route answers 404" \
   status 404 --request POST --header 'Content-Type: application/json' --data '{}' "$api/carrier/v1/submissions"
 check "carrier: an API route answers 404" status 404 "$carrier/api/v1/regions"
