@@ -24,7 +24,7 @@ async def test_a_new_visitor_gets_the_default_allowance(api: AccessApi) -> None:
     assert response.headers["set-cookie"].startswith("vr_ws=v1.")  # no gate: a workspace opens
     body = response.json()
     assert set(body) == {"conversations_left", "messages_left", "resets_at", "boosted"}
-    assert (body["conversations_left"], body["messages_left"], body["boosted"]) == (2, 15, False)
+    assert (body["conversations_left"], body["messages_left"], body["boosted"]) == (3, 60, False)
     assert datetime.fromisoformat(body["resets_at"]) == _next_midnight(api)
 
 
@@ -38,7 +38,7 @@ async def test_the_allowance_is_reduced_after_admitted_messages(api: AccessApi) 
     body = (await browser.get(URL)).json()
     again = (await browser.get(URL)).json()
 
-    assert (body["conversations_left"], body["messages_left"]) == (1, 13)
+    assert (body["conversations_left"], body["messages_left"]) == (2, 58)
     assert again == body  # reading it consumes nothing
 
 
@@ -55,10 +55,10 @@ async def test_the_allowance_belongs_to_the_visitor_and_not_to_the_browser(api: 
         await api.browser().get(URL, headers={"X-Forwarded-For": f"198.51.100.9, {ADDRESS}"})
     ).json()
 
-    assert (same_address["conversations_left"], same_address["messages_left"]) == (1, 14)
-    assert (other_address["conversations_left"], other_address["messages_left"]) == (2, 15)
+    assert (same_address["conversations_left"], same_address["messages_left"]) == (2, 59)
+    assert (other_address["conversations_left"], other_address["messages_left"]) == (3, 60)
     # An entry the client wrote before the platform's own does not make a new visitor.
-    assert (spoofed["conversations_left"], spoofed["messages_left"]) == (1, 14)
+    assert (spoofed["conversations_left"], spoofed["messages_left"]) == (2, 59)
 
 
 @pytest.mark.req("R-10.3-2", "R-11.2-12")
@@ -82,4 +82,4 @@ async def test_a_wrong_code_or_no_header_gives_the_default_limits(
 
     assert response.status_code == 200  # the code is required for nothing
     body = response.json()
-    assert (body["conversations_left"], body["messages_left"], body["boosted"]) == (2, 15, False)
+    assert (body["conversations_left"], body["messages_left"], body["boosted"]) == (3, 60, False)
