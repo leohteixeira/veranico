@@ -1,0 +1,25 @@
+{
+  "description": "The declared load campaign of SPEC 16.5. Written before the first measured run. It may change only before a run, never after one: a measured result always names the profile it ran under.",
+  "seed": 1605,
+  "scenarios": {
+    "quotes": {
+      "request": "POST /api/v1/quotes",
+      "distinct_keys": 200,
+      "sends_per_key": 5,
+      "virtual_users": 20,
+      "max_duration": "10m"
+    },
+    "cells": {
+      "request": "GET /api/v1/regions/{id}/cells",
+      "requests": 600,
+      "virtual_users": 10,
+      "max_duration": "10m"
+    }
+  },
+  "thresholds": {
+    "http_req_duration{scenario:quotes}": ["p(95)<2000"],
+    "http_req_duration{scenario:cells}": ["p(95)<1000"],
+    "unexpected_status": ["count==0"],
+    "checks": ["rate==1"]
+  }
+}

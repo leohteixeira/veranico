@@ -1,0 +1,21 @@
+event: started
+data: {"conversation_id":"2a849cb4d33b4c0ab3c880afe847f915","message_id":"m-0002"}
+
+event: tool_started
+data: {"call_id":"call-1","tool":"resolve_location","arguments":{"query":"Três Pontas, MG"}}
+
+event: tool_finished
+data: {"call_id":"call-1","tool":"resolve_location","status":"ok","duration_ms":412,"summary":{"code":"tool.resolve_location","params":{"label":"Três Pontas, MG","lat":-21.36667,"lon":-45.5125}},"result":{"label":"Três Pontas, MG","lat":-21.36667,"lon":-45.5125},"error":null}
+
+event: text_delta
+data: {"text":"I found the place "}
+
+event: text_delta
+data: {"text":"and I am loading"}
+
+event: error
+data: {"code":"model_unavailable","completed":["resolve_location"]}
+
+event: done
+data: {"conversation_id":"2a849cb4d33b4c0ab3c880afe847f915","message_id":"m-0002","stop_reason":"error","prompt_version":"v5"}
+

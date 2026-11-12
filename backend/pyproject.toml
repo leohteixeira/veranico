@@ -1,0 +1,316 @@
+[project]
+name = "veranico"
+version = "0.1.0"
+description = "Parametric rainfall cover agent for Brazilian agriculture"
+license = "MIT"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "anthropic>=2.8.0",
+    "fastapi>=0.162.4",
+    "gcsfs>=2026.7.0",
+    "google-auth[requests]>=2.62.2",
+    "google-cloud-firestore>=2.34.1",
+    "google-cloud-storage>=3.17.1",
+    "google-cloud-tasks>=2.26.0",
+    "h3>=4.5.0",
+    "h5netcdf>=1.8.2",
+    "h5py>=3.16.0",
+    "httpx>=0.28.1",
+    "numpy>=2.5.4",
+    "opentelemetry-api>=1.45.2",
+    "opentelemetry-exporter-gcp-trace>=1.15.0",
+    "opentelemetry-exporter-otlp>=1.45.2",
+    "opentelemetry-instrumentation-fastapi>=0.66b2",
+    "opentelemetry-instrumentation-httpx>=0.66b2",
+    "opentelemetry-sdk>=1.45.2",
+    "pydantic>=2.14.3",
+    "pydantic-settings>=2.16.2",
+    "reportlab>=5.1.0",
+    "scipy>=1.18.1",
+    "uvicorn>=0.54.0",
+    "xarray>=2026.9.0",
+    "zarr>=3.4.2",
+]
+
+[build-system]
+requires = ["uv_build>=0.12.12,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+cube = [
+    "earthengine-api==1.7.50",
+]
+dev = [
+    "import-linter>=2.16",
+    "inspect-ai>=0.3.289",
+    "mypy>=2.4.1",
+    "pypdf>=7.0.1",
+    "pytest>=9.2.0",
+    "pytest-asyncio>=1.4.1.post1",
+    "pyyaml>=6.0.3",
+    "ruff>=0.17.4",
+    "scipy-stubs>=1.18.1.1",
+    "types-pyyaml>=6.0.12.20261103",
+    "types-reportlab>=5.1.0.20261104",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["src", "tests", "scripts"]
+# Copied unchanged from the python-modular-monolith skill, so it keeps that skill's style.
+# Nothing else is excluded: `tests/architecture/_violations/` holds deliberately wrong
+# code for the scanners, and it is still linted and formatted like any other file.
+extend-exclude = ["scripts/validate_boundaries.py"]
+
+[tool.ruff.lint]
+select = [
+    "E",     # pycodestyle errors
+    "W",     # pycodestyle warnings
+    "F",     # pyflakes
+    "I",     # import order
+    "N",     # naming
+    "UP",    # idioms of the target Python version
+    "B",     # likely bugs
+    "C4",    # comprehensions
+    "SIM",   # simplifications
+    "PT",    # pytest style
+    "DTZ",   # naive datetimes: every datetime is timezone-aware UTC
+    "ASYNC", # blocking calls in async code
+    "RUF",   # ruff's own rules
+]
+
+[tool.ruff.lint.isort]
+# `tests` is importable from the backend directory (pytest `pythonpath = ["."]`).
+known-first-party = ["veranico", "tests"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+files = ["src", "tests/fakes", "scripts"]
+# The same copied file: it is not written for strict typing and is not edited here.
+exclude = ['^scripts/validate_boundaries\.py$']
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+# These packages ship neither a py.typed marker nor a stub package.
+module = [
+    "fsspec.*",
+    "gcsfs.*",
+    "google.cloud.storage.*",
+    "h3.*",
+    "h5netcdf.*",
+    "httplib2.*",
+    "opentelemetry.exporter.cloud_trace.*",
+]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# Typed, but only in the optional `cube` group, which a default sync leaves out.
+module = ["ee.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+addopts = ["--strict-markers", "--import-mode=importlib"]
+markers = [
+    "req(id): identifier of the requirement in tests/requirements.yaml that the test proves",
+    "integration: needs the Firestore and Cloud Storage emulators",
+    "failure: part of the failure campaign",
+    "live: touches a public network service",
+    "slow: a benchmark, excluded from mutation runs",
+    "external: shells out to a tool outside the Python environment, such as terraform",
+    "evidence: reads a stored campaign result and fails until that campaign has passed",
+]
+
+[tool.importlinter]
+root_package = "veranico"
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name = "shared-below-modules: shared code imports no module"
+id = "shared-below-modules"
+type = "forbidden"
+source_modules = ["veranico.shared"]
+forbidden_modules = ["veranico.modules"]
+
+# The seven modules are named explicitly in the three contracts below: a module missing from
+# a list would be unchecked (tests/architecture checks the lists against the directories).
+[[tool.importlinter.contracts]]
+name = "modules-independent: a module reaches another only through its contracts.py"
+id = "modules-independent"
+type = "independence"
+modules = [
+    "veranico.modules.access",
+    "veranico.modules.climate",
+    "veranico.modules.pricing",
+    "veranico.modules.quoting",
+    "veranico.modules.carriers",
+    "veranico.modules.documents",
+    "veranico.modules.assistant",
+]
+ignore_imports = ["veranico.modules.** -> veranico.modules.*.contracts"]
+
+[[tool.importlinter.contracts]]
+name = "contract-direction-access: access may import no other module (SPEC 3.1)"
+id = "contract-direction-access"
+type = "forbidden"
+source_modules = ["veranico.modules.access"]
+forbidden_modules = [
+    "veranico.modules.climate",
+    "veranico.modules.pricing",
+    "veranico.modules.quoting",
+    "veranico.modules.carriers",
+    "veranico.modules.documents",
+    "veranico.modules.assistant",
+]
+# Direct imports only: an allowed contract may itself build on another module's contract.
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+name = "contract-direction-climate: climate may import access (SPEC 3.1)"
+id = "contract-direction-climate"
+type = "forbidden"
+source_modules = ["veranico.modules.climate"]
+forbidden_modules = [
+    "veranico.modules.pricing",
+    "veranico.modules.quoting",
+    "veranico.modules.carriers",
+    "veranico.modules.documents",
+    "veranico.modules.assistant",
+]
+# Direct imports only: an allowed contract may itself build on another module's contract.
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+name = "contract-direction-pricing: pricing may import climate (SPEC 3.1)"
+id = "contract-direction-pricing"
+type = "forbidden"
+source_modules = ["veranico.modules.pricing"]
+forbidden_modules = [
+    "veranico.modules.access",
+    "veranico.modules.quoting",
+    "veranico.modules.carriers",
+    "veranico.modules.documents",
+    "veranico.modules.assistant",
+]
+# Direct imports only: an allowed contract may itself build on another module's contract.
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+name = "contract-direction-quoting: quoting may import pricing, climate, access (SPEC 3.1)"
+id = "contract-direction-quoting"
+type = "forbidden"
+source_modules = ["veranico.modules.quoting"]
+forbidden_modules = [
+    "veranico.modules.carriers",
+    "veranico.modules.documents",
+    "veranico.modules.assistant",
+]
+# Direct imports only: an allowed contract may itself build on another module's contract.
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+name = "contract-direction-carriers: carriers may import quoting (SPEC 3.1)"
+id = "contract-direction-carriers"
+type = "forbidden"
+source_modules = ["veranico.modules.carriers"]
+forbidden_modules = [
+    "veranico.modules.access",
+    "veranico.modules.climate",
+    "veranico.modules.pricing",
+    "veranico.modules.documents",
+    "veranico.modules.assistant",
+]
+# Direct imports only: an allowed contract may itself build on another module's contract.
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+name = "contract-direction-documents: documents may import quoting, climate, access (SPEC 3.1)"
+id = "contract-direction-documents"
+type = "forbidden"
+source_modules = ["veranico.modules.documents"]
+forbidden_modules = [
+    "veranico.modules.pricing",
+    "veranico.modules.carriers",
+    "veranico.modules.assistant",
+]
+# Direct imports only: an allowed contract may itself build on another module's contract.
+allow_indirect_imports = true
+
+# contract-direction-assistant: `assistant` may import the contracts of every other module (SPEC 3.1),
+# so there is nothing to forbid.
+
+[[tool.importlinter.contracts]]
+name = "module-layers: module > http, infrastructure > application > domain"
+id = "module-layers"
+type = "layers"
+layers = ["module", "http : infrastructure", "application", "domain"]
+containers = [
+    "veranico.modules.access",
+    "veranico.modules.climate",
+    "veranico.modules.pricing",
+    "veranico.modules.quoting",
+    "veranico.modules.carriers",
+    "veranico.modules.documents",
+    "veranico.modules.assistant",
+]
+
+[[tool.importlinter.contracts]]
+name = "contracts-are-leaf: a contracts.py imports no module internals"
+id = "contracts-are-leaf"
+type = "forbidden"
+source_modules = ["veranico.modules.*.contracts"]
+forbidden_modules = [
+    "veranico.modules.*.domain",
+    "veranico.modules.*.application",
+    "veranico.modules.*.infrastructure",
+    "veranico.modules.*.http",
+    "veranico.modules.*.module",
+]
+
+[[tool.importlinter.contracts]]
+name = "domain-pure: a domain uses the standard library, the kernel, NumPy and SciPy only"
+id = "domain-pure"
+type = "forbidden"
+source_modules = ["veranico.modules.*.domain"]
+forbidden_modules = [
+    "veranico.shared.infrastructure",
+    "fastapi",
+    "starlette",
+    "pydantic",
+    "httpx",
+    "anthropic",
+    "google",
+    "xarray",
+    "zarr",
+    "h5netcdf",
+    "h3",
+    "gcsfs",
+    "ee",
+    "reportlab",
+    "opentelemetry",
+]
+# Direct imports only: the shared kernel a domain may use is itself built on Pydantic.
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+name = "wiring-only-in-bootstrap: only bootstrap.py imports a module.py"
+id = "wiring-only-in-bootstrap"
+type = "forbidden"
+# Everything except `veranico.bootstrap` and each module's own `module.py`.
+source_modules = [
+    "veranico.main",
+    "veranico.shared",
+    "veranico.modules.*.contracts",
+    "veranico.modules.*.domain",
+    "veranico.modules.*.application",
+    "veranico.modules.*.infrastructure",
+    "veranico.modules.*.http",
+]
+forbidden_modules = ["veranico.modules.*.module"]
+# Direct imports only: `main` reaches the modules through `bootstrap`, which is the point.
+allow_indirect_imports = true

@@ -1,0 +1,10 @@
+{
+ "request": {
+  "method": "GET",
+  "url": "https://geocoding-api.open-meteo.com/v1/search?name=Reykjavik&count=10&language=pt&format=json&countryCode=BR"
+ },
+ "status": 200,
+ "body": {
+  "generationtime_ms": 0.0
+ }
+}

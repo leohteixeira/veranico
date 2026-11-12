@@ -1,0 +1,105 @@
+# Release: a tag `v<major>.<minor>.<patch>` builds the image, pushes it and applies the
+# Terraform configuration with the new image tag (SPEC 17).
+#
+# Credentials. There is no key anywhere. The job presents the OIDC token GitHub issues for
+# this run to Workload Identity Federation, which accepts tokens of this repository only
+# (infra/terraform/foundation), and receives a short-lived token of the deployer account.
+# `id-token: write` is the one permission added to the read-only default, and only here.
+#
+# Configuration comes from repository VARIABLES (not secrets: none of them is one), set by
+# the owner after the one bootstrap apply (README, deployment section):
+#
+#   GCP_WORKLOAD_IDENTITY_PROVIDER, GCP_DEPLOYER_SERVICE_ACCOUNT, GCP_PROJECT_ID,
+#   TF_STATE_BUCKET, GCP_BILLING_ACCOUNT, BUDGET_AMOUNT, BUDGET_CURRENCY, ALERT_EMAIL,
+#   FRAME_ANCESTORS (a JSON list), and optionally REPOSITORY_ID and CUSTOM_DOMAIN.
+#
+# Secret values are never here: they live in Secret Manager and are read by the services.
+#
+# The first execution of this workflow is human gate H2.
+name: Deploy
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build, push and apply
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      REGION: us-central1
+      PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+      IMAGE_TAG: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Authenticate through Workload Identity Federation
+        id: auth
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOYER_SERVICE_ACCOUNT }}
+          token_format: access_token
+
+      - name: Log in to the registry
+        env:
+          ACCESS_TOKEN: ${{ steps.auth.outputs.access_token }}
+        run: printf '%s' "$ACCESS_TOKEN" | docker login --username oauth2accesstoken --password-stdin "https://${REGION}-docker.pkg.dev"
+
+      - name: Build and push the image
+        run: |
+          image="${REGION}-docker.pkg.dev/${PROJECT_ID}/veranico/veranico:${IMAGE_TAG}"
+          docker build --build-arg "VERSION=${IMAGE_TAG}" --tag "$image" .
+          docker push "$image"
+
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: 1.15.2
+          # Without the wrapper `terraform output -raw` prints the bare value.
+          terraform_wrapper: false
+
+      - name: Terraform init with the state bucket
+        env:
+          STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
+        run: terraform -chdir=infra/terraform init -input=false -backend-config="bucket=${STATE_BUCKET}"
+
+      - name: Terraform apply with the new image tag
+        env:
+          TF_VAR_project_id: ${{ vars.GCP_PROJECT_ID }}
+          TF_VAR_billing_account: ${{ vars.GCP_BILLING_ACCOUNT }}
+          TF_VAR_budget_amount: ${{ vars.BUDGET_AMOUNT }}
+          TF_VAR_budget_currency: ${{ vars.BUDGET_CURRENCY }}
+          TF_VAR_alert_email: ${{ vars.ALERT_EMAIL }}
+          TF_VAR_frame_ancestors: ${{ vars.FRAME_ANCESTORS }}
+          TF_VAR_github_repository: ${{ github.repository }}
+          TF_VAR_image_tag: ${{ github.ref_name }}
+          REPOSITORY_ID: ${{ vars.REPOSITORY_ID }}
+          CUSTOM_DOMAIN: ${{ vars.CUSTOM_DOMAIN }}
+        run: |
+          # An optional variable is passed only when it has a value: an empty string is
+          # not "unset" to Terraform.
+          optional=()
+          if [ -n "$REPOSITORY_ID" ]; then optional+=(-var "github_repository_id=${REPOSITORY_ID}"); fi
+          if [ -n "$CUSTOM_DOMAIN" ]; then optional+=(-var "custom_domain=${CUSTOM_DOMAIN}"); fi
+          terraform -chdir=infra/terraform apply -input=false -auto-approve "${optional[@]}"
+
+      # `/health`, not `/healthz`: Cloud Run reserves some paths ending in "z" and answers
+      # them itself, so `/healthz` never reaches the container behind the service URL.
+      - name: The deployed service answers /health
+        run: |
+          url="$(terraform -chdir=infra/terraform output -raw api_url)"
+          curl --fail --silent --show-error --retry 10 --retry-delay 6 --retry-all-errors --max-time 20 "${url}/health"

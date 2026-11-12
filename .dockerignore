@@ -1,0 +1,40 @@
+# What the image build may read. The failure this file prevents: a secret (`.env`), the Git
+# history or local data (weather cubes, evaluation logs, campaign results) entering an image
+# layer, where it would stay readable by anyone who can pull the image.
+#
+# It is an allow list: everything is excluded, then the few inputs of the Dockerfile are
+# let back in. A new file at the repository root is therefore outside the build until it
+# is named here.
+*
+
+# Backend: the manifest, the lock file and the package. No tests, no scripts.
+!backend/pyproject.toml
+!backend/uv.lock
+!backend/src/
+
+# Frontend: the sources and the build configuration.
+!frontend/
+frontend/node_modules/
+frontend/dist/
+frontend/design-reference/
+frontend/playwright-report/
+frontend/test-results/
+frontend/blob-report/
+frontend/coverage/
+frontend/.cache/
+
+# Never, wherever they are: the rules above re-include whole directories, so these come
+# last and win.
+**/.env
+**/.env.*
+**/.git
+**/.data/
+**/.evidence/
+**/.cache/
+**/.venv/
+**/__pycache__/
+**/*.py[cod]
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+**/logs/

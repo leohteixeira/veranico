@@ -1,0 +1,29 @@
+{
+ "request": {
+  "method": "GET",
+  "url": "https://geocoding-api.open-meteo.com/v1/search?name=Ribeir%C3%A3o+Preto&count=10&language=pt&format=json&countryCode=BR"
+ },
+ "status": 200,
+ "body": {
+  "results": [
+   {
+    "id": 3451328,
+    "name": "Ribeirão Preto",
+    "latitude": -21.1775,
+    "longitude": -47.81028,
+    "elevation": 554.0,
+    "feature_code": "PPLA2",
+    "country_code": "BR",
+    "admin1_id": 3448433,
+    "admin2_id": 6322515,
+    "timezone": "America/Sao_Paulo",
+    "population": 698642,
+    "country_id": 3469034,
+    "country": "Brasil",
+    "admin1": "São Paulo",
+    "admin2": "Ribeirão Preto"
+   }
+  ],
+  "generationtime_ms": 0.0
+ }
+}

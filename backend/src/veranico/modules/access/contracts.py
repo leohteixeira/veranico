@@ -1,0 +1,63 @@
+"""Public surface of `access`: anonymous workspaces, API keys, visitor allowance, spend ledger."""
+
+from datetime import datetime
+from typing import Literal, Protocol
+
+from pydantic import BaseModel
+
+from veranico.shared.kernel.principal import Principal
+
+
+class VisitorRef(BaseModel, frozen=True):
+    ip_hash: str  # salted hash; the raw address never leaves the HTTP edge
+    boosted: bool
+
+
+class Allowance(BaseModel, frozen=True):
+    conversations_left: int
+    messages_left: int
+    resets_at: datetime
+    boosted: bool
+
+
+class Admission(BaseModel, frozen=True):
+    allowed: bool
+    reason: Literal["ok", "visitor_allowance", "day_ceiling", "month_ceiling"]
+    allowance: Allowance | None  # None from may_spend, which has no visitor
+
+
+class ModelUsage(BaseModel, frozen=True):
+    model: str
+    input_tokens: int
+    output_tokens: int
+    cache_read_tokens: int = 0
+    cache_write_tokens: int = 0
+
+
+class SpendRecorded(BaseModel, frozen=True):
+    cost_usd_micros: int  # integer millionths of a dollar
+
+
+class ApiKeyIssued(BaseModel, frozen=True):
+    key_id: str
+    secret: str  # returned once, stored only as a hash
+    expires_at: datetime
+
+
+class AccessFacade(Protocol):
+    def visitor(self, client_ip: str, code: str | None) -> VisitorRef: ...  # sync, pure
+    async def open_workspace(
+        self, cookie: str | None
+    ) -> tuple[Principal, str | None]: ...  # second item: cookie to set when new
+    async def authenticate_api_key(self, bearer: str) -> Principal: ...  # raises forbidden
+    async def issue_api_key(
+        self, principal: Principal
+    ) -> ApiKeyIssued: ...  # browser principals only
+    async def check_rate(self, principal: Principal) -> None: ...  # public API; raises rate_limited
+    async def allowance(self, visitor: VisitorRef) -> Allowance: ...
+    async def admit_message(
+        self, visitor: VisitorRef, new_conversation: bool
+    ) -> Admission: ...  # consumes when allowed
+    async def may_spend(self) -> Admission: ...  # before each model call
+    async def record_spend(self, usage: ModelUsage) -> SpendRecorded: ...  # after each model call
+    def cost_of(self, usage: ModelUsage) -> int: ...  # sync; micro-dollars, for spans

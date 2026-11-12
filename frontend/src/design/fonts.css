@@ -1,0 +1,15 @@
+/*
+ * The three Atlas families, self-hosted: the files are bundled from the Fontsource packages, so an
+ * embedded page makes no third-party font request and screenshots are stable.
+ * All three are licensed under the SIL Open Font License 1.1 (provenance in DESIGN.md).
+ *
+ * Fraunces (variable, weight and optical size axes): titles and large figures.
+ * IBM Plex Sans 400, 500, 600: text. IBM Plex Mono 400, 500: identifiers and tool names.
+ * The Latin subset covers English and Brazilian Portuguese.
+ */
+@import "@fontsource-variable/fraunces/opsz.css";
+@import "@fontsource/ibm-plex-sans/latin-400.css";
+@import "@fontsource/ibm-plex-sans/latin-500.css";
+@import "@fontsource/ibm-plex-sans/latin-600.css";
+@import "@fontsource/ibm-plex-mono/latin-400.css";
+@import "@fontsource/ibm-plex-mono/latin-500.css";

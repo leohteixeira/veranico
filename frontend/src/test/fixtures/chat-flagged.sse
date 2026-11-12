@@ -1,0 +1,18 @@
+event: started
+data: {"conversation_id":"2a849cb4d33b4c0ab3c880afe847f915","message_id":"m-0010"}
+
+event: text_delta
+data: {"text":"That is roughly R$ 2,070.00 "}
+
+event: text_delta
+data: {"text":"a month over the "}
+
+event: text_delta
+data: {"text":"season."}
+
+event: grounding_flagged
+data: {"message_id":"m-0010","values":["R$ 2,070.00"]}
+
+event: done
+data: {"conversation_id":"2a849cb4d33b4c0ab3c880afe847f915","message_id":"m-0010","stop_reason":"end_turn","prompt_version":"v5"}
+

@@ -1,0 +1,19 @@
+# Changes to compose.yaml for `infra/smoke/clean_copy.sh ISOLATED=1`: the development stack
+# of a clean copy, started as a Compose project of its own that publishes no host port, so
+# it can run next to a stack that holds the development ports. The script reaches the
+# containers by their addresses on the project's network.
+#
+# `!reset` empties a list; without the tag Compose would add entries to those of compose.yaml.
+services:
+  firestore:
+    ports: !reset []
+  storage:
+    ports: !reset []
+  jaeger:
+    ports: !reset []
+  carrier:
+    ports: !reset []
+  api:
+    ports: !reset []
+  web:
+    ports: !reset []

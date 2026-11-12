@@ -1,0 +1,2881 @@
+{
+  "components": {
+    "schemas": {
+      "Allowance": {
+        "properties": {
+          "boosted": {
+            "title": "Boosted",
+            "type": "boolean"
+          },
+          "conversations_left": {
+            "title": "Conversations Left",
+            "type": "integer"
+          },
+          "messages_left": {
+            "title": "Messages Left",
+            "type": "integer"
+          },
+          "resets_at": {
+            "format": "date-time",
+            "title": "Resets At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "conversations_left",
+          "messages_left",
+          "resets_at",
+          "boosted"
+        ],
+        "title": "Allowance",
+        "type": "object"
+      },
+      "ApiKeyIssued": {
+        "properties": {
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "key_id": {
+            "title": "Key Id",
+            "type": "string"
+          },
+          "secret": {
+            "title": "Secret",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key_id",
+          "secret",
+          "expires_at"
+        ],
+        "title": "ApiKeyIssued",
+        "type": "object"
+      },
+      "ApprovalRequired": {
+        "properties": {
+          "approval_id": {
+            "title": "Approval Id",
+            "type": "string"
+          },
+          "quote_id": {
+            "title": "Quote Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "approval_id",
+          "quote_id"
+        ],
+        "title": "ApprovalRequired",
+        "type": "object"
+      },
+      "ApprovalView": {
+        "properties": {
+          "approval_id": {
+            "title": "Approval Id",
+            "type": "string"
+          },
+          "carrier_id": {
+            "title": "Carrier Id",
+            "type": "string"
+          },
+          "carrier_name": {
+            "title": "Carrier Name",
+            "type": "string"
+          },
+          "delivery": {
+            "$ref": "#/components/schemas/DeliveryState"
+          },
+          "limit": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "location_label": {
+            "title": "Location Label",
+            "type": "string"
+          },
+          "premium": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "quote_id": {
+            "title": "Quote Id",
+            "type": "string"
+          },
+          "requested_at": {
+            "format": "date-time",
+            "title": "Requested At",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "approved",
+              "rejected"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "approval_id",
+          "quote_id",
+          "carrier_id",
+          "carrier_name",
+          "location_label",
+          "limit",
+          "premium",
+          "status",
+          "delivery",
+          "requested_at"
+        ],
+        "title": "ApprovalView",
+        "type": "object"
+      },
+      "AuditEntry": {
+        "properties": {
+          "action": {
+            "$ref": "#/components/schemas/Coded"
+          },
+          "actor": {
+            "enum": [
+              "agent",
+              "human",
+              "api_client",
+              "system",
+              "carrier"
+            ],
+            "title": "Actor",
+            "type": "string"
+          },
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "required": [
+          "at",
+          "actor",
+          "action"
+        ],
+        "title": "AuditEntry",
+        "type": "object"
+      },
+      "BacktestResult": {
+        "properties": {
+          "burn_cost": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "cover": {
+            "$ref": "#/components/schemas/CoverDefinition"
+          },
+          "dataset_id": {
+            "title": "Dataset Id",
+            "type": "string"
+          },
+          "max_payout": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "max_payout_season": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Payout Season"
+          },
+          "seasons": {
+            "items": {
+              "$ref": "#/components/schemas/SeasonResult"
+            },
+            "title": "Seasons",
+            "type": "array"
+          },
+          "seasons_excluded": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Seasons Excluded",
+            "type": "array"
+          },
+          "seasons_used": {
+            "title": "Seasons Used",
+            "type": "integer"
+          },
+          "trend": {
+            "$ref": "#/components/schemas/Trend"
+          },
+          "trigger_frequency": {
+            "pattern": "^-?\\d+\\.\\d{6}$",
+            "title": "Trigger Frequency",
+            "type": "string"
+          },
+          "warnings": {
+            "items": {
+              "$ref": "#/components/schemas/Coded"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "dataset_id",
+          "cover",
+          "seasons",
+          "seasons_used",
+          "seasons_excluded",
+          "trigger_frequency",
+          "burn_cost",
+          "max_payout",
+          "max_payout_season",
+          "trend",
+          "warnings"
+        ],
+        "title": "BacktestResult",
+        "type": "object"
+      },
+      "CellGrid": {
+        "properties": {
+          "breaks": {
+            "items": {
+              "type": "number"
+            },
+            "title": "Breaks",
+            "type": "array"
+          },
+          "cells_paying": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cells Paying"
+          },
+          "metric": {
+            "enum": [
+              "trigger_frequency",
+              "season_anomaly"
+            ],
+            "title": "Metric",
+            "type": "string"
+          },
+          "north": {
+            "title": "North",
+            "type": "number"
+          },
+          "nx": {
+            "title": "Nx",
+            "type": "integer"
+          },
+          "ny": {
+            "title": "Ny",
+            "type": "integer"
+          },
+          "region_id": {
+            "title": "Region Id",
+            "type": "string"
+          },
+          "seasons": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Seasons",
+            "type": "array"
+          },
+          "step_deg": {
+            "title": "Step Deg",
+            "type": "number"
+          },
+          "suggested_season": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suggested Season"
+          },
+          "values": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Values",
+            "type": "array"
+          },
+          "west": {
+            "title": "West",
+            "type": "number"
+          }
+        },
+        "required": [
+          "region_id",
+          "metric",
+          "nx",
+          "ny",
+          "north",
+          "west",
+          "step_deg",
+          "values",
+          "breaks",
+          "seasons",
+          "cells_paying",
+          "suggested_season"
+        ],
+        "title": "CellGrid",
+        "type": "object"
+      },
+      "ChatRequest": {
+        "properties": {
+          "conversation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id"
+          },
+          "locale": {
+            "enum": [
+              "en",
+              "pt-BR"
+            ],
+            "title": "Locale",
+            "type": "string"
+          },
+          "map_point": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GridPoint"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "conversation_id",
+          "message",
+          "locale"
+        ],
+        "title": "ChatRequest",
+        "type": "object"
+      },
+      "Coded": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "params": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "number"
+                }
+              ]
+            },
+            "default": {},
+            "title": "Params",
+            "type": "object"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "title": "Coded",
+        "type": "object"
+      },
+      "ConversationView": {
+        "properties": {
+          "conversation_id": {
+            "title": "Conversation Id",
+            "type": "string"
+          },
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/MessageView"
+            },
+            "title": "Messages",
+            "type": "array"
+          }
+        },
+        "required": [
+          "conversation_id",
+          "messages"
+        ],
+        "title": "ConversationView",
+        "type": "object"
+      },
+      "CoverDefinition": {
+        "properties": {
+          "index": {
+            "$ref": "#/components/schemas/IndexDefinition"
+          },
+          "limit": {
+            "$ref": "#/components/schemas/Money"
+          }
+        },
+        "required": [
+          "index",
+          "limit"
+        ],
+        "title": "CoverDefinition",
+        "type": "object"
+      },
+      "CreateQuote": {
+        "properties": {
+          "cover": {
+            "$ref": "#/components/schemas/CoverDefinition"
+          },
+          "location": {
+            "$ref": "#/components/schemas/QuoteLocationInput"
+          },
+          "simulation": {
+            "$ref": "#/components/schemas/SimulationOptions",
+            "default": {
+              "n": 100000,
+              "seed": 42
+            }
+          }
+        },
+        "required": [
+          "location",
+          "cover"
+        ],
+        "title": "CreateQuote",
+        "type": "object"
+      },
+      "Decision": {
+        "properties": {
+          "approve": {
+            "title": "Approve",
+            "type": "boolean"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "required": [
+          "approve"
+        ],
+        "title": "Decision",
+        "type": "object"
+      },
+      "DeliveryAttempt": {
+        "properties": {
+          "attempt": {
+            "title": "Attempt",
+            "type": "integer"
+          },
+          "duration_ms": {
+            "title": "Duration Ms",
+            "type": "integer"
+          },
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Code"
+          },
+          "event_id": {
+            "title": "Event Id",
+            "type": "string"
+          },
+          "receipt_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Receipt Id"
+          },
+          "status_code": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status Code"
+          }
+        },
+        "required": [
+          "event_id",
+          "attempt",
+          "status_code",
+          "error_code",
+          "duration_ms",
+          "receipt_id"
+        ],
+        "title": "DeliveryAttempt",
+        "type": "object"
+      },
+      "DeliveryOutcome": {
+        "properties": {
+          "attempt": {
+            "$ref": "#/components/schemas/DeliveryAttempt"
+          },
+          "delivered": {
+            "title": "Delivered",
+            "type": "boolean"
+          },
+          "retryable": {
+            "title": "Retryable",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "delivered",
+          "retryable",
+          "attempt"
+        ],
+        "title": "DeliveryOutcome",
+        "type": "object"
+      },
+      "DeliveryState": {
+        "properties": {
+          "attempts": {
+            "title": "Attempts",
+            "type": "integer"
+          },
+          "last_error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error Code"
+          },
+          "receipt_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Receipt Id"
+          },
+          "status": {
+            "enum": [
+              "not_started",
+              "delivering",
+              "delivered",
+              "abandoned"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "attempts",
+          "receipt_id",
+          "last_error_code"
+        ],
+        "title": "DeliveryState",
+        "type": "object"
+      },
+      "Done": {
+        "properties": {
+          "conversation_id": {
+            "title": "Conversation Id",
+            "type": "string"
+          },
+          "message_id": {
+            "title": "Message Id",
+            "type": "string"
+          },
+          "prompt_version": {
+            "title": "Prompt Version",
+            "type": "string"
+          },
+          "stop_reason": {
+            "enum": [
+              "end_turn",
+              "tool_limit",
+              "budget",
+              "error"
+            ],
+            "title": "Stop Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "conversation_id",
+          "message_id",
+          "stop_reason",
+          "prompt_version"
+        ],
+        "title": "Done",
+        "type": "object"
+      },
+      "GridPoint": {
+        "properties": {
+          "lat": {
+            "title": "Lat",
+            "type": "number"
+          },
+          "lon": {
+            "title": "Lon",
+            "type": "number"
+          }
+        },
+        "required": [
+          "lat",
+          "lon"
+        ],
+        "title": "GridPoint",
+        "type": "object"
+      },
+      "GroundingFlagged": {
+        "properties": {
+          "message_id": {
+            "title": "Message Id",
+            "type": "string"
+          },
+          "values": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Values",
+            "type": "array"
+          }
+        },
+        "required": [
+          "message_id",
+          "values"
+        ],
+        "title": "GroundingFlagged",
+        "type": "object"
+      },
+      "Health": {
+        "properties": {
+          "status": {
+            "const": "ok",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "Health",
+        "type": "object"
+      },
+      "IndexDefinition": {
+        "properties": {
+          "exit": {
+            "title": "Exit",
+            "type": "number"
+          },
+          "index_type": {
+            "enum": [
+              "rainfall_below",
+              "dry_spell_above"
+            ],
+            "title": "Index Type",
+            "type": "string"
+          },
+          "trigger": {
+            "title": "Trigger",
+            "type": "number"
+          },
+          "window": {
+            "$ref": "#/components/schemas/Window"
+          }
+        },
+        "required": [
+          "index_type",
+          "window",
+          "trigger",
+          "exit"
+        ],
+        "title": "IndexDefinition",
+        "type": "object"
+      },
+      "MessageView": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "flagged": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Flagged",
+            "type": "array"
+          },
+          "message_id": {
+            "title": "Message Id",
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "user",
+              "assistant"
+            ],
+            "title": "Role",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "tools": {
+            "items": {
+              "$ref": "#/components/schemas/ToolFinished"
+            },
+            "title": "Tools",
+            "type": "array"
+          }
+        },
+        "required": [
+          "message_id",
+          "role",
+          "text",
+          "tools",
+          "flagged",
+          "created_at"
+        ],
+        "title": "MessageView",
+        "type": "object"
+      },
+      "Money": {
+        "properties": {
+          "amount_cents": {
+            "title": "Amount Cents",
+            "type": "integer"
+          },
+          "currency": {
+            "const": "BRL",
+            "default": "BRL",
+            "title": "Currency",
+            "type": "string"
+          }
+        },
+        "required": [
+          "amount_cents"
+        ],
+        "title": "Money",
+        "type": "object"
+      },
+      "Premium": {
+        "properties": {
+          "expense_load": {
+            "pattern": "^-?\\d+\\.\\d{6}$",
+            "title": "Expense Load",
+            "type": "string"
+          },
+          "premium": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "rate_on_line": {
+            "pattern": "^-?\\d+\\.\\d{6}$",
+            "title": "Rate On Line",
+            "type": "string"
+          },
+          "risk_load": {
+            "pattern": "^-?\\d+\\.\\d{6}$",
+            "title": "Risk Load",
+            "type": "string"
+          }
+        },
+        "required": [
+          "premium",
+          "rate_on_line",
+          "risk_load",
+          "expense_load"
+        ],
+        "title": "Premium",
+        "type": "object"
+      },
+      "PricedCover": {
+        "properties": {
+          "assumptions": {
+            "items": {
+              "$ref": "#/components/schemas/Coded"
+            },
+            "title": "Assumptions",
+            "type": "array"
+          },
+          "backtest": {
+            "$ref": "#/components/schemas/BacktestResult"
+          },
+          "premium": {
+            "$ref": "#/components/schemas/Premium"
+          },
+          "simulation": {
+            "$ref": "#/components/schemas/SimulationResult"
+          }
+        },
+        "required": [
+          "backtest",
+          "simulation",
+          "premium",
+          "assumptions"
+        ],
+        "title": "PricedCover",
+        "type": "object"
+      },
+      "Problem": {
+        "description": "The problem document. The interface translates `code`, never the English text.",
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Detail"
+          },
+          "replay_available": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Replay Available"
+          },
+          "status": {
+            "title": "Status",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "trace_id": {
+            "title": "Trace Id",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "title",
+          "status",
+          "code",
+          "trace_id"
+        ],
+        "title": "Problem",
+        "type": "object"
+      },
+      "QuoteLocation": {
+        "properties": {
+          "admin_region": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Admin Region"
+          },
+          "h3_cell": {
+            "title": "H3 Cell",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "lat": {
+            "title": "Lat",
+            "type": "number"
+          },
+          "lon": {
+            "title": "Lon",
+            "type": "number"
+          }
+        },
+        "required": [
+          "label",
+          "lat",
+          "lon",
+          "h3_cell",
+          "admin_region"
+        ],
+        "title": "QuoteLocation",
+        "type": "object"
+      },
+      "QuoteLocationInput": {
+        "properties": {
+          "admin_region": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Admin Region"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "lat": {
+            "title": "Lat",
+            "type": "number"
+          },
+          "lon": {
+            "title": "Lon",
+            "type": "number"
+          }
+        },
+        "required": [
+          "lat",
+          "lon"
+        ],
+        "title": "QuoteLocationInput",
+        "type": "object"
+      },
+      "QuoteSummary": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "location_label": {
+            "title": "Location Label",
+            "type": "string"
+          },
+          "premium": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "quote_id": {
+            "title": "Quote Id",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "pending_approval",
+              "approved",
+              "rejected",
+              "submitted"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "quote_id",
+          "created_at",
+          "status",
+          "location_label",
+          "premium"
+        ],
+        "title": "QuoteSummary",
+        "type": "object"
+      },
+      "QuoteView": {
+        "properties": {
+          "audit": {
+            "items": {
+              "$ref": "#/components/schemas/AuditEntry"
+            },
+            "title": "Audit",
+            "type": "array"
+          },
+          "cover": {
+            "$ref": "#/components/schemas/CoverDefinition"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "dataset_id": {
+            "title": "Dataset Id",
+            "type": "string"
+          },
+          "location": {
+            "$ref": "#/components/schemas/QuoteLocation"
+          },
+          "priced": {
+            "$ref": "#/components/schemas/PricedCover"
+          },
+          "quote_id": {
+            "title": "Quote Id",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "pending_approval",
+              "approved",
+              "rejected",
+              "submitted"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "submission": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Submission"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "workspace_id": {
+            "title": "Workspace Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "quote_id",
+          "workspace_id",
+          "created_at",
+          "status",
+          "location",
+          "dataset_id",
+          "cover",
+          "priced",
+          "submission",
+          "audit"
+        ],
+        "title": "QuoteView",
+        "type": "object"
+      },
+      "Readiness": {
+        "properties": {
+          "status": {
+            "enum": [
+              "ready",
+              "shutting_down"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "Readiness",
+        "type": "object"
+      },
+      "Region": {
+        "properties": {
+          "crop": {
+            "title": "Crop",
+            "type": "string"
+          },
+          "east": {
+            "title": "East",
+            "type": "number"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "north": {
+            "title": "North",
+            "type": "number"
+          },
+          "nx": {
+            "title": "Nx",
+            "type": "integer"
+          },
+          "ny": {
+            "title": "Ny",
+            "type": "integer"
+          },
+          "region_id": {
+            "title": "Region Id",
+            "type": "string"
+          },
+          "south": {
+            "title": "South",
+            "type": "number"
+          },
+          "step_deg": {
+            "title": "Step Deg",
+            "type": "number"
+          },
+          "synthetic": {
+            "title": "Synthetic",
+            "type": "boolean"
+          },
+          "west": {
+            "title": "West",
+            "type": "number"
+          }
+        },
+        "required": [
+          "region_id",
+          "name",
+          "crop",
+          "north",
+          "south",
+          "west",
+          "east",
+          "step_deg",
+          "nx",
+          "ny",
+          "synthetic"
+        ],
+        "title": "Region",
+        "type": "object"
+      },
+      "SeasonResult": {
+        "properties": {
+          "index_value": {
+            "title": "Index Value",
+            "type": "number"
+          },
+          "payout": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Money"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "season": {
+            "title": "Season",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "season",
+          "index_value",
+          "payout"
+        ],
+        "title": "SeasonResult",
+        "type": "object"
+      },
+      "SeasonSeries": {
+        "properties": {
+          "dataset_id": {
+            "title": "Dataset Id",
+            "type": "string"
+          },
+          "index": {
+            "$ref": "#/components/schemas/IndexDefinition"
+          },
+          "seasons": {
+            "items": {
+              "$ref": "#/components/schemas/SeasonResult"
+            },
+            "title": "Seasons",
+            "type": "array"
+          },
+          "seasons_excluded": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Seasons Excluded",
+            "type": "array"
+          }
+        },
+        "required": [
+          "dataset_id",
+          "index",
+          "seasons",
+          "seasons_excluded"
+        ],
+        "title": "SeasonSeries",
+        "type": "object"
+      },
+      "SimulationOptions": {
+        "properties": {
+          "n": {
+            "default": 100000,
+            "title": "N",
+            "type": "integer"
+          },
+          "seed": {
+            "default": 42,
+            "title": "Seed",
+            "type": "integer"
+          }
+        },
+        "title": "SimulationOptions",
+        "type": "object"
+      },
+      "SimulationResult": {
+        "properties": {
+          "expected_loss": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "gap_to_burn_cost": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "method": {
+            "enum": [
+              "gamma_mle",
+              "bootstrap"
+            ],
+            "title": "Method",
+            "type": "string"
+          },
+          "n": {
+            "title": "N",
+            "type": "integer"
+          },
+          "payout_1_in_10": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "payout_1_in_100": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "probability_of_payout": {
+            "pattern": "^-?\\d+\\.\\d{6}$",
+            "title": "Probability Of Payout",
+            "type": "string"
+          },
+          "seed": {
+            "title": "Seed",
+            "type": "integer"
+          },
+          "std_dev": {
+            "$ref": "#/components/schemas/Money"
+          }
+        },
+        "required": [
+          "method",
+          "n",
+          "seed",
+          "expected_loss",
+          "std_dev",
+          "probability_of_payout",
+          "payout_1_in_10",
+          "payout_1_in_100",
+          "gap_to_burn_cost"
+        ],
+        "title": "SimulationResult",
+        "type": "object"
+      },
+      "Started": {
+        "properties": {
+          "conversation_id": {
+            "title": "Conversation Id",
+            "type": "string"
+          },
+          "message_id": {
+            "title": "Message Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "conversation_id",
+          "message_id"
+        ],
+        "title": "Started",
+        "type": "object"
+      },
+      "StreamError": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "completed": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Completed",
+            "type": "array"
+          }
+        },
+        "required": [
+          "code",
+          "completed"
+        ],
+        "title": "StreamError",
+        "type": "object"
+      },
+      "Submission": {
+        "properties": {
+          "carrier_id": {
+            "title": "Carrier Id",
+            "type": "string"
+          },
+          "decided_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided At"
+          },
+          "decision_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decision Note"
+          },
+          "delivery": {
+            "$ref": "#/components/schemas/DeliveryState"
+          },
+          "requested_at": {
+            "format": "date-time",
+            "title": "Requested At",
+            "type": "string"
+          },
+          "submission_id": {
+            "title": "Submission Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "submission_id",
+          "carrier_id",
+          "requested_at",
+          "decided_at",
+          "decision_note",
+          "delivery"
+        ],
+        "title": "Submission",
+        "type": "object"
+      },
+      "SubmissionRequest": {
+        "properties": {
+          "carrier_id": {
+            "title": "Carrier Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "carrier_id"
+        ],
+        "title": "SubmissionRequest",
+        "type": "object"
+      },
+      "SweepResult": {
+        "properties": {
+          "enqueued": {
+            "title": "Enqueued",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "enqueued"
+        ],
+        "title": "SweepResult",
+        "type": "object"
+      },
+      "TextDelta": {
+        "properties": {
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "TextDelta",
+        "type": "object"
+      },
+      "ToolError": {
+        "properties": {
+          "error_code": {
+            "title": "Error Code",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "retryable": {
+            "title": "Retryable",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "error_code",
+          "message",
+          "retryable"
+        ],
+        "title": "ToolError",
+        "type": "object"
+      },
+      "ToolFinished": {
+        "properties": {
+          "call_id": {
+            "title": "Call Id",
+            "type": "string"
+          },
+          "duration_ms": {
+            "title": "Duration Ms",
+            "type": "integer"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ToolError"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "result": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result"
+          },
+          "status": {
+            "enum": [
+              "ok",
+              "error"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/Coded"
+          },
+          "tool": {
+            "title": "Tool",
+            "type": "string"
+          }
+        },
+        "required": [
+          "call_id",
+          "tool",
+          "status",
+          "duration_ms",
+          "summary",
+          "result",
+          "error"
+        ],
+        "title": "ToolFinished",
+        "type": "object"
+      },
+      "ToolStarted": {
+        "properties": {
+          "arguments": {
+            "additionalProperties": true,
+            "title": "Arguments",
+            "type": "object"
+          },
+          "call_id": {
+            "title": "Call Id",
+            "type": "string"
+          },
+          "tool": {
+            "title": "Tool",
+            "type": "string"
+          }
+        },
+        "required": [
+          "call_id",
+          "tool",
+          "arguments"
+        ],
+        "title": "ToolStarted",
+        "type": "object"
+      },
+      "Trend": {
+        "properties": {
+          "p_value": {
+            "pattern": "^-?\\d+\\.\\d{6}$",
+            "title": "P Value",
+            "type": "string"
+          },
+          "significant": {
+            "title": "Significant",
+            "type": "boolean"
+          },
+          "slope_per_decade": {
+            "title": "Slope Per Decade",
+            "type": "number"
+          }
+        },
+        "required": [
+          "slope_per_decade",
+          "p_value",
+          "significant"
+        ],
+        "title": "Trend",
+        "type": "object"
+      },
+      "UserMessage": {
+        "properties": {
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "UserMessage",
+        "type": "object"
+      },
+      "Window": {
+        "properties": {
+          "end": {
+            "title": "End",
+            "type": "string"
+          },
+          "start": {
+            "title": "Start",
+            "type": "string"
+          }
+        },
+        "required": [
+          "start",
+          "end"
+        ],
+        "title": "Window",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "ApiKey": {
+        "description": "API key of a workspace, created from the interface.",
+        "scheme": "bearer",
+        "type": "http"
+      },
+      "ServiceIdentity": {
+        "description": "Google-signed ID token of the invoker service account.",
+        "scheme": "bearer",
+        "type": "http"
+      },
+      "WorkspaceCookie": {
+        "description": "Anonymous workspace cookie, set by the service on the first web request.",
+        "in": "cookie",
+        "name": "vr_ws",
+        "type": "apiKey"
+      }
+    }
+  },
+  "info": {
+    "title": "Veranico",
+    "version": "1"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/v1/allowance": {
+      "get": {
+        "operationId": "get_allowance",
+        "parameters": [
+          {
+            "description": "The code the visitor arrived with, when there was one.",
+            "in": "header",
+            "name": "Veranico-Allowance-Code",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "The code the visitor arrived with, when there was one.",
+              "title": "Veranico-Allowance-Code"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Allowance"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Problem document (RFC 9457); the stable `code` names the error."
+          }
+        },
+        "security": [
+          {
+            "WorkspaceCookie": []
+          }
+        ],
+        "summary": "Get Allowance",
+        "tags": [
+          "access"
+        ]
+      }
+    },
+    "/api/v1/approvals": {
+      "get": {
+        "operationId": "list_approvals",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "pending",
+                    "approved",
+                    "rejected"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ApprovalView"
+                  },
+                  "title": "Response List Approvals",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Problem document (RFC 9457); the stable `code` names the error."
+          }
+        },
+        "security": [
+          {
+            "WorkspaceCookie": []
+          }
+        ],
+        "summary": "List Approvals",
+        "tags": [
+          "quoting"
+        ]
+      }
+    },
+    "/api/v1/approvals/{id}/decision": {
+      "post": {
+        "operationId": "decide_approval",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Decision"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Problem document (RFC 9457); the stable `code` names the error."
+          }
+        },
+        "security": [
+          {
+            "WorkspaceCookie": []
+          }
+        ],
+        "summary": "Decide Approval",
+        "tags": [
+          "quoting"
+        ]
+      }
+    },
+    "/api/v1/approvals/{id}/redeliver": {
+      "post": {
+        "operationId": "redeliver_approval",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Problem document (RFC 9457); the stable `code` names the error."
+          }
+        },
+        "security": [
+          {
+            "WorkspaceCookie": []
+          }
+        ],
+        "summary": "Redeliver Approval",
+        "tags": [
+          "quoting"
+        ]
+      }
+    },
+    "/api/v1/chat": {
+      "post": {
+        "operationId": "chat",
+        "parameters": [
+          {
+            "description": "The code the visitor arrived with, when there was one.",
+            "in": "header",
+            "name": "Veranico-Allowance-Code",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "The code the visitor arrived with, when there was one.",
+              "title": "Veranico-Allowance-Code"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Server-sent events, each one an `AgentEvent` of the contract."
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Problem document (RFC 9457); the stable `code` names the error."
+          }
+        },
+        "security": [
+          {
+            "WorkspaceCookie": []
+          }
+        ],
+        "summary": "Chat",
+        "tags": [
+          "assistant"
+        ]
+      }
+    },
+    "/api/v1/conversations/{id}": {
+      "get": {
+        "operationId": "get_conversation",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Problem document (RFC 9457); the stable `code` names the error."
+          }
+        },
+        "security": [
+          {
+            "WorkspaceCookie": []
+          }
+        ],
+        "summary": "Get Conversation",
+        "tags": [
+          "assistant"
+        ]
+      }
+    },
+    "/api/v1/internal/outbox/sweep": {
+      "post": {
+        "operationId": "sweep_outbox",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SweepResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Problem document (RFC 9457); the stable `code` names the error."
+          }
+        },
+        "security": [
+          {
+            "ServiceIdentity": []
+          }
+        ],
+        "summary": "Sweep Outbox",
+        "tags": [
+          "quoting"
+        ]
+      }
+    },
+    "/api/v1/internal/outbox/{event_id}/deliver": {
+      "post": {
+        "operationId": "deliver_outbox_event",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "event_id",
+            "required": true,
+            "schema": {
+              "title": "Event Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryOutcome"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Problem document (RFC 9457); the stable `code` names the error."
+          }
+        },
+        "security": [
+          {
+            "ServiceIdentity": []
+          }
+        ],
+        "summary": "Deliver Outbox Event",
+        "tags": [
+          "carriers"
+        ]
+      }
+    },
+    "/api/v1/quotes": {
+      "get": {
+        "operationId": "list_quotes",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/QuoteSummary"
+                  },
+                  "title": "Response List Quotes",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Problem document (RFC 9457); the stable `code` names the error."
+          }
+        },
+        "security": [
+          {
+            "WorkspaceCookie": []
+          }
+        ],
+        "summary": "List Quotes",
+        "tags": [
+          "quoting"
+        ]
+      },
+      "post": {
+        "operationId": "create_quote",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateQuote"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuoteView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Problem document (RFC 9457); the stable `code` names the error."
+          }
+        },
+        "security": [
+          {
+            "ApiKey": []
+          }
+        ],
+        "summary": "Create Quote",
+        "tags": [
+          "quoting"
+        ]
+      }
+    },
+    "/api/v1/quotes/{id}": {
+      "get": {
+        "operationId": "get_quote",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuoteView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Problem document (RFC 9457); the stable `code` names the error."
+          }
+        },
+        "security": [
+          {
+            "ApiKey": []
+          },
+          {
+            "WorkspaceCookie": []
+          }
+        ],
+        "summary": "Get Quote",
+        "tags": [
+          "quoting"
+        ]
+      }
+    },
+    "/api/v1/quotes/{id}/evidence.nc": {
+      "get": {
+        "operationId": "get_evidence",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/x-netcdf": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Problem document (RFC 9457); the stable `code` names the error."
+          }
+        },
+        "security": [
+          {
+            "ApiKey": []
+          },
+          {
+            "WorkspaceCookie": []
+          }
+        ],
+        "summary": "Get Evidence",
+        "tags": [
+          "documents"
+        ]
+      }
+    },
+    "/api/v1/quotes/{id}/submissions": {
+      "post": {
+        "operationId": "request_submission",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmissionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Submission"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Problem document (RFC 9457); the stable `code` names the error."
+          }
+        },
+        "security": [
+          {
+            "ApiKey": []
+          },
+          {
+            "WorkspaceCookie": []
+          }
+        ],
+        "summary": "Request Submission",
+        "tags": [
+          "quoting"
+        ]
+      }
+    },
+    "/api/v1/quotes/{id}/term-sheet.pdf": {
+      "get": {
+        "operationId": "get_term_sheet",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "lang",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "en",
+                    "pt-BR"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Lang"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Problem document (RFC 9457); the stable `code` names the error."
+          }
+        },
+        "security": [
+          {
+            "ApiKey": []
+          },
+          {
+            "WorkspaceCookie": []
+          }
+        ],
+        "summary": "Get Term Sheet",
+        "tags": [
+          "documents"
+        ]
+      }
+    },
+    "/api/v1/regions": {
+      "get": {
+        "operationId": "list_regions",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Region"
+                  },
+                  "title": "Response List Regions",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Problem document (RFC 9457); the stable `code` names the error."
+          }
+        },
+        "summary": "List Regions",
+        "tags": [
+          "climate"
+        ]
+      }
+    },
+    "/api/v1/regions/{id}/cells": {
+      "get": {
+        "operationId": "get_region_cells",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "metric",
+            "required": true,
+            "schema": {
+              "enum": [
+                "trigger_frequency",
+                "season_anomaly"
+              ],
+              "title": "Metric",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "season",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Season"
+            }
+          },
+          {
+            "in": "query",
+            "name": "index_type",
+            "required": true,
+            "schema": {
+              "enum": [
+                "rainfall_below",
+                "dry_spell_above"
+              ],
+              "title": "Index Type",
+              "type": "string"
+            }
+          },
+          {
+            "description": "First day of the window, MM-DD.",
+            "in": "query",
+            "name": "window_start",
+            "required": true,
+            "schema": {
+              "description": "First day of the window, MM-DD.",
+              "title": "Window Start",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Last day of the window, MM-DD.",
+            "in": "query",
+            "name": "window_end",
+            "required": true,
+            "schema": {
+              "description": "Last day of the window, MM-DD.",
+              "title": "Window End",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "trigger",
+            "required": true,
+            "schema": {
+              "title": "Trigger",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "exit",
+            "required": true,
+            "schema": {
+              "title": "Exit",
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CellGrid"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Problem document (RFC 9457); the stable `code` names the error."
+          }
+        },
+        "summary": "Get Region Cells",
+        "tags": [
+          "pricing"
+        ]
+      }
+    },
+    "/api/v1/replays/{locale}": {
+      "get": {
+        "operationId": "get_replay",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "locale",
+            "required": true,
+            "schema": {
+              "enum": [
+                "en",
+                "pt-BR"
+              ],
+              "title": "Locale",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Server-sent events, each one an `AgentEvent` of the contract."
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Problem document (RFC 9457); the stable `code` names the error."
+          }
+        },
+        "security": [
+          {
+            "WorkspaceCookie": []
+          }
+        ],
+        "summary": "Get Replay",
+        "tags": [
+          "assistant"
+        ]
+      }
+    },
+    "/api/v1/weather/seasons": {
+      "get": {
+        "operationId": "get_season_series",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "lat",
+            "required": true,
+            "schema": {
+              "title": "Lat",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "lon",
+            "required": true,
+            "schema": {
+              "title": "Lon",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit_cents",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit Cents"
+            }
+          },
+          {
+            "in": "query",
+            "name": "index_type",
+            "required": true,
+            "schema": {
+              "enum": [
+                "rainfall_below",
+                "dry_spell_above"
+              ],
+              "title": "Index Type",
+              "type": "string"
+            }
+          },
+          {
+            "description": "First day of the window, MM-DD.",
+            "in": "query",
+            "name": "window_start",
+            "required": true,
+            "schema": {
+              "description": "First day of the window, MM-DD.",
+              "title": "Window Start",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Last day of the window, MM-DD.",
+            "in": "query",
+            "name": "window_end",
+            "required": true,
+            "schema": {
+              "description": "Last day of the window, MM-DD.",
+              "title": "Window End",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "trigger",
+            "required": true,
+            "schema": {
+              "title": "Trigger",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "exit",
+            "required": true,
+            "schema": {
+              "title": "Exit",
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeasonSeries"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Problem document (RFC 9457); the stable `code` names the error."
+          }
+        },
+        "summary": "Get Season Series",
+        "tags": [
+          "pricing"
+        ]
+      }
+    },
+    "/api/v1/workspace/api-keys": {
+      "post": {
+        "operationId": "issue_api_key",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyIssued"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Problem document (RFC 9457); the stable `code` names the error."
+          }
+        },
+        "security": [
+          {
+            "WorkspaceCookie": []
+          }
+        ],
+        "summary": "Issue Api Key",
+        "tags": [
+          "access"
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "operationId": "health",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Problem document (RFC 9457); the stable `code` names the error."
+          }
+        },
+        "summary": "Healthz",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/healthz": {
+      "get": {
+        "operationId": "healthz",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Problem document (RFC 9457); the stable `code` names the error."
+          }
+        },
+        "summary": "Healthz",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/readyz": {
+      "get": {
+        "operationId": "readyz",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Readiness"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Readiness"
+                }
+              }
+            },
+            "description": "The instance is shutting down."
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Problem document (RFC 9457); the stable `code` names the error."
+          }
+        },
+        "summary": "Readyz",
+        "tags": [
+          "health"
+        ]
+      }
+    }
+  }
+}

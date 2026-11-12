@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+build/
+dist/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.import_linter_cache/
+.cache/
+
+# Coverage
+.coverage
+.coverage.*
+htmlcov/
+coverage/
+coverage.xml
+
+# Node
+node_modules/
+.pnpm-store/
+*.tsbuildinfo
+.vite/
+
+# Playwright
+playwright-report/
+test-results/
+blob-report/
+
+# Environment files (the documented example is env.example)
+.env
+.env.*
+
+# Local data: weather store, blobs, evaluation logs, campaign results
+.data/
+backend/tests/evals/logs/
+.evidence/
+
+# Terraform: provider binaries, state and variable values
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+
+# Editors and operating system
+.idea/
+.vscode/
+.DS_Store

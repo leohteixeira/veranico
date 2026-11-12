@@ -1,0 +1,258 @@
+# The local stack for development and tests (SPEC 17): the API role, the mock carrier role,
+# the Vite dev server, the Firestore and Cloud Storage emulators and Jaeger; the fault proxy
+# of the failure campaign in its own profile. `make dev` and `make test-failure` drive it.
+#
+# The file works on a bare copy of the repository and names no secret value:
+#
+# * A secret reaches a container only by name (`- NAME` under `environment`): Compose copies
+#   the value from the environment of the calling process, and leaves the variable out of
+#   the container when it is not set there. `make dev` generates the development secrets
+#   for one run; the roles refuse to start without them.
+# * Two variables are interpolated, both with a value that always exists: WEB_PORT
+#   (default 3500) and COMPOSE_PROJECT_NAME, which Compose sets itself to the project name.
+# * The Makefile calls Compose with `--env-file /dev/null`, so Compose never reads the
+#   `.env` file on its own: the Makefile's loader is its only reader.
+#
+# No container or image name is fixed to one stack, so the same file starts a second,
+# separate project (`docker compose -p veranico-load ...`, the load campaign), with the
+# published ports changed by load/compose.load.yaml.
+name: veranico
+
+# The one image of the Dockerfile, for both roles and for the cube seeding.
+x-app: &app
+  image: veranico:dev
+  build: .
+
+# Traces go to Jaeger over OTLP/HTTP. Jaeger is not a dependency: the exporter sends in the
+# background, so a role starts and answers without it and only logs the failed exports.
+x-traces:
+  - &traces-exporter VERANICO_TELEMETRY__EXPORTER=otlp
+  - &traces-endpoint VERANICO_TELEMETRY__OTLP_ENDPOINT=http://jaeger:4318/v1/traces
+
+# The image has neither curl nor wget, so the health check is the interpreter's own client.
+x-role-healthcheck: &role-healthcheck
+  test:
+    - CMD
+    - python
+    - -c
+    - 'import urllib.request; urllib.request.urlopen("http://127.0.0.1:8080/healthz", timeout=2)'
+  interval: 2s
+  timeout: 3s
+  retries: 30
+  start_period: 5s
+
+services:
+  firestore:
+    # The image has no entrypoint, and the emulator binds localhost unless told otherwise.
+    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:593.0.0-emulators
+    command: ["gcloud", "emulators", "firestore", "start", "--host-port=0.0.0.0:8580"]
+    ports:
+      - "8580:8580"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "--output", "/dev/null", "http://localhost:8580/"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+      start_period: 5s
+
+  storage:
+    # A community emulator: Google publishes none for Cloud Storage. Data lives in the
+    # container and is gone after `docker compose down`.
+    image: fsouza/fake-gcs-server:1.56.1
+    command: ["-scheme", "http", "-port", "8590", "-public-host", "localhost:8590"]
+    ports:
+      - "8590:8590"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--spider", "http://localhost:8590/_internal/healthcheck"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+      start_period: 2s
+
+  jaeger:
+    # Jaeger v2, all-in-one with in-memory storage. Only the UI is published; OTLP (4317,
+    # 4318) is reachable inside the network.
+    image: jaegertracing/jaeger:2.23.0
+    ports:
+      - "8516:16686"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--spider", "http://localhost:13133/status"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+      start_period: 2s
+
+  cubes:
+    # Runs once and exits: installs the cube of each showcase region in the `weather`
+    # volume. A cube the owner built on the host (`make build-cube REGION=<id>`, in
+    # backend/.data/weather) wins: it is copied in, replacing what the volume holds, whenever
+    # its manifest differs. Without one, a SYNTHETIC cube is seeded when the volume holds no
+    # cube for the region, so a bare copy of the repository (no backend/.data, no network,
+    # no Earth Engine project) still serves the three regions. Seeded data answers
+    # `synthetic = true` and is labelled so wherever it is shown. The seeding is the
+    # documented script with the documented seeds
+    # (`make build-cube REGION=<id> SYNTHETIC=1 SEED=<n>`); backend/ is mounted read-only
+    # because the image holds the package and not the scripts or the local data. About ten
+    # seconds per seeded region, on a new volume only; a copy takes about a second.
+    <<: *app
+    network_mode: none
+    # A new named volume belongs to root and the image's user is 10001: the cubes are
+    # written as root and the store is handed to that user, who also caches points in it.
+    user: "0:0"
+    volumes:
+      - weather:/tmp/veranico/weather
+      - ./backend:/backend:ro
+    environment:
+      - VERANICO_CLIMATE__STORE_ROOT=/tmp/veranico/weather
+    command:
+      - sh
+      - -euc
+      - |
+        store=/tmp/veranico/weather
+        built=/backend/.data/weather/climate/cubes
+        mkdir -p "$$store/climate/cubes"
+        for seeded in sul-de-minas:1 sorriso:2 ribeirao-preto:3; do
+          region="$${seeded%%:*}"
+          target="$$store/climate/cubes/$$region"
+          if [ -f "$$built/$$region/manifest.json" ]; then
+            if ! cmp -s "$$built/$$region/manifest.json" "$$target/manifest.json"; then
+              rm -rf "$$target.new"
+              cp -R "$$built/$$region" "$$target.new"
+              rm -rf "$$target"
+              mv "$$target.new" "$$target"
+              echo "cubes: $$region copied from backend/.data/weather"
+            fi
+          elif [ ! -f "$$target/manifest.json" ]; then
+            python /backend/scripts/build_cube.py --region "$$region" --synthetic --seed "$${seeded##*:}"
+          fi
+        done
+        chown -R 10001:10001 "$$store"
+
+  carrier:
+    # The mock carrier (SPEC 11.4). It signs with the same webhook secret as the sender and
+    # writes its receipts to the Firestore emulator, in the default project of the settings,
+    # which is also what the failure tests read. Whether it answers the first attempt of
+    # each event with 503 comes from the caller by name (SPEC 7): `make dev` turns it on so
+    # the demo shows the retry; `make test-failure` and the load campaign turn it off, and
+    # without the variable the setting's default (off) applies.
+    <<: *app
+    depends_on:
+      firestore:
+        condition: service_healthy
+    environment:
+      - APP_ROLE=carrier
+      - FIRESTORE_EMULATOR_HOST=firestore:8580
+      - VERANICO_DELIVERY__CARRIER_FAIL_FIRST_ATTEMPT
+      - *traces-exporter
+      - *traces-endpoint
+      - VERANICO_DELIVERY__WEBHOOK_SIGNING_SECRET
+    ports:
+      - "8510:8080"
+    healthcheck: *role-healthcheck
+
+  api:
+    # The product. Documents and cached points stay in the container (the `local` backends
+    # of the image); the regional cubes come from the `weather` volume.
+    <<: *app
+    depends_on:
+      firestore:
+        condition: service_healthy
+      cubes:
+        condition: service_completed_successfully
+    volumes:
+      - weather:/tmp/veranico/weather
+    environment:
+      - APP_ROLE=api
+      - FIRESTORE_EMULATOR_HOST=firestore:8580
+      - VERANICO_CLIMATE__STORE_ROOT=/tmp/veranico/weather
+      - VERANICO_DELIVERY__CARRIER_BASE_URL=http://carrier:8080
+      # The in-process relay calls the deliver route of its own container.
+      - VERANICO_DELIVERY__INTERNAL_BASE_URL=http://127.0.0.1:8080
+      - VERANICO_DELIVERY__INTERNAL_AUTH=token
+      - *traces-exporter
+      - *traces-endpoint
+      # By name only, from the caller. The first four are required (generated by `make dev`).
+      - VERANICO_COOKIE_SIGNING_SECRET
+      - VERANICO_ACCESS__IP_HASH_SALT
+      - VERANICO_DELIVERY__WEBHOOK_SIGNING_SECRET
+      - VERANICO_DELIVERY__INTERNAL_TOKEN
+      - VERANICO_ACCESS__ALLOWANCE_CODE
+      - VERANICO_ACCESS__API_KEY_RATE_PER_MINUTE
+      - VERANICO_FRAME_ANCESTORS
+      # Without a key the caller sets the model client to `scripted`.
+      - ANTHROPIC_API_KEY
+      - AGENT_MODEL
+      - VERANICO_ASSISTANT__MODEL_CLIENT
+    ports:
+      - "8500:8080"
+    healthcheck: *role-healthcheck
+
+  web:
+    # The Vite dev server, from the frontend stage of the Dockerfile (Node.js, pnpm and the
+    # locked dependencies). The sources are mounted, so an edit on the host reloads the page.
+    image: veranico-web:dev
+    build:
+      context: .
+      target: web
+    depends_on:
+      api:
+        condition: service_healthy
+    command: ["pnpm", "exec", "vite"]
+    volumes:
+      - ./frontend/src:/web/src:ro
+      - ./frontend/index.html:/web/index.html:ro
+      - ./frontend/public:/web/public:ro
+    environment:
+      # In this container the API is the service `api` on its container port.
+      - VERANICO_API_PROXY_TARGET=http://api:8080
+      # Optional interface settings (env.example, "Frontend"); none is a secret.
+      - VITE_BASEMAP_RELIEF
+      - VITE_BASEMAP_SATELLITE
+      - VITE_EXAMPLE_COVERS
+      - VITE_LANDING_URLS
+    ports:
+      - "${WEB_PORT:-3500}:3500"
+    healthcheck:
+      # The image has neither curl nor wget.
+      test:
+        - CMD
+        - node
+        - -e
+        - 'fetch("http://127.0.0.1:3500/").then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))'
+      interval: 2s
+      timeout: 3s
+      retries: 30
+      start_period: 3s
+
+  toxiproxy:
+    # The fault proxy of the failure campaign; only `make test-failure` starts it. Tests
+    # create the proxy through the control API, listening on 8520 and pointing at the
+    # carrier service (`carrier:8080`).
+    profiles: ["failure"]
+    image: ghcr.io/shopify/toxiproxy:2.13.0
+    # A command replaces the image's default arguments, so the bind address is repeated.
+    command: ["-host=0.0.0.0"]
+    depends_on:
+      carrier:
+        condition: service_healthy
+    ports:
+      - "8520:8520" # listener of the proxy the tests create
+      - "8521:8474" # control API
+    healthcheck:
+      # The image has no shell: exec form only.
+      test: ["CMD", "/toxiproxy-cli", "list"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+      start_period: 1s
+
+volumes:
+  # The local weather store of the API role: the installed cubes and the cached points.
+  weather:
+
+networks:
+  default:
+    # The project name, so a container started outside Compose can join by a known name
+    # (the smoke test of the image, the k6 container of the load campaign) and two projects
+    # never share a network: `veranico` here, `veranico-load` for the load campaign.
+    name: ${COMPOSE_PROJECT_NAME}

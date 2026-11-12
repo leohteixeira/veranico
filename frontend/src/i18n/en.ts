@@ -1,0 +1,429 @@
+/**
+ * English catalogue: the source of the message keys. `pt-BR.ts` must define exactly the same
+ * keys, so a missing translation is a type error.
+ *
+ * `{name}` is a parameter. A key that is an API code (`problem.<code>`, `audit.<action>`,
+ * `tool.<name>`, `assumption.<name>`, `warning.<name>`) may have `.alt` and `.plain` variants:
+ * `translateCoded` uses the first variant whose parameters are all present.
+ */
+export const en = {
+  // Product
+  "app.name": "Veranico",
+  "app.about": "Veranico, about the project",
+  "app.disclaimer": "Pricing is illustrative. It is not actuarial or insurance advice.",
+  "app.non_commercial": "Non-commercial demo.",
+  "app.weather_attribution":
+    "Weather: Copernicus Climate Change Service. ERA5-Land for the regional cubes; ERA5 through Open-Meteo for any other point. CC BY 4.0.",
+  // A synthetic region: ERA5-Land is not credited for a surface that was generated.
+  "app.weather_attribution_synthetic":
+    "Weather: the surface of this region is synthetic, generated for the demonstration; it is not weather history. A point outside the showcase regions uses ERA5 through Open-Meteo (Copernicus Climate Change Service, CC BY 4.0).",
+  "app.synthetic":
+    "Synthetic weather data: these figures are generated for the demo and are not weather history.",
+
+  // Map
+  "map.label": "Map of {region}",
+  "map.label_empty": "Map",
+  "map.basemap_failed": "The basemap did not load. The risk layer is still shown.",
+  "map.basemap_retry": "Load it again",
+  "map.farm": "Farm",
+  "map.cube": "Weather grid: {count} cells of {step}°",
+  "map.smoothing":
+    "The colour is smoothed between cell centres for reading only. The data is one value per cell.",
+  "map.synthetic": "Synthetic weather data, not weather history",
+  "map.outside_showcase":
+    "This point is outside the showcase regions, so there is no regional view. The quote uses the ERA5 grid point the weather source returned; the outline only shows the size of a 0.25° cell.",
+  "map.cell.frequency": "Pays in {rate} of seasons",
+  "map.cell.anomaly": "{anomaly} against its median",
+  "map.cell.no_value": "No value for this cell",
+  "map.cell.distance": "{distance} from the farm",
+  "compass.north": "N",
+  "compass.south": "S",
+  "compass.east": "E",
+  "compass.west": "W",
+
+  // Season timeline
+  "timeline.label": "Seasons",
+  "timeline.range_label": "Season",
+  "timeline.hint": "Drag to see one season on the map",
+  "timeline.season_view": "Show one season",
+  "timeline.all_seasons": "All seasons",
+  "timeline.season": "{season}: {value}",
+  "timeline.season_payout": "{season}: {value}, payout {payout}",
+  "timeline.legend_payout": "Payout season",
+  "timeline.legend_trigger": "Trigger {value}",
+  "timeline.loading": "Loading the seasons",
+  "timeline.failed": "The seasons did not load.",
+  "action.retry": "Try again",
+  "basemap.label": "Basemap",
+  "basemap.relief": "Relief",
+  "basemap.satellite": "Satellite",
+  "attribution.label": "Sources and licences",
+  "attribution.basemap": "Basemap:",
+
+  // Languages and themes
+  "language.label": "Language",
+  "language.en": "English",
+  "language.pt-BR": "Português",
+  "theme.label": "Theme",
+  "theme.light": "Light",
+  "theme.dark": "Dark",
+
+  // Regions
+  "region.label": "Region",
+  "region.option": "{name} · {crop}",
+  "region.outside": "Outside the showcase regions",
+  "render.label": "Risk layer",
+  "render.surface": "Surface",
+  "render.cells": "Cells",
+  "top.label": "View settings",
+  "crop.coffee": "Coffee",
+  "crop.soybean": "Soybean",
+  "crop.sugarcane": "Sugarcane",
+
+  // Units
+  "unit.mm": "{value} mm",
+  "unit.day": "{value} day",
+  "unit.days": "{value} days",
+  "unit.km": "{value} km",
+  "unit.ms": "{value} ms",
+
+  // The six steps of the flow
+  "step.locate": "Locate",
+  "step.history": "History",
+  "step.backtest": "Backtest",
+  "step.price": "Price",
+  "step.term_sheet": "Term sheet",
+  "step.approval": "Approval",
+
+  // Tabs
+  "tab.risk": "Risk",
+  "tab.history": "History",
+  "tab.quote": "Quote",
+  "tab.approvals": "Approvals",
+
+  "tabs.label": "Details",
+  "state.loading": "Loading",
+  "state.failed": "This did not load.",
+
+  // Risk tab
+  "risk.empty": "Choose a region to see its risk surface.",
+  "risk.no_cell": "The insured point is outside this region's weather grid.",
+  "risk.cell": "Insured cell",
+  "risk.cell.no_value": "no value",
+  "risk.neighbours": "Neighbouring cells",
+  "risk.range": "{min} to {max}",
+  "risk.reading.frequency":
+    "At the insured cell this cover would have paid in {rate} of the {seasons} seasons. Its neighbours range from {min} to {max}.",
+  "risk.reading.season":
+    "In {season} the index at the insured cell was {anomaly} against its median. {paying} of the {cells} cells of the region would have paid.",
+  "risk.reading.season_plain":
+    "In {season} the index at the insured cell was {anomaly} against its median.",
+  "risk.legend.frequency": "Share of seasons that pay",
+  "risk.legend.anomaly": "Index against the cell's median, dry to wet",
+  "risk.legend.class": "{low} to {high}",
+  "risk.neighbourhood": "The insured cell and its neighbours, north at the top",
+  "risk.neighbourhood.insured": "insured cell",
+  "risk.neighbourhood.outside": "outside the grid",
+
+  // History tab
+  "history.empty":
+    "No backtest yet. Describe an exposure in the conversation and the agent replays the index over every season.",
+  "history.example":
+    "The example cover of this region, season by season, as the timeline shows it. Describe an exposure in the conversation to backtest your own cover.",
+  "history.index_title.rainfall_below": "Rainfall in the window, per season",
+  "history.index_title.dry_spell_above": "Longest dry spell in the window, per season",
+  "history.payout_title": "Payout per season",
+  "history.trigger_line": "Trigger {value}",
+  "history.exit_line": "Exit {value}",
+  "history.range_label": "Season",
+  "history.hint": "Select a bar, or use the arrow keys, to put that season on the map.",
+  "history.tip.index": "Index",
+  "history.tip.payout": "Payout",
+  "history.no_payout": "No payout",
+  "history.aggregates": "Aggregates",
+  "history.seasons_used": "Seasons used",
+  "history.trigger_frequency": "Trigger frequency",
+  "history.burn_cost": "Burn cost (average payout)",
+  "history.max_payout": "Largest payout",
+  "history.max_payout_in": "{value} in {season}",
+  "history.seasons_excluded": "Seasons excluded",
+  "history.table.show": "Show every season as a table",
+  "history.table.hide": "Hide the table",
+  "history.table.caption": "Every season",
+  "history.table.season": "Season",
+  "history.table.index": "Index",
+  "history.table.payout": "Payout",
+
+  // Quote tab
+  "quote.empty": "No quote yet. When the agent prices a cover, the quote appears here.",
+  "quote.recording":
+    "Recording. This quote was priced when the conversation was recorded. It does not exist in your workspace, so there are no downloads and nothing to approve.",
+  "quote.premium": "Indicative premium",
+  "quote.rate_on_line": "Rate on line",
+  "quote.simulation": "Simulation",
+  "quote.expected_loss": "Expected loss",
+  "quote.std_dev": "Standard deviation",
+  "quote.probability_of_payout": "Probability of a payout",
+  "quote.payout_1_in_10": "Payout, 1 season in 10",
+  "quote.payout_1_in_100": "Payout, 1 season in 100",
+  "quote.gap_to_burn_cost": "Expected loss minus burn cost",
+  "quote.cover": "Cover",
+  "quote.location": "Location",
+  "quote.dataset": "Dataset",
+  "quote.dataset.cube": "Grid cell of the regional cube (0.1°)",
+  "quote.dataset.point": "History of the point",
+  "quote.index": "Index",
+  "quote.window": "Window",
+  "quote.trigger": "Trigger",
+  "quote.exit": "Exit",
+  "quote.limit": "Limit",
+  "quote.assumptions": "Assumptions",
+  "quote.downloads": "Downloads",
+  "quote.term_sheet": "Term sheet, {language} (PDF)",
+  "quote.evidence": "Evidence (NetCDF)",
+  "quote.term_sheet_pending": "The term sheet is available once the agent has drafted it.",
+  "quote.audit": "Audit trail",
+  "quote.audit.note": "Note: {note}",
+  "quote.api.title": "Use the API",
+  "quote.api.body":
+    "Create a key for this workspace to price the same cover over the public API. The key is shown once and is not stored in this browser.",
+  "quote.api.create": "Create an API key",
+  "quote.api.creating": "Creating the key",
+  "quote.api.secret": "API key",
+  "quote.api.once": "Copy it now. It is shown this once and cannot be shown again.",
+  "quote.api.expires": "Expires {date}",
+  "quote.api.copy": "Copy the key",
+  "quote.api.copy_example": "Copy the request",
+  "quote.api.copied": "Copied",
+  "quote.api.example": "Example request",
+  "quote.api.hide": "Done, hide the key",
+
+  // Approvals tab
+  "tabs.badge.one": "{count} pending",
+  "tabs.badge.other": "{count} pending",
+  "approvals.empty":
+    "Nothing to approve. When the agent requests a submission, it waits here for your decision.",
+  "approvals.open_quote": "{quote_id}: open the quote",
+  "approvals.carrier": "Carrier",
+  "approvals.premium": "Premium",
+  "approvals.requested": "Requested",
+  "approvals.you_decide":
+    "The agent requested this submission and cannot approve it. The decision is yours.",
+  "approvals.note": "Note (optional)",
+  "approvals.note_count": "{count} of {max} characters",
+  "approvals.note_too_long": "The note has more than {max} characters. Shorten it.",
+  "approvals.approve": "Approve",
+  "approvals.reject": "Reject",
+  "approvals.delivering": "Approved. Delivering to the carrier.",
+  "approvals.attempts.one": "{count} attempt so far.",
+  "approvals.attempts.other": "{count} attempts so far.",
+  "approvals.last_error": "Last error: {code}.",
+  "approvals.delivered": "Delivered on attempt {count}. The carrier's receipt is {receipt_id}.",
+  "approvals.attempts.label": "Webhook attempts",
+  "approvals.rejected": "Rejected. Nothing was sent to the carrier.",
+  "approvals.abandoned": "The delivery was abandoned after {count} attempts.",
+  "approvals.redeliver": "Deliver again",
+
+  // Conversation card
+  "chat.title": "Conversation",
+  "chat.restart": "Start over",
+  "chat.progress": "Progress",
+  "chat.step_of": "Step {step} of {count}: {name}",
+  "chat.steps_done": "All {count} steps done",
+  "chat.step.done": "{name}: done",
+  "chat.step.current": "{name}: next",
+  "chat.step.todo": "{name}: not started",
+  "chat.meter.one": "{count} message left today",
+  "chat.meter.other": "{count} messages left today",
+  "chat.messages": "Messages",
+  "chat.you": "You",
+  "chat.working": "The agent is working",
+  "chat.no_answer": "The agent ended the turn without an answer.",
+  "chat.answer_lost": "The answer was interrupted. Send the message again.",
+  "chat.first.title": "Describe an exposure, or start from one of these",
+  "chat.first.body":
+    "The agent asks for anything essential that is missing, then backtests and prices the cover with the tools listed in each step.",
+  "chat.example.rainfall_below":
+    "Farm near {label}. The client worries about too little rain from {start} to {end}. Pay when rainfall is below {trigger}, in full at {exit}. Limit {limit}.",
+  "chat.example.dry_spell_above":
+    "Farm near {label}. The client worries about a dry spell from {start} to {end}. Pay when the longest dry spell is above {trigger}, in full at {exit}. Limit {limit}.",
+  "chat.input": "Message to the agent",
+  "chat.placeholder": "Crop, place, peril, coverage window, limit",
+  "chat.send": "Send",
+  "chat.hint": "Enter sends. Shift+Enter starts a new line.",
+  "chat.map_point": "Point from the map: {lat}, {lon}",
+  "chat.map_point_remove": "Remove the point",
+  "chat.map_point_request": "Price a cover for the point I marked on the map ({lat}, {lon}).",
+  "chat.tool.running": "running",
+  "chat.tool.ok": "done",
+  "chat.tool.failed": "failed",
+  "chat.tool.not_run": "not run",
+  "chat.tool.arguments": "Arguments",
+  "chat.figure.open": "{value}: show its source in the {tab} tab",
+  "chat.figure.flagged": "not found in any tool output",
+  "chat.flagged.one":
+    "1 figure in this answer was not found in any tool output. Treat it as unverified.",
+  "chat.flagged.other":
+    "{count} figures in this answer were not found in any tool output. Treat them as unverified.",
+  "chat.interrupted": "The connection closed before the answer finished.",
+  "chat.completed": "Completed before the interruption: {tools}.",
+  "chat.completed_none": "No tool had completed.",
+  "chat.approval": "A person decides this submission in the Approvals tab.",
+  "chat.open_approvals": "Open approvals",
+  "chat.replay.offer":
+    "You can still watch a recorded conversation. The map, the history and the public API keep working.",
+  "chat.replay.play": "Play the recorded conversation",
+  "chat.replay.again": "Play it again",
+  "chat.replay.loading": "Loading the recording",
+  "chat.replay.failed": "The recording did not load.",
+  "chat.replay.banner":
+    "Recording. This conversation was recorded earlier; nothing here is created or sent.",
+  "chat.replay.ended": "The recording has ended.",
+
+  // Tool names, as labels beside the identifier
+  "toolname.resolve_location": "Resolve the location",
+  "toolname.get_weather_history": "Load the weather history",
+  "toolname.backtest_index": "Backtest the index",
+  "toolname.price_cover": "Price the cover",
+  "toolname.find_extreme_seasons": "Find the worst seasons",
+  "toolname.draft_term_sheet": "Draft the term sheet",
+  "toolname.request_submission": "Request the submission",
+
+  // Index, method, metric and data source names
+  "index.rainfall_below": "rainfall below a trigger",
+  "index.dry_spell_above": "dry spell above a trigger",
+  "method.gamma_mle": "Gamma distribution fitted to the seasonal totals",
+  "method.bootstrap": "Bootstrap of the historical seasons",
+  "direction.increasing": "rising",
+  "direction.decreasing": "falling",
+  "metric.trigger_frequency": "Trigger frequency",
+  "metric.season_anomaly": "Season anomaly",
+  "source.era5-land/cds": "ERA5-Land, Copernicus Climate Change Service",
+  "source.era5/open-meteo": "ERA5, Open-Meteo",
+  "source.synthetic": "synthetic cube (generated for the demo, not weather history)",
+
+  // Quote, approval and delivery states
+  "status.quote.draft": "Draft",
+  "status.quote.pending_approval": "Pending approval",
+  "status.quote.approved": "Approved",
+  "status.quote.rejected": "Rejected",
+  "status.quote.submitted": "Submitted",
+  "status.approval.pending": "Pending",
+  "status.approval.approved": "Approved",
+  "status.approval.rejected": "Rejected",
+  "status.delivery.not_started": "Not sent",
+  "status.delivery.delivering": "Delivering",
+  "status.delivery.delivered": "Delivered",
+  "status.delivery.abandoned": "Delivery abandoned",
+
+  // Actors of the audit trail
+  "actor.agent": "Agent",
+  "actor.human": "You",
+  "actor.api_client": "API client",
+  "actor.system": "System",
+  "actor.carrier": "Carrier",
+
+  // Why the live agent is or is not available
+  "admission.ok": "The live agent is available.",
+  "admission.visitor_allowance": "Today's allowance for the live agent is used.",
+  "admission.day_ceiling": "The demo reached its spend ceiling for today.",
+  "admission.month_ceiling": "The demo reached its spend ceiling for this month.",
+
+  // How a turn ended
+  "stop.end_turn": "The agent finished its answer.",
+  "stop.tool_limit":
+    "The agent reached the limit of tool calls for one request. Send a message to continue.",
+  "stop.budget": "This conversation reached its budget. Start over to continue.",
+  "stop.error": "The answer was interrupted.",
+
+  // Problem codes (RFC 9457 `code`); the API's English prose is never shown
+  "problem.not_found": "Not found. It may have expired or belong to another workspace.",
+  "problem.unauthorized": "A valid API key is needed. Create one in the Quote tab.",
+  "problem.forbidden": "This action is not allowed here.",
+  "problem.invalid_arguments": "The request has a missing or invalid value.",
+  "problem.conflict": "This conflicts with the current state. Reload and try again.",
+  "problem.rate_limited": "Too many requests. Wait a moment and try again.",
+  "problem.allowance_exhausted": "Today's allowance for the live agent is used.",
+  "problem.spend_ceiling_reached": "The demo reached its spend ceiling for the live agent.",
+  "problem.outside_coverage": "This point is outside the area the weather data covers.",
+  "problem.location_not_found": "No place in Brazil matches that name.",
+  "problem.location_ambiguous": "Several places match that name. Choose one.",
+  "problem.weather_source_unavailable": "The weather source did not answer. Try again in a moment.",
+  "problem.dataset_not_found": "There is no weather history loaded for this point yet.",
+  "problem.invalid_cover":
+    "The cover is not valid. Check the window, the trigger, the exit and the limit.",
+  "problem.insufficient_history": "There are fewer than 20 complete seasons for this window.",
+  "problem.invalid_state": "The quote is not in a state that allows this.",
+  "problem.idempotency_conflict": "This idempotency key was already used with another request.",
+  "problem.unknown_carrier": "That carrier is not in the directory.",
+  "problem.delivery_failed": "The carrier could not be reached.",
+  "problem.model_unavailable": "The agent is unavailable right now. Try again in a moment.",
+  "problem.message_too_long": "The message is too long. Shorten it and send again.",
+  "problem.not_implemented": "This part of the service is not available yet.",
+  "problem.shutting_down": "The service restarted during the answer. Send the message again.",
+  // A tool call the agent asked for beyond the limit, or after the tool had failed twice
+  "problem.tool_not_executed":
+    "This call was not run: the agent had used its calls or attempts for this request.",
+  // Two codes of the interface itself, for a failure that carries no problem document
+  "problem.network": "The service could not be reached. Check the connection and try again.",
+  "problem.internal_error": "Something went wrong on our side. Try again in a moment.",
+  "problem.unknown": "The request failed. Try again in a moment.",
+  "error.reference": "Reference {trace_id}",
+
+  // Audit actions
+  "audit.quote_created": "Quote created as a draft",
+  "audit.term_sheet_rendered": "Term sheet rendered ({locale})",
+  "audit.term_sheet_rendered.plain": "Term sheet rendered",
+  "audit.submission_requested": "Submission requested for {carrier_name}",
+  "audit.submission_requested.plain": "Submission requested",
+  "audit.approved": "Approved",
+  "audit.rejected": "Rejected",
+  "audit.webhook_attempt": "Webhook attempt {attempt}: the carrier answered {status_code}",
+  "audit.webhook_attempt.alt": "Webhook attempt {attempt} failed: {error_code}",
+  "audit.webhook_attempt.plain": "Webhook attempt",
+  "audit.receipt_recorded": "Receipt {receipt_id} recorded; quote submitted",
+  "audit.receipt_recorded.plain": "Receipt recorded; quote submitted",
+  "audit.delivery_abandoned": "Delivery abandoned after {attempts} attempts",
+  "audit.delivery_abandoned.plain": "Delivery abandoned",
+  "audit.redelivery_requested": "Redelivery requested",
+
+  // Tool summaries
+  "tool.resolve_location": "{label}",
+  "tool.resolve_location.plain": "Location resolved",
+  "tool.resolve_location.candidates": "{count} possible places",
+  "tool.resolve_location.candidates.plain": "Several possible places",
+  "tool.get_weather_history": "{source} · {first_year} to {last_year}",
+  "tool.get_weather_history.plain": "History loaded",
+  "tool.backtest_index": "{seasons_used} seasons · pays in {trigger_frequency_rate}",
+  "tool.backtest_index.plain": "Backtest done",
+  "tool.price_cover": "{quote_id} · premium {premium_cents}",
+  "tool.price_cover.plain": "Cover priced",
+  "tool.find_extreme_seasons": "{count} seasons",
+  "tool.find_extreme_seasons.plain": "Worst seasons found",
+  "tool.draft_term_sheet": "Term sheet drafted in English and Portuguese",
+  "tool.request_submission": "{submission_id} · waiting for approval",
+  "tool.request_submission.plain": "Submission requested; waiting for approval",
+  "tool.error": "Failed: {error_code}",
+  "tool.error.plain": "Failed",
+
+  // Pricing warnings and assumptions
+  "warning.trend_significant":
+    "The index has a significant {direction} trend of {slope_per_decade} per decade. History may misstate current risk.",
+  "warning.trend_significant.plain":
+    "The index has a significant trend. History may misstate current risk.",
+  "warning.seasons_excluded": "Seasons excluded for incomplete data ({count}): {seasons}.",
+  "warning.seasons_excluded.plain": "Some seasons were excluded for incomplete data.",
+  "assumption.index_type": "Index: {index_type}.",
+  "assumption.window":
+    "Coverage window from {start} to {end}; a season is labelled by its start year.",
+  "assumption.seasons_used": "{seasons_used} seasons used, {first_season} to {last_season}.",
+  "assumption.simulation_method": "{method}; {n} simulated seasons; seed {seed}.",
+  "assumption.loads":
+    "Risk load of {risk_load_rate} on the standard deviation; expense load of {expense_load_rate} on the expected loss.",
+  "assumption.data_source": "Weather data: {source}.",
+} as const;
+
+export type MessageKey = keyof typeof en;
+
+/** Every catalogue has exactly the keys of the English one. */
+export type Messages = Record<MessageKey, string>;
