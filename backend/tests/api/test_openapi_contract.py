@@ -442,8 +442,13 @@ async def test_stubbed_route_answers_501_with_a_problem_document(method: str, pa
     assert body["type"] == "https://veranico.dev/problems/not_implemented"
 
 
+@pytest.mark.integration
 async def test_cookie_route_opens_a_workspace_and_answers_from_the_real_modules() -> None:
-    """With `access` and `quoting` landed, a first visit gets a workspace cookie and no quotes."""
+    """With `access` and `quoting` landed, a first visit gets a workspace cookie and no quotes.
+
+    The request reaches the real `access` and `quoting` stores, so it needs the Firestore
+    emulator at `EMULATOR`.
+    """
     transport = httpx.ASGITransport(app=app_for("api"))
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as http:
         response = await http.get(f"{V1}/quotes")
