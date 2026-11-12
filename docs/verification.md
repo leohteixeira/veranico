@@ -44,9 +44,10 @@ Commands:
    does not depend on real weather. Every figure in the blocks below that involves a regional
    cube (prices, cell metrics, load latencies) shows the engine working on generated rain.
    None of it is evidence about real weather, and nothing here is presented as such.
-2. **Nothing was deployed.** Human gate H2 (the first deploy to Google Cloud) is open. The
-   Terraform configuration is validated and tested without credentials; no resource exists.
-   All measurements were made on one development machine with emulators.
+2. **Measured locally, deployed once.** Human gate H2 closed on 2026-11-12 with the first
+   deploy (tag `v0.1.2`). Every measurement in this record was made on one development
+   machine with emulators; the deployed service was checked once by hand (health, real cubes,
+   the happy path), not measured.
 3. **Emulators are not the services.** Firestore and Cloud Storage are their emulators.
    Behaviour that depends on the real services (index requirements, TTL deletion, quotas,
    latency) is not measured.
@@ -59,7 +60,7 @@ Commands:
 | Gate | Needs | State | Closed by |
 |---|---|---|---|
 | H1 | a Cloud project registered for Earth Engine, `earthengine authenticate` and `EARTHENGINE_PROJECT` | **closed** on 2026-11-11 | the three cubes built with `make build-cube REGION=<id>` (1950-01-01 to 2025-12-31, 27,759 days); the chunking measured with `MEASURE=1` (ADR 0016, at `efebecb`); the live consistency test (`tests/integration/climate/test_consistency_live.py -m live`) passing in the three regions within the final limits (`0a9cadb`); the replays recorded on the real cubes (`8095c6e`), so R-9.6-1 has a passing test from that commit on. The cubes are on the owner's machine; putting them in Cloud Storage is part of H2 (README section 8) |
-| H2 | first deploy to the Google Cloud project | **open** | the bootstrap `terraform apply`, then the first tag `v*.*.*` (workflow `deploy.yml`), the live `/health` (Cloud Run reserves `/healthz`), the uptime check and the budget alert |
+| H2 | first deploy to the Google Cloud project | **closed** on 2026-11-12 | bootstrap apply; tags `v0.1.0` and `v0.1.1` failed (an organization policy refused `allUsers`, fixed in `5b16365`; Cloud Run answers `/healthz` itself, fixed in `38b0466`); `v0.1.2` deployed with `/health` answering; the uptime check on `/health` and the budget exist; the real cubes are in Cloud Storage; the happy path ran once on the live address with the live model (`.evidence/prod-smoke/20261112T043114Z`, not committed). The custom domain waits for its DNS record |
 | H3 | the owner | **open** | the interface finish review decision, the portfolio page |
 
 Requirements that can only be proven after a gate closes are open, not passed. Among them:
