@@ -1249,7 +1249,7 @@ footer{border-top:1px solid var(--line-strong);margin-top:72px;padding-top:20px;
           <rect class="box k-slate" x="782" y="164" width="142" height="180" rx="12"/>
           <text class="tz c-slate" x="796" y="187">OPERATIONS</text>
           <text class="ts sm" x="796" y="212">uptime check on</text>
-          <text class="tm" x="796" y="227">/healthz</text>
+          <text class="tm" x="796" y="227">/health</text>
           <text class="ts sm" x="796" y="254">billing budget,</text>
           <text class="ts sm" x="796" y="269">email alerts</text>
           <text class="ts sm" x="796" y="296">Cloud Trace</text>
@@ -1410,7 +1410,7 @@ climate.ingest         <span class="c">point history fetched from Open-Meteo</sp
         <li>The cost of each model call is computed from token counts with prices read from configuration.</li>
         <li>Structured JSON logs carry <code>trace_id</code>; the same identifier is returned in every problem document.</li>
         <li>No secrets, raw IP addresses, message text or tool payloads appear in logs or span attributes.</li>
-        <li>Operations are limited to what is free: an uptime check on <code>/healthz</code> and a billing budget with email alerts.</li>
+        <li>Operations are limited to what is free: an uptime check on <code>/health</code> and a billing budget with email alerts.</li>
       </ul>
 
       <h3>Access and cost ceilings</h3>

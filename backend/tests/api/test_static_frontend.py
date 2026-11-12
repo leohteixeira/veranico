@@ -80,9 +80,12 @@ async def test_api_routes_win_over_frontend_files_and_keep_the_policy(dist: Path
     (dist / "healthz").write_text("a file with the name of a route")
     async with client(dist, ["http://127.0.0.1:3450"]) as http:
         health = await http.get("/healthz")
+        # The deployed liveness route must not fall back to `index.html`.
+        deployed_health = await http.get("/health", headers=HTML)
         missing = await http.get("/api/v1/does-not-exist")
 
     assert health.json() == {"status": "ok"}
+    assert deployed_health.json() == {"status": "ok"}
     assert missing.status_code == 404
     assert missing.headers["content-security-policy"] == NOBODY
 

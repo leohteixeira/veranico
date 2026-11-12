@@ -59,7 +59,7 @@ Commands:
 | Gate | Needs | State | Closed by |
 |---|---|---|---|
 | H1 | a Cloud project registered for Earth Engine, `earthengine authenticate` and `EARTHENGINE_PROJECT` | **closed** on 2026-11-11 | the three cubes built with `make build-cube REGION=<id>` (1950-01-01 to 2025-12-31, 27,759 days); the chunking measured with `MEASURE=1` (ADR 0016, at `efebecb`); the live consistency test (`tests/integration/climate/test_consistency_live.py -m live`) passing in the three regions within the final limits (`0a9cadb`); the replays recorded on the real cubes (`8095c6e`), so R-9.6-1 has a passing test from that commit on. The cubes are on the owner's machine; putting them in Cloud Storage is part of H2 (README section 8) |
-| H2 | first deploy to the Google Cloud project | **open** | the bootstrap `terraform apply`, then the first tag `v*.*.*` (workflow `deploy.yml`), the live `/healthz`, the uptime check and the budget alert |
+| H2 | first deploy to the Google Cloud project | **open** | the bootstrap `terraform apply`, then the first tag `v*.*.*` (workflow `deploy.yml`), the live `/health` (Cloud Run reserves `/healthz`), the uptime check and the budget alert |
 | H3 | the owner | **open** | the interface finish review decision, the portfolio page |
 
 Requirements that can only be proven after a gate closes are open, not passed. Among them:

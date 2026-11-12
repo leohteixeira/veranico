@@ -70,7 +70,11 @@ def create_app(settings: Settings | None = None, *, container: Container | None 
     _add_schemas(app, [Problem, *(get_args(AgentEvent) if is_api else ())])
     telemetry.setup_telemetry(settings, app)
 
+    # `/health` answers the same liveness behind Cloud Run's front end, which reserves some
+    # paths ending in "z" and answers `/healthz` itself before the container sees it.
+    # `/healthz` stays for container probes, local use and the smoke tests.
     @app.get("/healthz", operation_id="healthz", tags=["health"])
+    @app.get("/health", operation_id="health", tags=["health"])
     async def healthz() -> Health:
         return Health(status="ok")
 

@@ -198,5 +198,6 @@ PUBLIC_TO_TOOL: dict[str, str] = {
     "sweep_outbox": "Internal: called by the scheduler, not a capability of a consumer.",
     "deliver_outbox_event": "Internal: called by the queue, not a capability of a consumer.",
     "healthz": "Operations, not a capability of a consumer.",
+    "health": "Operations, not a capability of a consumer.",
     "readyz": "Operations, not a capability of a consumer.",
 }

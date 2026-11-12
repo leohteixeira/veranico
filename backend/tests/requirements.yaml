@@ -721,6 +721,10 @@ requirements:
   section: '11.2'
   text: '`GET /regions`, `GET /regions/{id}/cells` and `GET /weather/seasons` need no workspace cookie; every other route of the web application requires it.'
   plan: '00'
+- id: R-11.2-15
+  section: '11.2'
+  text: Checks against the deployed service use `GET /health`, the same liveness as `/healthz`, because Cloud Run reserves `/healthz`; `/healthz` stays for container probes and local use.
+  plan: '09'
 - id: R-11.3-1
   section: '11.3'
   text: '`POST /internal/outbox/{event_id}/deliver` performs one webhook delivery attempt and accepts only the service identity.'
@@ -943,7 +947,7 @@ requirements:
   plan: 09
 - id: R-15-6
   section: '15'
-  text: Operations are limited to an uptime check on `/healthz` and a billing budget with email alerts.
+  text: Operations are limited to an uptime check on `/health` (Cloud Run reserves `/healthz`) and a billing budget with email alerts.
   plan: 09
 - id: R-16.2-1
   section: '16.2'

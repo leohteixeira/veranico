@@ -11,7 +11,7 @@ What was deliberately left out of Veranico, with the reason. The scope is locked
 * **Forecasting.** The product backtests and prices from ERA5-Land history; it makes no statement about future weather.
 * **More perils and index types.** The scope is rainfall deficit (`rainfall_below`) and dry spells (`dry_spell_above`); every index added needs its own pure functions, hand-computed tests and mutants.
 * **Retrieval over documents (RAG).** There is no document corpus; every fact the agent states comes from a tool result (ADR 0004).
-* **Paid alerting.** Operations are limited to what is free: an uptime check on `/healthz` and a billing budget with email alerts (SPEC section 15).
+* **Paid alerting.** Operations are limited to what is free: an uptime check on `/health` and a billing budget with email alerts (SPEC section 15).
 
 ## Rejected for now or left for later
 

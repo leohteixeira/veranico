@@ -256,7 +256,7 @@ domain restricted sharing refuses; an organization that enforces
 7. `git tag v0.1.0 && git push origin v0.1.0`, then watch
    [deploy.yml](.github/workflows/deploy.yml). It authenticates through Workload Identity
    Federation (there is no key file), builds and pushes the image, applies Terraform with
-   the new tag and requests `/healthz`.
+   the new tag and requests `/health`.
 8. Put the real cubes in the data bucket, `<project>-veranico`, which the apply of step 7
    creates. The API reads them from there (`VERANICO_CLIMATE__STORE_BACKEND=gcs`) and never
    calls Earth Engine; until they are written the three regions answer `synthetic: true`.
@@ -264,11 +264,14 @@ domain restricted sharing refuses; an organization that enforces
    cube build pointed at the bucket: it writes to the store the `VERANICO_CLIMATE__*`
    variables name and reuses the yearly files cached in `backend/.cache/earth-engine/`, so
    nothing is downloaded again, though it still checks the Earth Engine login of H1 first.
-   After `gcloud auth application-default login`, with `STORAGE_EMULATOR_HOST` unset, once
-   per region (`sul-de-minas`, `sorriso`, `ribeirao-preto`):
-   `make build-cube REGION=<id> VERANICO_CLIMATE__STORE_BACKEND=gcs VERANICO_STORAGE_BUCKET=<project>-veranico VERANICO_FIRESTORE_PROJECT=<project>`.
-   This path is tested against the Cloud Storage emulator, not yet against a real bucket.
-9. Check: `curl -fsS <API URL>/healthz`; `GET <API URL>/api/v1/regions` answers
+   After `gcloud auth application-default login`, once per region (`sul-de-minas`,
+   `sorriso`, `ribeirao-preto`), clearing the emulator variables on the command line (a value
+   from `.env` would otherwise win over the shell and send the cube to the emulator):
+   `make build-cube REGION=<id> STORAGE_EMULATOR_HOST= FIRESTORE_EMULATOR_HOST= VERANICO_CLIMATE__STORE_BACKEND=gcs VERANICO_STORAGE_BUCKET=<project>-veranico VERANICO_FIRESTORE_PROJECT=<project>`.
+   Done on 2026-11-12 for the first deploy: the three cubes went to the real bucket and
+   `/api/v1/regions` answered `"synthetic": false` for each.
+9. Check: `curl -fsS <API URL>/health` (not `/healthz`, which Cloud Run reserves and answers
+   itself); `GET <API URL>/api/v1/regions` answers
    `"synthetic": false` for the three regions; the happy path once in the browser; the
    uptime check and the budget in the console; one trace in Cloud Trace.
 
@@ -283,7 +286,7 @@ Configured values (their source in brackets):
 | Cost per call | computed from token counts with prices in configuration (`AccessSettings.model_prices`) and recorded on each `llm.call` span |
 | Instances | two Cloud Run services, each from 0 to 2 instances; one CPU each, 1 GiB of memory for the API and 512 MiB for the carrier (`infra/terraform/services.tf`). Under the load campaign with the same limits the API process peaked at 958 MiB of 1,024 MiB with three regions decoded, so a fourth region needs a larger instance or a smaller `VERANICO_CLIMATE__CUBE_CACHE_SIZE` ([docs/verification.md](docs/verification.md), section 6) |
 | Images kept | the last 3 (`infra/terraform/foundation/main.tf`) |
-| Uptime check | one, on `/healthz`, every 900 seconds (`infra/terraform/monitoring.tf`) |
+| Uptime check | one, on `/health`, every 900 seconds (`infra/terraform/monitoring.tf`) |
 | Budget alert | a monthly budget of `budget_amount` in the billing currency, with email alerts at 50%, 90% and 100% (`infra/terraform/variables.tf`); the owner chooses the amount |
 
 Measured values:

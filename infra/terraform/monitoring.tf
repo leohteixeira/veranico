@@ -1,16 +1,18 @@
 # Operations, limited to what is free (SPEC 15): one uptime check and one billing budget
 # with email alerts. There is no alerting policy.
 
+# The check probes `/health`: Cloud Run reserves some paths ending in "z" and answers
+# `/healthz` itself, before the request reaches the container.
 resource "google_monitoring_uptime_check_config" "api_health" {
   project      = var.project_id
-  display_name = "Veranico API /healthz"
+  display_name = "Veranico API /health"
   timeout      = "10s"
 
   # The longest interval there is: each check wakes the service, which scales to zero.
   period = "900s"
 
   http_check {
-    path         = "/healthz"
+    path         = "/health"
     port         = 443
     use_ssl      = true
     validate_ssl = true

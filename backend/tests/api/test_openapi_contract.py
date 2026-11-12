@@ -105,6 +105,7 @@ CARRIER_ROUTES: list[Route] = [
 ]
 HEALTH_ROUTES: list[Route] = [
     ("GET", "/healthz", "healthz", NONE, None, "Health"),
+    ("GET", "/health", "health", NONE, None, "Health"),
     ("GET", "/readyz", "readyz", NONE, None, "Readiness"),
 ]
 

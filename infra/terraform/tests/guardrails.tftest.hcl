@@ -420,8 +420,8 @@ run "uptime_check_and_budget_exist" {
   command = plan
 
   assert {
-    condition     = google_monitoring_uptime_check_config.api_health.http_check[0].path == "/healthz"
-    error_message = "The uptime check must probe /healthz."
+    condition     = google_monitoring_uptime_check_config.api_health.http_check[0].path == "/health"
+    error_message = "The uptime check must probe /health: Cloud Run reserves /healthz."
   }
   assert {
     condition     = google_monitoring_uptime_check_config.api_health.http_check[0].use_ssl == true

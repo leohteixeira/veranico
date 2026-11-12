@@ -97,7 +97,9 @@ jobs:
           if [ -n "$CUSTOM_DOMAIN" ]; then optional+=(-var "custom_domain=${CUSTOM_DOMAIN}"); fi
           terraform -chdir=infra/terraform apply -input=false -auto-approve "${optional[@]}"
 
-      - name: The deployed service answers /healthz
+      # `/health`, not `/healthz`: Cloud Run reserves some paths ending in "z" and answers
+      # them itself, so `/healthz` never reaches the container behind the service URL.
+      - name: The deployed service answers /health
         run: |
           url="$(terraform -chdir=infra/terraform output -raw api_url)"
-          curl --fail --silent --show-error --retry 10 --retry-delay 6 --retry-all-errors --max-time 20 "${url}/healthz"
+          curl --fail --silent --show-error --retry 10 --retry-delay 6 --retry-all-errors --max-time 20 "${url}/health"
