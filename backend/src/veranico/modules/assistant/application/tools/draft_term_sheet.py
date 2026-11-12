@@ -14,7 +14,8 @@ from veranico.shared.kernel.principal import Principal
 DESCRIPTION = (
     "Render the term sheet of a quote as a PDF in English and in Brazilian Portuguese and store "
     "both. Returns `documents`, one per language, each with the API path it is served from. "
-    "The interface shows the downloads in the Quote tab."
+    "The interface shows the downloads in the Quote tab: tell the user they are there, and do "
+    "not write the paths."
 )
 
 

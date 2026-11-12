@@ -131,7 +131,10 @@ services:
   carrier:
     # The mock carrier (SPEC 11.4). It signs with the same webhook secret as the sender and
     # writes its receipts to the Firestore emulator, in the default project of the settings,
-    # which is also what the failure tests read.
+    # which is also what the failure tests read. Whether it answers the first attempt of
+    # each event with 503 comes from the caller by name (SPEC 7): `make dev` turns it on so
+    # the demo shows the retry; `make test-failure` and the load campaign turn it off, and
+    # without the variable the setting's default (off) applies.
     <<: *app
     depends_on:
       firestore:
@@ -139,7 +142,7 @@ services:
     environment:
       - APP_ROLE=carrier
       - FIRESTORE_EMULATOR_HOST=firestore:8580
-      - VERANICO_DELIVERY__CARRIER_FAIL_FIRST_ATTEMPT=false
+      - VERANICO_DELIVERY__CARRIER_FAIL_FIRST_ATTEMPT
       - *traces-exporter
       - *traces-endpoint
       - VERANICO_DELIVERY__WEBHOOK_SIGNING_SECRET

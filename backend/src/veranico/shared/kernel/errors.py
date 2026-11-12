@@ -26,6 +26,13 @@ class DatasetNotFoundError(DomainError):
     status = 404
 
 
+class UnauthorizedError(DomainError):
+    """No valid credential was presented (RFC 9110 15.5.2); the answer names the scheme."""
+
+    code = "unauthorized"
+    status = 401
+
+
 class ForbiddenError(DomainError):
     code = "forbidden"
     status = 403
@@ -126,3 +133,10 @@ class ShuttingDownError(DomainError):
     code = "shutting_down"
     status = 503
     retryable = True
+
+
+class InternalError(DomainError):
+    """An unexpected failure. Its detail is generic: no internals, paths or payloads."""
+
+    code = "internal_error"
+    status = 500

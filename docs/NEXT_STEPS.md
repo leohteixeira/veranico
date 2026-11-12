@@ -50,6 +50,10 @@ Backend:
 * **Rendering off the request.** The term sheet renders synchronously; a queue is not justified at this size.
 * **Closing the model client at shutdown.** The connection pool of the Anthropic client is not closed; the process ends anyway.
 * **Caching the growing message history.** Only the stable prefix (tools and system prompt) is cached; a second breakpoint would save tokens in long tool loops.
+* **Plain-language answers from the scripted model client.** `make dev` without a key still writes the source code, the simulation method value and the submission id; only the live model's prompt (v4) was tightened.
+* **A provenance label that names the download path.** The frozen source value `era5-land/cds` predates ADR 0019 (cubes from Google Earth Engine); a new value needs a contract change.
+* **401 on the internal routes.** A missing or wrong service token still answers 403 `forbidden`; only the public API distinguishes 401 from 403.
+* **The term sheet in the compose smoke test.** The clean-copy smoke test checks health only; rendering a term sheet would have caught the unwritable data root.
 
 ## Not in this list
 

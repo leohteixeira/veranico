@@ -142,7 +142,9 @@ describe("quote tab [R-12.3-3]", () => {
     expect(field("exit")).toBe("70.0 mm");
     expect(field("window")).toBe("Sep 1 – Oct 31");
     expect(field("index")).toBe("rainfall below a trigger");
-    expect(field("dataset")).toBe(DATASET_ID);
+    // The dataset in words: the raw identifier stays out of the tab.
+    expect(field("dataset")).toBe("Grid cell of the regional cube (0.1°)");
+    expect(document.body).not.toHaveTextContent(DATASET_ID);
     expect(field("location")).toBe(`${POINT_LABEL} · -21.3667, -45.5125`);
     // The field a figure link asked for is highlighted, and only that one.
     const highlighted = [...document.querySelectorAll('[data-highlight="true"]')];
@@ -152,7 +154,8 @@ describe("quote tab [R-12.3-3]", () => {
   });
 
   it("assumptions_and_audit_actions_are_translated [R-12.3-3]", () => {
-    renderWithApi(<QuoteTab quote={pendingQuote()} origin={ORIGIN} />);
+    const carrierNames = new Map([["carrier-1", "Seguradora Jatobá (mock)"]]);
+    renderWithApi(<QuoteTab quote={pendingQuote()} origin={ORIGIN} carrierNames={carrierNames} />);
     const assumptions = [...document.querySelectorAll("[data-assumption]")].map(
       (item) => item.textContent,
     );
@@ -170,12 +173,18 @@ describe("quote tab [R-12.3-3]", () => {
     expect(actions).toEqual([
       "Quote created as a draft",
       "Term sheet rendered (English)",
-      "Submission requested for carrier-1",
+      "Submission requested for Seguradora Jatobá (mock)",
     ]);
     const entry = document.querySelector('[data-action="audit.quote_created"]');
     expect(entry?.querySelector("[data-actor]")).toHaveTextContent("Agent");
     expect(entry?.querySelector("time")).toHaveAttribute("datetime", "2026-11-11T22:58:20Z");
     expect(screen.getByText("Pending approval")).toBeVisible();
+  });
+
+  it("audit_trail_never_shows_a_carrier_id_it_cannot_name [R-12.3-3]", () => {
+    renderWithApi(<QuoteTab quote={pendingQuote()} origin={ORIGIN} />);
+    const requested = document.querySelector('[data-action="audit.submission_requested"]');
+    expect(requested?.querySelector(".audit__action")).toHaveTextContent(/^Submission requested$/);
   });
 
   it("downloads_link_to_the_api_paths [R-12.3-3]", () => {

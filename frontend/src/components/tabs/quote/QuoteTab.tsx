@@ -36,6 +36,8 @@ interface QuoteTabProps {
   highlight?: string | null;
   /** Where the API is served, for the example request; defaults to this page's origin. */
   origin?: string;
+  /** Carrier id to the directory's name, so the audit trail names the carrier. */
+  carrierNames?: ReadonlyMap<string, string>;
 }
 
 const TONE: Record<Schemas["QuoteView"]["status"], StateTone> = {
@@ -60,6 +62,7 @@ export function QuoteTab({
   onRetry,
   highlight = null,
   origin,
+  carrierNames,
 }: QuoteTabProps) {
   const { locale } = useI18n();
 
@@ -114,7 +117,7 @@ export function QuoteTab({
         quoteId={quote.quote_id}
         termSheetRendered={quote.audit.some((entry) => entry.action.code === TERM_SHEET_RENDERED)}
       />
-      <AuditTrail audit={quote.audit} />
+      <AuditTrail audit={quote.audit} carrierNames={carrierNames} />
       <ApiKeyDisclosure quote={quote} origin={origin} />
     </div>
   );

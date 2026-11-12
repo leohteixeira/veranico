@@ -34,8 +34,14 @@ export function CoverDefinition({
       value: `${location.label} · ${coordinates}`,
     });
   }
-  if (datasetId !== null) {
-    fields.push({ field: "dataset", label: translate(locale, "quote.dataset"), value: datasetId });
+  // The dataset in words: a regional cube cell or a point's own history, never the raw id.
+  const kind = datasetId?.split(":", 1)[0];
+  if (kind === "cube" || kind === "point") {
+    fields.push({
+      field: "dataset",
+      label: translate(locale, "quote.dataset"),
+      value: translate(locale, `quote.dataset.${kind}`),
+    });
   }
   fields.push(
     {

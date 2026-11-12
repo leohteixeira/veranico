@@ -1,6 +1,7 @@
 """The registry as a whole: the seven tools, error mapping, summaries."""
 
 import json
+import logging
 
 import pytest
 
@@ -203,13 +204,32 @@ async def test_domain_error_becomes_tool_error_with_code_and_retryable(
 
 
 @pytest.mark.req("R-9.1-3")
-async def test_unexpected_exception_does_not_escape_as_a_tool_result() -> None:
+async def test_an_unexpected_exception_becomes_a_generic_non_retryable_tool_error(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     kit = build_kit()
+    quote_id = await kit.priced_quote_id()
+    # The storage failure the pre-deploy campaign met on the local stack.
+    kit.documents.fail_with(
+        PermissionError(13, "Permission denied", "/tmp/veranico/blobs/documents")
+    )
 
-    # The climate fake raises `LookupError` for a point no test registered: a defect, not a
-    # domain error. It is not dressed up as a tool result; it propagates and ends the turn.
-    with pytest.raises(LookupError):
-        await kit.registry.execute(BROWSER, "get_weather_history", {"lat": -20.0, "lon": -50.0})
+    with caplog.at_level(logging.ERROR):
+        outcome = await kit.registry.execute(BROWSER, "draft_term_sheet", {"quote_id": quote_id})
+
+    assert outcome.result is None
+    assert outcome.error is not None
+    assert outcome.error.error_code == "internal_error"
+    assert outcome.error.retryable is False
+    # The model reads the message: nothing of the exception, its path or its type reaches it.
+    assert "/tmp" not in outcome.error.message
+    assert "Permission" not in outcome.error.message
+    assert outcome.summary == Coded(code="tool.error", params={"error_code": "internal_error"})
+    # The defect is logged with its stack, under the tool's name only.
+    [record] = [r for r in caplog.records if r.levelno >= logging.ERROR]
+    assert record.exc_info is not None
+    assert "draft_term_sheet" in record.getMessage()
+    assert quote_id not in record.getMessage()
 
 
 async def test_summary_code_and_params_per_tool() -> None:

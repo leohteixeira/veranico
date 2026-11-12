@@ -89,7 +89,8 @@ frontend/node_modules/.modules.yaml: frontend/pnpm-lock.yaml
 # Everything is a Compose service (compose.yaml): both roles from the image of the
 # Dockerfile, the Vite dev server, the emulators and Jaeger. The recipe generates the secrets
 # the roles need once per run; a non-empty value from the environment file is used instead.
-# They reach the containers by name and are written nowhere. `--build` rebuilds the image
+# They reach the containers by name and are written nowhere. The demo carrier answers the
+# first attempt of each event with 503, so the retry shows on every run (SPEC 7). `--build` rebuilds the image
 # from the working tree, so the roles never run stale code.
 #
 # The recipe follows the logs until Ctrl-C (or until the three services have ended), then
@@ -102,6 +103,7 @@ dev:
 	export VERANICO_ACCESS__IP_HASH_SALT="$${VERANICO_ACCESS__IP_HASH_SALT:-$$($(GEN_SECRET))}"; \
 	export VERANICO_DELIVERY__WEBHOOK_SIGNING_SECRET="$${VERANICO_DELIVERY__WEBHOOK_SIGNING_SECRET:-$$($(GEN_SECRET))}"; \
 	export VERANICO_DELIVERY__INTERNAL_TOKEN="$${VERANICO_DELIVERY__INTERNAL_TOKEN:-$$($(GEN_SECRET))}"; \
+	export VERANICO_DELIVERY__CARRIER_FAIL_FIRST_ATTEMPT="$${VERANICO_DELIVERY__CARRIER_FAIL_FIRST_ATTEMPT:-true}"; \
 	frame_ancestors='["http://127.0.0.1:3450"]'; \
 	export VERANICO_FRAME_ANCESTORS="$${VERANICO_FRAME_ANCESTORS:-$$frame_ancestors}"; \
 	if [ -z "$${ANTHROPIC_API_KEY:-}" ]; then export VERANICO_ASSISTANT__MODEL_CLIENT=scripted; fi; \
@@ -142,7 +144,8 @@ test-integration:
 # proxy's own terms: its control API as the host reaches it, and the `upstream` (the carrier
 # service on the Compose network) and `listen` values of the proxy the tests create. The
 # host reaches the listener on the same port. The test process and the carrier service get
-# the same webhook signing secret, and both use the Firestore emulator of this project.
+# the same webhook signing secret, and both use the Firestore emulator of this project. The
+# carrier's demo failure of the first attempt is off: the campaign injects its own faults.
 # Results go to .evidence/failure/<run_id>/{junit.xml,req.json}.
 #
 # A carrier that is already running belongs to `make dev` and holds that run's secret; the
@@ -153,6 +156,7 @@ test-failure:
 	fi
 	@export FIRESTORE_EMULATOR_HOST=$(FIRESTORE_HOST) STORAGE_EMULATOR_HOST=$(STORAGE_HOST); \
 	export VERANICO_DELIVERY__WEBHOOK_SIGNING_SECRET="$${VERANICO_DELIVERY__WEBHOOK_SIGNING_SECRET:-$$($(GEN_SECRET))}"; \
+	export VERANICO_DELIVERY__CARRIER_FAIL_FIRST_ATTEMPT=false; \
 	export VERANICO_FAULT_PROXY_API=http://127.0.0.1:8521; \
 	export VERANICO_FAULT_PROXY_UPSTREAM=carrier:8080; \
 	export VERANICO_FAULT_PROXY_LISTEN=0.0.0.0:8520; \

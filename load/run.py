@@ -102,6 +102,8 @@ def stack_environment() -> dict[str, str]:
     }
     environment.update({name: secrets.token_hex(32) for name in GENERATED_SECRETS})
     environment["VERANICO_ASSISTANT__MODEL_CLIENT"] = "scripted"
+    # The demo carrier's 503 on each first attempt is for `make dev`, not for measurements.
+    environment["VERANICO_DELIVERY__CARRIER_FAIL_FIRST_ATTEMPT"] = "false"
     environment[RATE_SETTING] = str(RATE_PER_MINUTE)
     return environment
 

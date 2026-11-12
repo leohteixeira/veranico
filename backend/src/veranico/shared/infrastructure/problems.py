@@ -11,14 +11,18 @@ from pydantic import BaseModel
 from veranico.shared.infrastructure import telemetry
 from veranico.shared.kernel.errors import (
     DomainError,
+    InternalError,
     InvalidArgumentsError,
     NotImplementedYetError,
+    UnauthorizedError,
 )
 
 PROBLEM_MEDIA_TYPE = "application/problem+json"
 PROBLEM_TYPE_BASE = "https://veranico.dev/problems/"
 # The interface offers the recorded replay when it sees one of these.
 REPLAY_CODES = frozenset({"allowance_exhausted", "spend_ceiling_reached"})
+# A 401 names the authentication scheme the client must use (RFC 9110 11.6.1, RFC 6750 3).
+_HEADERS = {UnauthorizedError.code: {"WWW-Authenticate": "Bearer"}}
 
 
 # Every route may answer with a problem document. Passed to `FastAPI(responses=...)`, it
@@ -57,6 +61,7 @@ def problem_response(error: DomainError, trace_id: str | None) -> JSONResponse:
         problem.model_dump(mode="json", exclude_none=True),
         status_code=error.status,
         media_type=PROBLEM_MEDIA_TYPE,
+        headers=_HEADERS.get(error.code),
     )
 
 
@@ -85,7 +90,14 @@ async def _not_implemented(request: Request, error: Exception) -> JSONResponse:
     return problem_response(NotImplementedYetError(), telemetry.current_trace_id())
 
 
+async def _unexpected(request: Request, error: Exception) -> JSONResponse:
+    """Any other exception: a generic `internal_error`. Starlette re-raises it after this
+    answer is sent, so the server logs it with its stack; the answer carries none of it."""
+    return problem_response(InternalError(), telemetry.current_trace_id())
+
+
 def install_problem_handlers(app: FastAPI) -> None:
     app.add_exception_handler(DomainError, _domain_error)
+    app.add_exception_handler(Exception, _unexpected)
     app.add_exception_handler(RequestValidationError, _validation_error)
     app.add_exception_handler(NotImplementedError, _not_implemented)

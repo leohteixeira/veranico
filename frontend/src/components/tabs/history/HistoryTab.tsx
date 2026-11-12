@@ -16,9 +16,22 @@ import "../tabs.css";
 
 type Schemas = components["schemas"];
 
+/** The seasons of the cover in view before any backtest: the series the timeline draws. */
+export interface ExampleSeries {
+  seasons: readonly SeasonResult[];
+  index: Schemas["IndexDefinition"];
+  /** The limit payouts were computed for; `null` draws no payout panel. */
+  limit: Schemas["Money"] | null;
+}
+
 interface HistoryTabProps {
   /** The latest backtest, from the agent's tool result or from the quote; `null` before any. */
   backtest: Schemas["BacktestResult"] | null;
+  /**
+   * Before any backtest, the active cover's seasons from `GET /weather/seasons` (the series of the
+   * timeline), shown labelled as the example. `null` leaves the tab empty.
+   */
+  example?: ExampleSeries | null;
   /** The selected season, shared with the timeline and the map; `null` is all seasons. */
   season: number | null;
   onSelectSeason: (season: number | null) => void;
@@ -31,12 +44,16 @@ interface HistoryTabProps {
 const TREND_WARNING = "warning.trend_significant";
 
 /**
+ * Before any backtest the tab draws the example cover the timeline shows, labelled as the example,
+ * without the aggregates and the trend, which only a backtest computes.
+ *
  * The History tab: the index per season with its trigger and exit, the payout per season below on
  * the same time axis, the trend warning when the trend is significant, the aggregates and a table
  * of every season. A bar, a table row or the arrow keys select the season the map shows.
  */
 export function HistoryTab({
   backtest,
+  example = null,
   season,
   onSelectSeason,
   status = "ready",
@@ -44,7 +61,13 @@ export function HistoryTab({
   highlight = null,
 }: HistoryTabProps) {
   const { locale } = useI18n();
-  if (backtest === null) {
+  const series =
+    backtest !== null
+      ? { seasons: backtest.seasons, index: backtest.cover.index, limit: backtest.cover.limit }
+      : example !== null && example.seasons.length > 0
+        ? example
+        : null;
+  if (series === null) {
     return status === "ready" ? (
       <TabEmpty>{translate(locale, "history.empty")}</TabEmpty>
     ) : (
@@ -52,8 +75,7 @@ export function HistoryTab({
     );
   }
 
-  const { seasons, cover, trend } = backtest;
-  const { index } = cover;
+  const { seasons, index, limit } = series;
   const selectedAt = season === null ? -1 : seasons.findIndex((item) => item.season === season);
   const current = selectedAt >= 0 ? seasons[selectedAt] : undefined;
   const first = seasons[0];
@@ -71,15 +93,23 @@ export function HistoryTab({
   };
 
   // The trend warning is shown only for a significant trend; other warnings always are.
-  const warnings = backtest.warnings.filter(
-    (warning) => warning.code !== TREND_WARNING || trend.significant,
-  );
-  if (trend.significant && !warnings.some((warning) => warning.code === TREND_WARNING)) {
+  const warnings =
+    backtest === null
+      ? []
+      : backtest.warnings.filter(
+          (warning) => warning.code !== TREND_WARNING || backtest.trend.significant,
+        );
+  if (
+    backtest !== null &&
+    backtest.trend.significant &&
+    !warnings.some((warning) => warning.code === TREND_WARNING)
+  ) {
     warnings.unshift({ code: TREND_WARNING, params: {} });
   }
 
   return (
-    <div className="history">
+    <div className="history" data-example={backtest === null ? "true" : undefined}>
+      {backtest === null && <Note data-note="example">{translate(locale, "history.example")}</Note>}
       <div className="history__head">
         <p className="history__readout num" aria-live="polite">
           {current !== undefined
@@ -113,16 +143,18 @@ export function HistoryTab({
             onSelect={onSelectSeason}
           />
         </figure>
-        <figure className="history__panel">
-          <figcaption>{translate(locale, "history.payout_title")}</figcaption>
-          <PayoutChart
-            seasons={seasons}
-            indexType={index.index_type}
-            limit={cover.limit}
-            selected={current?.season ?? null}
-            onSelect={onSelectSeason}
-          />
-        </figure>
+        {limit !== null && (
+          <figure className="history__panel">
+            <figcaption>{translate(locale, "history.payout_title")}</figcaption>
+            <PayoutChart
+              seasons={seasons}
+              indexType={index.index_type}
+              limit={limit}
+              selected={current?.season ?? null}
+              onSelect={onSelectSeason}
+            />
+          </figure>
+        )}
         {/* The keyboard's handle on the selection: arrows move one season at a time. */}
         {seasons.length > 0 && (
           <input
@@ -155,7 +187,7 @@ export function HistoryTab({
         </Note>
       ))}
 
-      <Aggregates backtest={backtest} highlight={highlight} />
+      {backtest !== null && <Aggregates backtest={backtest} highlight={highlight} />}
       <SeasonTable
         seasons={seasons}
         indexType={index.index_type}

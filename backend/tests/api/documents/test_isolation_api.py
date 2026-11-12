@@ -86,5 +86,6 @@ async def test_an_invalid_api_key_is_refused(api: DocumentsApi) -> None:
     async with api.client(headers={"Authorization": "Bearer not-a-key"}) as stranger:
         response = await stranger.get(ROUTES[0])
 
-    assert response.status_code == 403
-    assert response.json()["code"] == "forbidden"
+    assert response.status_code == 401
+    assert response.headers["www-authenticate"] == "Bearer"
+    assert response.json()["code"] == "unauthorized"

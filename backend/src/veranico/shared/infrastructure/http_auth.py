@@ -30,7 +30,7 @@ from starlette.datastructures import MutableHeaders
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from veranico.shared.infrastructure.settings import Settings
-from veranico.shared.kernel.errors import ForbiddenError
+from veranico.shared.kernel.errors import ForbiddenError, UnauthorizedError
 from veranico.shared.kernel.principal import Principal
 
 WORKSPACE_COOKIE = "vr_ws"
@@ -174,8 +174,15 @@ class WorkspaceCookieMiddleware:
 
 
 async def _from_api_key(request: Request) -> Principal:
+    """A missing, malformed or unknown key is `unauthorized` (401 with `WWW-Authenticate`):
+    no credential was presented. `forbidden` (403) stays for a principal that is known but
+    not allowed. `access` refuses every bad key with the same `forbidden`, so that refusal is
+    the one translated here, and only here."""
     context = _context(request)
-    principal = await context.access.authenticate_api_key(_bearer(request))
+    try:
+        principal = await context.access.authenticate_api_key(_bearer(request))
+    except ForbiddenError:
+        raise UnauthorizedError from None
     await context.access.check_rate(principal)
     return principal
 

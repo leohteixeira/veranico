@@ -127,6 +127,8 @@ export const en = {
   // History tab
   "history.empty":
     "No backtest yet. Describe an exposure in the conversation and the agent replays the index over every season.",
+  "history.example":
+    "The example cover of this region, season by season, as the timeline shows it. Describe an exposure in the conversation to backtest your own cover.",
   "history.index_title.rainfall_below": "Rainfall in the window, per season",
   "history.index_title.dry_spell_above": "Longest dry spell in the window, per season",
   "history.payout_title": "Payout per season",
@@ -167,6 +169,8 @@ export const en = {
   "quote.cover": "Cover",
   "quote.location": "Location",
   "quote.dataset": "Dataset",
+  "quote.dataset.cube": "Grid cell of the regional cube (0.1°)",
+  "quote.dataset.point": "History of the point",
   "quote.index": "Index",
   "quote.window": "Window",
   "quote.trigger": "Trigger",
@@ -331,6 +335,7 @@ export const en = {
 
   // Problem codes (RFC 9457 `code`); the API's English prose is never shown
   "problem.not_found": "Not found. It may have expired or belong to another workspace.",
+  "problem.unauthorized": "A valid API key is needed. Create one in the Quote tab.",
   "problem.forbidden": "This action is not allowed here.",
   "problem.invalid_arguments": "The request has a missing or invalid value.",
   "problem.conflict": "This conflicts with the current state. Reload and try again.",
@@ -358,6 +363,7 @@ export const en = {
     "This call was not run: the agent had used its calls or attempts for this request.",
   // Two codes of the interface itself, for a failure that carries no problem document
   "problem.network": "The service could not be reached. Check the connection and try again.",
+  "problem.internal_error": "Something went wrong on our side. Try again in a moment.",
   "problem.unknown": "The request failed. Try again in a moment.",
   "error.reference": "Reference {trace_id}",
 
@@ -365,7 +371,7 @@ export const en = {
   "audit.quote_created": "Quote created as a draft",
   "audit.term_sheet_rendered": "Term sheet rendered ({locale})",
   "audit.term_sheet_rendered.plain": "Term sheet rendered",
-  "audit.submission_requested": "Submission requested for {carrier_id}",
+  "audit.submission_requested": "Submission requested for {carrier_name}",
   "audit.submission_requested.plain": "Submission requested",
   "audit.approved": "Approved",
   "audit.rejected": "Rejected",
@@ -383,7 +389,7 @@ export const en = {
   "tool.resolve_location.plain": "Location resolved",
   "tool.resolve_location.candidates": "{count} possible places",
   "tool.resolve_location.candidates.plain": "Several possible places",
-  "tool.get_weather_history": "{dataset_id} · {first_year} to {last_year}",
+  "tool.get_weather_history": "{source} · {first_year} to {last_year}",
   "tool.get_weather_history.plain": "History loaded",
   "tool.backtest_index": "{seasons_used} seasons · pays in {trigger_frequency_rate}",
   "tool.backtest_index.plain": "Backtest done",

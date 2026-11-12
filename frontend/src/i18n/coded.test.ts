@@ -3,9 +3,11 @@ import { describe, expect, it } from "vitest";
 import { translateCoded, translateProblem, translateValue } from "./coded";
 import { LOCALES, lookup } from "./index";
 
-// contracts.md section 1, plus `not_implemented` and `shutting_down`: one class each in the kernel.
+// contracts.md section 1, plus `not_implemented`, `shutting_down`, `unauthorized` and
+// `internal_error`: one class each in the kernel.
 const PROBLEM_CODES = [
   "not_found",
+  "unauthorized",
   "forbidden",
   "invalid_arguments",
   "conflict",
@@ -27,6 +29,7 @@ const PROBLEM_CODES = [
   "message_too_long",
   "not_implemented",
   "shutting_down",
+  "internal_error",
 ];
 
 const AUDIT_ACTIONS = [
@@ -122,6 +125,32 @@ describe("codes from the API", () => {
         expect(text, `${code} ${locale}`).not.toMatch(/[{}]/);
       }
     }
+  });
+
+  it("[R-13-5] tool summaries and the audit trail name the source and the carrier, never an id", () => {
+    const history = {
+      code: "tool.get_weather_history",
+      params: {
+        dataset_id: "cube:sul-de-minas:9:10",
+        first_year: 1950,
+        last_year: 2025,
+        source: "era5-land/cds",
+      },
+    };
+    expect(translateCoded(history, "en")).toBe(
+      "ERA5-Land, Copernicus Climate Change Service · 1950 to 2025",
+    );
+    expect(translateCoded(history, "pt-BR")).toBe(
+      "ERA5-Land, Copernicus Climate Change Service · 1950 a 2025",
+    );
+    const requested = { code: "audit.submission_requested", params: { carrier_id: "carrier-1" } };
+    expect(translateCoded(requested, "en")).toBe("Submission requested");
+    expect(
+      translateCoded(
+        { ...requested, params: { ...requested.params, carrier_name: "Seguradora Jatobá (mock)" } },
+        "pt-BR",
+      ),
+    ).toBe("Submissão solicitada para Seguradora Jatobá (mock)");
   });
 
   it("[R-13-5] the eight pricing codes are translated with the parameters pricing sends", () => {

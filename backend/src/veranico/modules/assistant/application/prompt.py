@@ -49,6 +49,10 @@ PROMPT_SHA256 = {
     # truncated; no confirmation question when every essential is stated, the backtest runs in
     # the same turn; the place name goes to the tool with the state the user gave.
     "v3": "abe71ec7e5e8205c7c9344a66110112f36bf4822a7df0281a35df8fd9588df58",
+    # v4, after the pre-deploy campaign of 2026-11-11: answers for a person, with no internal
+    # identifier but the quote id, no code or enumerated value, no URL or API path; index
+    # types described in words, the carrier and the weather source named.
+    "v4": "33087441d94e01bfbf78116353686dc5f9418d5780d036f6d27e27deda41269a",
 }
 
 _PROMPT_FILE = re.compile(r"^system\.v(\d+)\.md$")

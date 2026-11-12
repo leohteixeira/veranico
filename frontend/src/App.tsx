@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   useSyncExternalStore,
@@ -207,6 +208,11 @@ export function Shell() {
     (approvals.data ?? []).some(
       (approval) => approval.approval_id === waiting.approval_id && approval.status !== "pending",
     );
+  // The directory's names of the carriers the queue knows, for the quote's audit trail.
+  const carrierNames = useMemo(
+    () => new Map((approvals.data ?? []).map((item) => [item.carrier_id, item.carrier_name])),
+    [approvals.data],
+  );
   const source = latestResult(session, "get_weather_history")?.source;
   const datasetSource = typeof source === "string" ? source : null;
 
@@ -253,6 +259,19 @@ export function Shell() {
     history: (
       <HistoryTab
         backtest={backtest}
+        // Before a backtest: the active cover's seasons, the very series the timeline draws.
+        example={
+          backtest === null && timeline.seasons !== null && view.index !== null
+            ? {
+                seasons: timeline.seasons,
+                index: view.index,
+                limit:
+                  view.limitCents === null
+                    ? null
+                    : { amount_cents: view.limitCents, currency: "BRL" },
+              }
+            : null
+        }
         season={view.season}
         onSelectSeason={selectSeason}
         highlight={view.tab === "history" ? view.highlight : null}
@@ -269,6 +288,7 @@ export function Shell() {
           void quote.refetch();
         }}
         highlight={view.tab === "quote" ? view.highlight : null}
+        carrierNames={carrierNames}
       />
     ),
     approvals: (

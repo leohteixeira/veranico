@@ -14,7 +14,10 @@ DESCRIPTION = (
     "Returns the `dataset_id` the pricing tools need, the grid point, the years covered, the "
     "number of missing days and the `source`. When `source` is `synthetic` the series is "
     "generated demonstration data, not real weather history: say so whenever you present "
-    "figures based on it."
+    "figures based on it. Name the source in words, never by its code: `era5-land/cds` is "
+    "ERA5-Land reanalysis (ECMWF), `era5/open-meteo` is ERA5 reanalysis (ECMWF) served by "
+    "Open-Meteo, and `synthetic` is synthetic demonstration data. The `dataset_id` is for the "
+    "pricing tools only; do not write it."
 )
 
 

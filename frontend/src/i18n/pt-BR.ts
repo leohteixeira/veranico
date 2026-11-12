@@ -121,6 +121,8 @@ export const ptBR: Messages = {
   // History tab
   "history.empty":
     "Ainda não há backtest. Descreva uma exposição na conversa e o agente reproduz o índice em todas as safras.",
+  "history.example":
+    "A cobertura de exemplo desta região, safra a safra, como a linha do tempo mostra. Descreva uma exposição na conversa para fazer o backtest da sua cobertura.",
   "history.index_title.rainfall_below": "Chuva na janela, por safra",
   "history.index_title.dry_spell_above": "Maior período seco na janela, por safra",
   "history.payout_title": "Pagamento por safra",
@@ -162,6 +164,8 @@ export const ptBR: Messages = {
   "quote.cover": "Cobertura",
   "quote.location": "Local",
   "quote.dataset": "Conjunto de dados",
+  "quote.dataset.cube": "Célula da grade do cubo regional (0,1°)",
+  "quote.dataset.point": "Histórico do ponto",
   "quote.index": "Índice",
   "quote.window": "Janela",
   "quote.trigger": "Gatilho",
@@ -326,6 +330,7 @@ export const ptBR: Messages = {
 
   // Problem codes (RFC 9457 `code`); the API's English prose is never shown
   "problem.not_found": "Não encontrado. Pode ter expirado ou pertencer a outro workspace.",
+  "problem.unauthorized": "É preciso uma chave de API válida. Crie uma na aba Cotação.",
   "problem.forbidden": "Esta ação não é permitida aqui.",
   "problem.invalid_arguments": "O pedido tem um valor ausente ou inválido.",
   "problem.conflict": "Isso conflita com o estado atual. Recarregue e tente de novo.",
@@ -354,6 +359,7 @@ export const ptBR: Messages = {
     "Esta chamada não foi executada: o agente já havia usado as chamadas ou tentativas deste pedido.",
   // Two codes of the interface itself, for a failure that carries no problem document
   "problem.network": "Não foi possível contatar o serviço. Verifique a conexão e tente de novo.",
+  "problem.internal_error": "Algo deu errado do nosso lado. Tente de novo em instantes.",
   "problem.unknown": "O pedido falhou. Tente de novo em instantes.",
   "error.reference": "Referência {trace_id}",
 
@@ -361,7 +367,7 @@ export const ptBR: Messages = {
   "audit.quote_created": "Cotação criada como rascunho",
   "audit.term_sheet_rendered": "Term sheet gerado ({locale})",
   "audit.term_sheet_rendered.plain": "Term sheet gerado",
-  "audit.submission_requested": "Submissão solicitada para {carrier_id}",
+  "audit.submission_requested": "Submissão solicitada para {carrier_name}",
   "audit.submission_requested.plain": "Submissão solicitada",
   "audit.approved": "Aprovada",
   "audit.rejected": "Rejeitada",
@@ -379,7 +385,7 @@ export const ptBR: Messages = {
   "tool.resolve_location.plain": "Local resolvido",
   "tool.resolve_location.candidates": "{count} lugares possíveis",
   "tool.resolve_location.candidates.plain": "Vários lugares possíveis",
-  "tool.get_weather_history": "{dataset_id} · {first_year} a {last_year}",
+  "tool.get_weather_history": "{source} · {first_year} a {last_year}",
   "tool.get_weather_history.plain": "Histórico carregado",
   "tool.backtest_index": "{seasons_used} safras · paga em {trigger_frequency_rate}",
   "tool.backtest_index.plain": "Backtest concluído",

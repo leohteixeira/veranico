@@ -85,6 +85,17 @@ def test_prompt_has_the_seven_numbered_rules() -> None:
     assert "Amounts are in BRL." in numbered[7]
 
 
+def test_prompt_keeps_internal_identifiers_codes_and_paths_out_of_the_answer() -> None:
+    # The pre-deploy campaign found dataset ids, carrier ids, index-type values and API paths
+    # in the recorded answers. The quote id stays: rule 2 asks for it.
+    text = PROMPT.text
+    assert "The `quote_id` is the only identifier you write" in text
+    for kind in ("a dataset id", "a carrier id", "a URL or an API path"):
+        assert kind in text
+    assert "Describe an index type in words" in text
+    assert "Name a carrier by its name in the directory." in text
+
+
 def test_prompt_never_lets_synthetic_figures_pass_as_real_history() -> None:
     assert "`synthetic`" in PROMPT.text
     assert "not real weather history" in PROMPT.text
@@ -92,7 +103,7 @@ def test_prompt_never_lets_synthetic_figures_pass_as_real_history() -> None:
 
 @pytest.mark.req("R-9.3-8")
 def test_version_comes_from_the_file_name() -> None:
-    assert PROMPT.version == "v3"
+    assert PROMPT.version == "v4"
     assert PROMPT.text.startswith("You are the cover structuring agent of Veranico.")
 
 
@@ -121,7 +132,7 @@ def test_a_directory_without_a_prompt_fails_loudly(tmp_path: Path) -> None:
 def test_prompt_text_matches_the_checksum_recorded_for_its_version() -> None:
     # An edit without a new version fails here: add `system.v<N+1>.md` and its checksum instead.
     assert PROMPT.sha256 == PROMPT_SHA256[PROMPT.version]
-    assert set(PROMPT_SHA256) == {"v1", "v2", "v3"}
+    assert set(PROMPT_SHA256) == {"v1", "v2", "v3", "v4"}
 
 
 @pytest.mark.req("R-9.3-8")

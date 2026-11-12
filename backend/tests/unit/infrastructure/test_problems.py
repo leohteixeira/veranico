@@ -57,7 +57,7 @@ def test_no_other_code_carries_replay_available() -> None:
         cls for cls in errors.DomainError.__subclasses__() if cls.code not in problems.REPLAY_CODES
     ]
 
-    assert len(others) == 20
+    assert len(others) == 22
     assert all("replay_available" not in _body(problem_response(cls(), "t")) for cls in others)
 
 
@@ -81,11 +81,17 @@ def _app() -> FastAPI:
     async def not_built() -> None:
         raise NotImplementedError
 
+    @app.get("/defect")
+    async def defect() -> None:
+        raise PermissionError(13, "Permission denied", "/tmp/veranico/blobs/documents")
+
     return app
 
 
 async def _call(method: str, path: str, **kwargs: object) -> httpx.Response:
-    transport = httpx.ASGITransport(app=_app())
+    # The server error middleware answers and then re-raises for the server's log; the
+    # transport keeps the answer instead of raising it into the test.
+    transport = httpx.ASGITransport(app=_app(), raise_app_exceptions=False)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
         return await client.request(method, path, **kwargs)  # type: ignore[arg-type]  # test passthrough
 
@@ -127,3 +133,27 @@ async def test_trace_id_comes_from_telemetry(monkeypatch: pytest.MonkeyPatch) ->
     response = await _call("GET", "/missing")
 
     assert response.json()["trace_id"] == "0af7651916cd43dd8448eb211c80319c"
+
+
+@pytest.mark.req("R-11-2")
+async def test_an_unexpected_exception_is_an_internal_error_problem_without_internals() -> None:
+    response = await _call("GET", "/defect")
+
+    assert response.status_code == 500
+    assert response.headers["content-type"] == "application/problem+json"
+    body = response.json()
+    assert body["code"] == "internal_error"
+    assert body["type"] == "https://veranico.dev/problems/internal_error"
+    assert "/tmp" not in response.text
+    assert "Permission" not in response.text
+
+
+def test_unauthorized_names_the_bearer_scheme_and_forbidden_does_not() -> None:
+    unauthorized = problem_response(errors.UnauthorizedError(), "t")
+    forbidden = problem_response(errors.ForbiddenError(), "t")
+
+    assert unauthorized.status_code == 401
+    assert unauthorized.headers["www-authenticate"] == "Bearer"
+    assert _body(unauthorized)["code"] == "unauthorized"
+    assert forbidden.status_code == 403
+    assert "www-authenticate" not in forbidden.headers

@@ -57,9 +57,14 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # --- Runtime -------------------------------------------------------------------------------
 FROM python:3.12-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df AS runtime
 
-# A fixed numeric user: the process never runs as root.
+# A fixed numeric user: the process never runs as root. The local data root (VERANICO_DATA_ROOT
+# below) is made here and handed to that user: a volume mounted under it (compose.yaml mounts
+# the weather store at /tmp/veranico/weather) would otherwise make Docker create the root as
+# root, and the `local` blob store could not write documents/ or points beside it.
 RUN groupadd --gid 10001 veranico \
-    && useradd --uid 10001 --gid 10001 --no-create-home --home-dir /nonexistent --shell /usr/sbin/nologin veranico
+    && useradd --uid 10001 --gid 10001 --no-create-home --home-dir /nonexistent --shell /usr/sbin/nologin veranico \
+    && mkdir -p /tmp/veranico/weather /tmp/veranico/blobs \
+    && chown -R 10001:10001 /tmp/veranico
 
 WORKDIR /app
 COPY --from=deps /app/.venv /app/.venv
@@ -69,7 +74,8 @@ COPY --from=web /web/dist /app/frontend
 ARG VERSION=0.0.0
 
 # Paths only. The local data root is used by the `local` blob and weather backends; the
-# file system of the image is read-only for this user except /tmp.
+# file system of the image is read-only for this user except /tmp, where the data root
+# belongs to it.
 ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \

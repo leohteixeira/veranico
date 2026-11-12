@@ -4,10 +4,13 @@ from veranico.shared.kernel import errors
 from veranico.shared.kernel.errors import DomainError
 
 # contracts.md section 1 (codes) and plan 00 decision 4 (statuses): code -> (status, retryable).
+# `unauthorized` and `internal_error` came with the pre-deploy campaign of 2026-11-11 (F-004,
+# F-002): a missing or invalid API key, and an unexpected failure answered as a problem.
 EXPECTED: dict[str, tuple[int, bool]] = {
     "not_found": (404, False),
     "location_not_found": (404, False),
     "dataset_not_found": (404, False),
+    "unauthorized": (401, False),
     "forbidden": (403, False),
     "conflict": (409, False),
     "invalid_state": (409, False),
@@ -27,6 +30,7 @@ EXPECTED: dict[str, tuple[int, bool]] = {
     "model_unavailable": (503, True),
     "shutting_down": (503, True),
     "not_implemented": (501, False),
+    "internal_error": (500, False),
 }
 
 

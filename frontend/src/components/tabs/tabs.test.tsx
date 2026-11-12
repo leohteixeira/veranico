@@ -381,6 +381,34 @@ describe("history tab [R-12.3-2]", () => {
     expect(document.querySelector("[data-chart]")).toBeNull();
   });
 
+  it("before_a_backtest_the_example_cover_seasons_are_shown_as_the_example [R-12.3-2]", () => {
+    // The series the timeline draws (`GET /weather/seasons` for the active cover).
+    const example = {
+      seasons: backtest.seasons,
+      index: backtest.cover.index,
+      limit: backtest.cover.limit,
+    };
+    renderHistory({ backtest: null, example });
+    expect(document.querySelector('[data-note="example"]')).toHaveTextContent(
+      /^The example cover of this region/,
+    );
+    expect(chart("index")).toBeVisible();
+    expect(chart("payout")).toBeVisible();
+    expect(screen.queryByText(/^No backtest yet\./)).toBeNull();
+    // Aggregates and the trend come only from a backtest.
+    expect(screen.queryByLabelText("Aggregates")).toBeNull();
+    expect(document.querySelector("[data-warning]")).toBeNull();
+  });
+
+  it("an_example_without_a_limit_draws_no_payout_panel [R-12.3-2]", () => {
+    renderHistory({
+      backtest: null,
+      example: { seasons: backtest.seasons, index: backtest.cover.index, limit: null },
+    });
+    expect(chart("index")).toBeVisible();
+    expect(document.querySelector('[data-chart="payout"]')).toBeNull();
+  });
+
   it("loading_and_failed_states_per_tab [R-12.4-12]", () => {
     const onRetry = vi.fn();
     const { unmount } = inEnglish(

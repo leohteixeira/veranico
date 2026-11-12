@@ -23,12 +23,19 @@ class FakeDocumentsFacade:
     def __init__(self, quoting: QuotingFacade) -> None:
         self._quoting = quoting
         self._rendered: set[QuoteId] = set()
+        self._failure: Exception | None = None
         self.calls: list[Call] = []
+
+    def fail_with(self, error: Exception | None) -> None:
+        """Raise `error` from every rendering until it is cleared (a storage failure)."""
+        self._failure = error
 
     async def render_term_sheets(
         self, principal: Principal, quote_id: QuoteId, actor: Actor
     ) -> list[DocumentRef]:
         self.calls.append(("render_term_sheets", (principal, quote_id, actor)))
+        if self._failure is not None:
+            raise self._failure
         await self._quoting.get_quote(principal, quote_id)  # not_found for another workspace
         if quote_id not in self._rendered:
             self._rendered.add(quote_id)

@@ -135,9 +135,12 @@ async def test_creating_a_quote_needs_an_api_key(api: QuotingApi) -> None:
         f"{V1}/quotes", json=quote_body(), headers=KEY
     )
 
+    # No valid key was presented: 401 naming the Bearer scheme (RFC 9110, RFC 6750), not 403.
     for response in (by_cookie, bad_key):
-        assert response.status_code == 403
-        assert response.json()["code"] == "forbidden"
+        assert response.status_code == 401
+        assert response.headers["www-authenticate"] == "Bearer"
+        assert response.headers["content-type"] == "application/problem+json"
+        assert response.json()["code"] == "unauthorized"
     assert (await session.browser.get(f"{V1}/quotes")).json() == []
 
 

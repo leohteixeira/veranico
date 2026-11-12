@@ -4,7 +4,9 @@
 message; `Turn.events` does the rest. The rules of the stream:
 
 * `started` is the first event and `done` the last; there is exactly one of each.
-* An `error` event is directly followed by `done`.
+* An `error` event is directly followed by `done`. Any unexpected exception of the turn (a
+  defect, a store that fails) ends it with `error` (`internal_error`) and `done`; only a
+  cancellation or a closed stream ends it without them.
 * Before every model call the loop checks, in this order: the shutdown signal (`error` with
   `shutting_down`, `done` with `error`), the conversation's token budget (`done` with `budget`
   and no `error`) and the spend ceiling (`error` with `spend_ceiling_reached`, `done` with
@@ -22,6 +24,7 @@ tool. They carry identifiers, counts and codes, and never message text or tool p
 """
 
 import asyncio
+import logging
 import time
 from collections.abc import AsyncGenerator, Coroutine, Mapping, Sequence
 from contextlib import aclosing
@@ -66,12 +69,15 @@ from veranico.shared.infrastructure import telemetry
 from veranico.shared.infrastructure.settings import Settings
 from veranico.shared.kernel.coded import Coded
 from veranico.shared.kernel.errors import (
+    InternalError,
     ModelUnavailableError,
     ShuttingDownError,
     SpendCeilingReachedError,
 )
 from veranico.shared.kernel.ids import ConversationId, Locale
 from veranico.shared.kernel.principal import Principal
+
+_logger = logging.getLogger(__name__)
 
 StopReason = Literal["end_turn", "tool_limit", "budget", "error"]
 
@@ -181,134 +187,149 @@ class Turn:
         ending: _Ending
         try:
             yield Started(conversation_id=self.conversation_id, message_id=self.message_id)
-            while True:
-                if deps.shutdown.is_set():
-                    ending = _Ending("error", ShuttingDownError.code)
-                    break
-                if self._conversation_tokens + self._tokens >= budget:
-                    ending = _Ending("budget")
-                    break
-                if not (await deps.access.may_spend()).allowed:
-                    ending = _Ending("budget", SpendCeilingReachedError.code)
-                    break
+            try:
+                while True:
+                    if deps.shutdown.is_set():
+                        ending = _Ending("error", ShuttingDownError.code)
+                        break
+                    if self._conversation_tokens + self._tokens >= budget:
+                        ending = _Ending("budget")
+                        break
+                    if not (await deps.access.may_spend()).allowed:
+                        ending = _Ending("budget", SpendCeilingReachedError.code)
+                        break
 
-                request = build_request(
-                    deps.prompt,
-                    self._entries,
-                    tools,
-                    deps.settings,
-                    tool_use="none" if wrap_up is not None else "auto",
-                )
-                call = _ModelCall()
-                interrupted = False
-                llm_span = telemetry.tracer().start_span(
-                    telemetry.SPAN_LLM_CALL,
-                    context=parent,
-                    attributes={telemetry.ATTR_LLM_MODEL: request.model},
-                )
-                started_ns = time.perf_counter_ns()
-                try:
-                    async with aclosing(deps.model.stream(request)) as stream:
-                        async for item in stream:
-                            if isinstance(item, ModelTextDelta):
-                                if item.text:
-                                    if not call.text and self._texts:
-                                        yield TextDelta(text=STEP_SEPARATOR)
-                                    call.text.append(item.text)
-                                    yield TextDelta(text=item.text)
-                            elif isinstance(item, ModelToolCall):
-                                call.tool_calls.append(item)
-                            elif isinstance(item, ModelUsageSoFar):
-                                call.usage = item.usage
-                            else:
-                                call.usage, call.stop = item.usage, item.stop
-                            if call.stop is None and deps.shutdown.is_set():
-                                interrupted = True
-                                break
-                except ModelUnavailable as error:
-                    call.failed = True
-                    call.usage = error.usage or call.usage
-                finally:
-                    text = "".join(call.text)
-                    if text:
-                        self._texts.append(text)
-                    # The token count is taken here, not in the task below: a cancelled turn
-                    # goes on to release its claim, and the total it writes must be complete.
-                    self._account(llm_span, call, started_ns)
-                    if call.usage is not None:
-                        await _settled(deps.access.record_spend(call.usage))
-
-                if interrupted:
-                    ending = _Ending("error", ShuttingDownError.code)
-                    break
-                if call.failed:
-                    ending = _Ending("error", ModelUnavailableError.code)
-                    break
-
-                requested = [] if wrap_up is not None else call.tool_calls
-                step = AssistantStep(
-                    seq=self._next_seq(),
-                    turn=self._turn,
-                    text=text,
-                    tool_calls=tuple(
-                        ToolCall(call_id=item.call_id, tool=item.name, arguments=item.arguments)
-                        for item in requested
-                    ),
-                )
-                if not requested:
-                    if text:
-                        await self._store([step])
-                    ending = _Ending("tool_limit" if wrap_up == "tool_limit" else "end_turn")
-                    break
-
-                results: list[ToolResultEntry] = []
-                for item in requested:
-                    yield ToolStarted(
-                        call_id=item.call_id, tool=item.name, arguments=dict(item.arguments)
+                    request = build_request(
+                        deps.prompt,
+                        self._entries,
+                        tools,
+                        deps.settings,
+                        tool_use="none" if wrap_up is not None else "auto",
                     )
-                    duration_ms = 0
-                    if wrap_up == "failures":
-                        outcome = _not_executed(f"{last_failed} failed twice in a row")
-                    elif self._executed >= limit:
-                        outcome = _not_executed(f"the limit of {limit} tool calls was reached")
-                    else:
-                        name = item.name if item.name in known_tools else _UNKNOWN_TOOL
-                        # Current while the tool runs, so spans its facade opens nest under it.
-                        with telemetry.tracer().start_as_current_span(
-                            telemetry.tool_span_name(name), context=parent
-                        ) as tool_span:
-                            tool_started_ns = time.perf_counter_ns()
-                            outcome = await deps.registry.execute(
-                                self._principal, item.name, item.arguments
-                            )
-                            duration_ms = _elapsed_ms(tool_started_ns)
-                            _describe_tool(tool_span, outcome, duration_ms)
-                        self._executed += 1
-                        if outcome.ok:
-                            last_failed = None
-                            self._completed.append(item.name)
-                        elif last_failed == item.name:
-                            wrap_up = "failures"
+                    call = _ModelCall()
+                    interrupted = False
+                    llm_span = telemetry.tracer().start_span(
+                        telemetry.SPAN_LLM_CALL,
+                        context=parent,
+                        attributes={telemetry.ATTR_LLM_MODEL: request.model},
+                    )
+                    started_ns = time.perf_counter_ns()
+                    try:
+                        async with aclosing(deps.model.stream(request)) as stream:
+                            async for item in stream:
+                                if isinstance(item, ModelTextDelta):
+                                    if item.text:
+                                        if not call.text and self._texts:
+                                            yield TextDelta(text=STEP_SEPARATOR)
+                                        call.text.append(item.text)
+                                        yield TextDelta(text=item.text)
+                                elif isinstance(item, ModelToolCall):
+                                    call.tool_calls.append(item)
+                                elif isinstance(item, ModelUsageSoFar):
+                                    call.usage = item.usage
+                                else:
+                                    call.usage, call.stop = item.usage, item.stop
+                                if call.stop is None and deps.shutdown.is_set():
+                                    interrupted = True
+                                    break
+                    except ModelUnavailable as error:
+                        call.failed = True
+                        call.usage = error.usage or call.usage
+                    finally:
+                        text = "".join(call.text)
+                        if text:
+                            self._texts.append(text)
+                        # The token count is taken here, not in the task below: a cancelled turn
+                        # goes on to release its claim, and the total it writes must be complete.
+                        self._account(llm_span, call, started_ns)
+                        if call.usage is not None:
+                            await _settled(deps.access.record_spend(call.usage))
+
+                    if interrupted:
+                        ending = _Ending("error", ShuttingDownError.code)
+                        break
+                    if call.failed:
+                        ending = _Ending("error", ModelUnavailableError.code)
+                        break
+
+                    requested = [] if wrap_up is not None else call.tool_calls
+                    step = AssistantStep(
+                        seq=self._next_seq(),
+                        turn=self._turn,
+                        text=text,
+                        tool_calls=tuple(
+                            ToolCall(call_id=item.call_id, tool=item.name, arguments=item.arguments)
+                            for item in requested
+                        ),
+                    )
+                    if not requested:
+                        if text:
+                            await self._store([step])
+                        ending = _Ending("tool_limit" if wrap_up == "tool_limit" else "end_turn")
+                        break
+
+                    results: list[ToolResultEntry] = []
+                    for item in requested:
+                        yield ToolStarted(
+                            call_id=item.call_id, tool=item.name, arguments=dict(item.arguments)
+                        )
+                        duration_ms = 0
+                        if wrap_up == "failures":
+                            outcome = _not_executed(f"{last_failed} failed twice in a row")
+                        elif self._executed >= limit:
+                            outcome = _not_executed(f"the limit of {limit} tool calls was reached")
                         else:
-                            last_failed = item.name
-                    result = self._result(step.seq + 1 + len(results), item, outcome, duration_ms)
-                    results.append(result)
-                    yield tool_finished(result)
-                    if outcome.approval is not None:
-                        yield outcome.approval
-                await self._store([step, *results])
-                if wrap_up is None and self._executed >= limit:
-                    wrap_up = "tool_limit"
+                            name = item.name if item.name in known_tools else _UNKNOWN_TOOL
+                            # Current while the tool runs, so spans its facade opens nest under it.
+                            with telemetry.tracer().start_as_current_span(
+                                telemetry.tool_span_name(name), context=parent
+                            ) as tool_span:
+                                tool_started_ns = time.perf_counter_ns()
+                                outcome = await deps.registry.execute(
+                                    self._principal, item.name, item.arguments
+                                )
+                                duration_ms = _elapsed_ms(tool_started_ns)
+                                _describe_tool(tool_span, outcome, duration_ms)
+                            self._executed += 1
+                            if outcome.ok:
+                                last_failed = None
+                                self._completed.append(item.name)
+                            elif last_failed == item.name:
+                                wrap_up = "failures"
+                            else:
+                                last_failed = item.name
+                        seq = step.seq + 1 + len(results)
+                        result = self._result(seq, item, outcome, duration_ms)
+                        results.append(result)
+                        yield tool_finished(result)
+                        if outcome.approval is not None:
+                            yield outcome.approval
+                    await self._store([step, *results])
+                    if wrap_up is None and self._executed >= limit:
+                        wrap_up = "tool_limit"
+
+            except Exception:
+                # A defect or an infrastructure failure, not a cancellation or a disconnect
+                # (those are `BaseException`s and propagate). The step it cut is not stored;
+                # the stream still ends with `error` and `done`, and the claim is released.
+                _logger.exception("turn failed unexpectedly")
+                ending = _Ending("error", InternalError.code)
 
             self._flagged = self._ungrounded()
             if self._flagged:
                 yield GroundingFlagged(message_id=self.message_id, values=list(self._flagged))
+            # Before `done`: the client may send its next message as soon as it reads `done`,
+            # and the claim must be free by then. A store that fails here still gets a stream
+            # that ends; the claim then lapses with its lease.
+            try:
+                await self._finish()
+            except Exception:
+                _logger.exception("turn could not be finished")
+                if ending.error_code is None:
+                    ending = _Ending("error", InternalError.code)
             if ending.error_code is not None:
                 yield StreamError(code=ending.error_code, completed=list(self._completed))
             span.set_attribute(telemetry.ATTR_AGENT_STOP_REASON, ending.stop_reason)
-            # Before `done`: the client may send its next message as soon as it reads `done`,
-            # and the claim must be free by then.
-            await self._finish()
             yield Done(
                 conversation_id=self.conversation_id,
                 message_id=self.message_id,

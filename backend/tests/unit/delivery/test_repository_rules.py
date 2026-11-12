@@ -276,3 +276,37 @@ def test_the_development_stack_has_the_declared_services_and_ports() -> None:
     assert set(profiled) == {"toxiproxy"}
     assert profiled["toxiproxy"]["profiles"] == ["failure"]
     assert _host_ports(profiled["toxiproxy"]) == {8520, 8521}
+
+
+def _runtime_stage() -> str:
+    """The instructions of the runtime stage of the Dockerfile, continuation lines joined."""
+    text = (REPOSITORY / "Dockerfile").read_text(encoding="utf-8").replace("\\\n", " ")
+    return text.split(" AS runtime", 1)[1]
+
+
+def test_the_image_hands_the_local_data_root_to_its_user() -> None:
+    # The pre-deploy campaign of 2026-11-11: compose.yaml mounts a volume under the data root,
+    # Docker then made the root as root, and the API (uid 10001) could not write documents.
+    stage = _runtime_stage()
+    root = re.search(r"VERANICO_DATA_ROOT=(\S+)", stage)
+    assert root is not None
+    data_root = root[1]
+    prepare = re.search(rf"mkdir -p ([^&]*)&& chown -R 10001:10001 {re.escape(data_root)}\b", stage)
+    assert prepare is not None, "the runtime stage must create the data root for uid 10001"
+    made = prepare[1].split()
+    assert f"{data_root}/weather" in made  # the mount point of the weather volume
+    assert f"{data_root}/blobs" in made  # the `local` blob store (documents, points)
+    assert stage.index(prepare[0]) < stage.index("USER 10001:10001")
+
+
+@pytest.mark.req("R-7-10")
+def test_the_demo_carrier_fails_first_attempts_and_the_campaigns_keep_it_off() -> None:
+    compose = yaml.safe_load((REPOSITORY / "compose.yaml").read_text(encoding="utf-8"))
+    name = "VERANICO_DELIVERY__CARRIER_FAIL_FIRST_ATTEMPT"
+
+    # By name only: the caller decides, and without it the setting's default (off) applies.
+    assert name in compose["services"]["carrier"]["environment"]
+    assert f'export {name}="$${{{name}:-true}}"' in _recipe("dev")
+    assert f"export {name}=false" in _recipe("test-failure")
+    load = (REPOSITORY / "load" / "run.py").read_text(encoding="utf-8")
+    assert f'environment["{name}"] = "false"' in load

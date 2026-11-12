@@ -3,8 +3,10 @@
 `execute` validates the arguments with the tool's input model, calls the facade and returns a
 `ToolOutcome`. A validation error, an unknown tool name and every `DomainError` become a
 `ToolError` (`{error_code, message, retryable}`), which the loop hands to the model as the
-tool result. Any other exception is a defect, not a tool result: it propagates and ends the
-turn as an error. There is no tool that decides an approval and no retrieval over documents.
+tool result. Any other exception (a defect, a storage failure) is logged with its stack and
+becomes the non-retryable `internal_error`, whose message says nothing of the exception: the
+model never sees an exception, its text or a path (SPEC 9.1). There is no tool that decides
+an approval and no retrieval over documents.
 
 Tool summaries (`ToolFinished.summary`). This table is the single place the interface reads
 the codes and their parameters from. A parameter ending in `_cents` is integer BRL centavos
@@ -35,6 +37,7 @@ Tool results (`ToolFinished.result`, the output model serialised with `mode="jso
 | `request_submission` | `Submission` |
 """
 
+import logging
 from collections.abc import Mapping, Sequence
 from typing import Any
 
@@ -60,8 +63,13 @@ from veranico.modules.documents.contracts import DocumentsFacade
 from veranico.modules.pricing.contracts import PricingFacade
 from veranico.modules.quoting.contracts import QuotingFacade
 from veranico.shared.kernel.coded import Coded
-from veranico.shared.kernel.errors import DomainError
+from veranico.shared.kernel.errors import DomainError, InternalError
 from veranico.shared.kernel.principal import Principal
+
+_logger = logging.getLogger(__name__)
+
+# What the model reads for an unexpected failure. It may tell the user; it holds no internals.
+UNEXPECTED_FAILURE = "the tool failed unexpectedly; it is not worth retrying in this turn"
 
 
 class ToolRegistry:
@@ -112,6 +120,10 @@ class ToolRegistry:
             success = await tool.handler(principal, validated)
         except DomainError as error:
             return _failed(error.code, str(error), retryable=error.retryable)
+        except Exception:
+            # The name only: arguments are user data and stay out of the log.
+            _logger.exception("tool %s failed unexpectedly", name)
+            return _failed(InternalError.code, UNEXPECTED_FAILURE, retryable=False)
         return ToolOutcome(
             summary=success.summary,
             result=success.output.model_dump(mode="json"),

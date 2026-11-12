@@ -239,14 +239,17 @@ async def test_a_valid_key_authenticates_then_passes_the_rate_check() -> None:
         {"Authorization": "Bearer unknown-key"},
     ],
 )
-async def test_a_missing_malformed_or_unknown_key_is_forbidden(headers: dict[str, str]) -> None:
+async def test_a_missing_malformed_or_unknown_key_is_unauthorized(headers: dict[str, str]) -> None:
     client, access = build()
     await issue_key(client, access)
 
     response = await client.get("/key", headers=headers)
 
-    assert response.status_code == 403
-    assert response.json()["code"] == "forbidden"
+    # No valid credential: 401 naming the scheme (RFC 9110 15.5.2, RFC 6750 3), not 403.
+    assert response.status_code == 401
+    assert response.headers["www-authenticate"] == "Bearer"
+    assert response.headers["content-type"] == "application/problem+json"
+    assert response.json()["code"] == "unauthorized"
 
 
 async def test_a_rate_limited_key_is_answered_429() -> None:
@@ -293,7 +296,7 @@ async def test_any_principal_with_a_bad_bearer_never_falls_back_to_the_cookie(
         "/any", headers={"Authorization": authorization, "Cookie": "vr_ws=cookie-1"}
     )
 
-    assert response.status_code == 403
+    assert response.status_code == 401
     assert "open_workspace" not in [name for name, _ in access.calls]
     assert "set-cookie" not in response.headers
 
