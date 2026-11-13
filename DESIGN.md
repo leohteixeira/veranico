@@ -389,8 +389,11 @@ was verified in EOX's own documents on 2026-11-11 (sources in `frontend/src/conf
   Rendering © EOX and MapServer }" in the light theme and "Overlay bright { Data © OpenStreetMap
   contributors, Rendering © EOX and MapServer }" in the dark theme, linked to
   `https://maps.eox.at/#data`. Verified in EOX's WMTS capabilities document on 2026-11-12.
-- Weather, for a region with real weather: "Weather: Copernicus Climate Change Service. ERA5-Land
-  for the regional cubes; ERA5 through Open-Meteo for any other point. CC BY 4.0."
+- Weather, for a region with real weather: "Weather: Copernicus Climate Change Service. ERA5-Land,
+  read through Google Earth Engine, for the regional cubes; ERA5 through Open-Meteo for any other
+  point. Contains modified Copernicus Climate Change Service information 2026. CC BY 4.0." The
+  notice sentence is the one the Copernicus licence asks for and stays in English in both
+  languages; Earth Engine is the channel the cubes were read through (ADR 0019).
 - Weather, for a synthetic region (`Region.synthetic`, or a dataset source of `synthetic`), in the
   application and in `/embed/map`: "Weather: the surface of this region is synthetic, generated
   for the demonstration; it is not weather history. A point outside the showcase regions uses ERA5
