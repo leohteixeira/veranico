@@ -13,7 +13,7 @@ export const en = {
   "app.disclaimer": "Pricing is illustrative. It is not actuarial or insurance advice.",
   "app.non_commercial": "Non-commercial demo.",
   "app.weather_attribution":
-    "Weather: Copernicus Climate Change Service. ERA5-Land for the regional cubes; ERA5 through Open-Meteo for any other point. CC BY 4.0.",
+    "Weather: Copernicus Climate Change Service. ERA5-Land, read through Google Earth Engine, for the regional cubes; ERA5 through Open-Meteo for any other point. Contains modified Copernicus Climate Change Service information 2026. CC BY 4.0.",
   // A synthetic region: ERA5-Land is not credited for a surface that was generated.
   "app.weather_attribution_synthetic":
     "Weather: the surface of this region is synthetic, generated for the demonstration; it is not weather history. A point outside the showcase regions uses ERA5 through Open-Meteo (Copernicus Climate Change Service, CC BY 4.0).",

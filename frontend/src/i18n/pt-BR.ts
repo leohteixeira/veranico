@@ -8,7 +8,7 @@ export const ptBR: Messages = {
   "app.disclaimer": "O preço é ilustrativo. Não é cálculo atuarial nem recomendação de seguro.",
   "app.non_commercial": "Demonstração sem fins comerciais.",
   "app.weather_attribution":
-    "Clima: Copernicus Climate Change Service. ERA5-Land nos cubos regionais; ERA5 via Open-Meteo em qualquer outro ponto. CC BY 4.0.",
+    "Clima: Copernicus Climate Change Service. ERA5-Land, via Google Earth Engine, nos cubos regionais; ERA5 via Open-Meteo em qualquer outro ponto. Contains modified Copernicus Climate Change Service information 2026. CC BY 4.0.",
   "app.weather_attribution_synthetic":
     "Clima: a superfície desta região é sintética, gerada para a demonstração; não é histórico de clima. Um ponto fora das regiões de demonstração usa o ERA5 via Open-Meteo (Copernicus Climate Change Service, CC BY 4.0).",
   "app.synthetic":

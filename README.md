@@ -314,7 +314,7 @@ interface shows.
 | Source | Attribution | Licence |
 |---|---|---|
 | Weather, region with a synthetic cube | Weather: the surface of this region is synthetic, generated for the demonstration; it is not weather history. A point outside the showcase regions uses ERA5 through Open-Meteo (Copernicus Climate Change Service, CC BY 4.0). | generated data; CC BY 4.0 for the ERA5 points |
-| Weather, region with a real cube | Weather: Copernicus Climate Change Service. ERA5-Land for the regional cubes; ERA5 through Open-Meteo for any other point. CC BY 4.0. | CC BY 4.0 |
+| Weather, region with a real cube | Weather: Copernicus Climate Change Service. ERA5-Land, read through Google Earth Engine, for the regional cubes; ERA5 through Open-Meteo for any other point. Contains modified Copernicus Climate Change Service information 2026. CC BY 4.0. | CC BY 4.0 |
 | Relief basemap | Terrain Light { Data © OpenStreetMap contributors and others, Rendering © EOX } (https://maps.eox.at/#data) | EOX::Maps, free to use with attribution |
 | Satellite basemap | EOxCloudless https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2025) | CC BY-NC-SA 4.0 |
 | Place names, light theme | Overlay { Data © OpenStreetMap contributors, Rendering © EOX and MapServer } (https://maps.eox.at/#data) | EOX::Maps, free to use with attribution |
